@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, View, Modal, Button, TouchableOpacity, Image,TouchableWithoutFeedback,Keyboard } from 'react-native';
+import { SafeAreaView, Text, TextInput, View, Modal, Button, TouchableOpacity, Image,TouchableWithoutFeedback,Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { styles_tube_calculate } from '../../css/Tube calculation/Tube calculation_css';
 import calculateTubeLogic from './CalculateTube';
 
@@ -40,6 +40,16 @@ const Button_Tube_Calculation = ({ navigation }) => {
     return (
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
         <SafeAreaView style={styles_tube_calculate.container}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+            >
+                <ScrollView
+                    style={{ flex: 1 }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
             <TouchableOpacity onPress={openImageModal}>
                 <Image
                     source={require('./ларинг_изображ.png')}
@@ -87,7 +97,7 @@ const Button_Tube_Calculation = ({ navigation }) => {
             >
                 <Text style={{ fontSize: 18, textAlign: "center", color: "#363636", fontWeight: "300"}}>Рассчитать трубку</Text>
             </TouchableOpacity>
-
+                </ScrollView>
 
             <Modal
                 animationType="fade"
@@ -123,8 +133,9 @@ const Button_Tube_Calculation = ({ navigation }) => {
                             resizeMode: 'contain'
                         }}
                     />
-                </View>
+                    </View>
             </Modal>
+            </KeyboardAvoidingView>
         </SafeAreaView>
         </TouchableWithoutFeedback>
     );

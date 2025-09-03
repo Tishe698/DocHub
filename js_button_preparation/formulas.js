@@ -6,8 +6,8 @@ const formulas = [
     description: 'sol. analgini 500 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 10} мг`,
-      result2: `${mass * 0.02} мл`,
+      result1: mass * 10, // мг
+      result2: mass * 0.02, // мл
     }),
   },
   {
@@ -15,8 +15,8 @@ const formulas = [
     description: 'sol. adrenalini 1mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${0.01 * mass} мг`,
-      result2: `${(0.01 * mass) / 1} мл`,
+      result1: 0.01 * mass, // мг
+      result2: (0.01 * mass) / 1, // мл
     }),
   },
   {
@@ -24,8 +24,8 @@ const formulas = [
     description: 'sol.Amiodaroni 50 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 5} мг`,
-      result2: `${mass * 5 / 50} мл`,
+      result1: mass * 5, // мг
+      result2: mass * 5 / 50, // мл
     }),
     warnings: ["максимальная  cуточная доза (1200 мг)"],
   },  
@@ -34,8 +34,8 @@ const formulas = [
     description: 'Acidi ascorbinici 50 mg/ml - 2ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 7} мг`,
-      result2: `${mass * 7 / 50} мл`,
+      result1: mass * 7, // мг
+      result2: mass * 7 / 50, // мл
     }),
     warnings: ["максимальная суточная доза (500 мг)"],
   },
@@ -44,8 +44,8 @@ const formulas = [
     description: 'tab. Carbonis activati 250 mg',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.05} грамма`,
-      result2: `${(mass * 0.05 * 1000) / 250} таблеток`,
+      result1: mass * 0.05, // граммы
+      result2: (mass * 0.05 * 1000) / 250, // таблеток
     }),
   },
   {
@@ -53,8 +53,8 @@ const formulas = [
     description: 'tab.Acidi acetylsalicylici acidi 500 mg',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 30} грамма`,
-      result2: `${mass * 30 / 500} таблеток`,
+      result1: mass * 30, // граммы
+      result2: mass * 30 / 500, // таблеток
     }),
     warnings: ["максимальная разовая доза (1000 мг) старше 16 лет!"],
   },
@@ -63,8 +63,8 @@ const formulas = [
     description: 'sol.Atropini sulfatis 1 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.02} мг`,
-      result2: `${mass * 0.02} мл`,
+      result1: mass * 0.02, // мг
+      result2: mass * 0.02, // мл
     }),
   },
   {
@@ -86,8 +86,8 @@ const formulas = [
         const result2 = result1 / 100; // Разведение 100 мг/мл
   
         return {
-          result1: `${result1} мг`,
-          result2: `${result2} мл`,
+          result1: result1, // мг
+          result2: result2, // мл
         };
       } else {
         return { error: 'Недопустимые данные для расчета' };
@@ -100,8 +100,8 @@ const formulas = [
     description: 'sol.Verapamili 2.5 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.1} мг`,
-      result2: `${mass * 0.1 / 2.5} мл`,
+      result1: mass * 0.1, // мг
+      result2: mass * 0.1 / 2.5, // мл
     }),
     warnings: ["максимальная доза (10 мг)"],
   },
@@ -110,8 +110,8 @@ const formulas = [
     description: 'Sol. Dexamethasoni 4 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.6} мг`,
-      result2: `${mass * 0.6 / 4} мл`,
+      result1: mass * 0.6, // мг
+      result2: mass * 0.6 / 4, // мл
     }),
   },
   {
@@ -119,8 +119,8 @@ const formulas = [
     description: 'sol.Drotaverini  20 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.2} мг`,
-      result2: `${mass * 0.2 / 20} мл`,
+      result1: mass * 0.2, // мг
+      result2: mass * 0.2 / 20, // мл
     }),
     warnings: ["Расчет производиться на детей до 12 лет, более 12 лет 2 мл"],
   },
@@ -129,7 +129,7 @@ const formulas = [
     description: 'Sol. Calcii gluconici  100 mg/ml',
     inputs: { mass: 'Масса' },
     formula: ({ mass }) => ({
-      result1: `${mass * 0.2} мл`,
+      result1: mass * 0.2, // мл
     }),
     warnings: ["Введение только в/в МЕДЛЕННО! 1% р-р нагретый до температуры тела, максимальная доза 10мл"],
   },
@@ -138,7 +138,7 @@ const formulas = [
     description: ' Sol. "Carboxim" 150 mg/ml - 1 ml',
     inputs: { age: 'Возраст' },
     formula: ({ age }) => ({
-      result1: `${0.1 * age} мл`,
+      result1: 0.1 * age, // мл
     }),
     warnings: ["Введение в/м , при отравление ФОС"],
   },
@@ -149,10 +149,10 @@ const formulas = [
     formula: ({ mass }) => {
       const result1 = mass * 3;
       const result2 = result1 / 50;
-      
+
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Запрещенно при Артериальной гипертнзии, ОИМ (меньше 6 мес.) , ОНМК в анамнезе , Эпилепсия, Эклампсия, Неизвестные наркотики, РАСЧЕТ ПО МАКС.ДОЗЕ 1-3 МГ/КГ"],
@@ -184,8 +184,8 @@ const formulas = [
       const result2 = result1 / 20;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["при кардиологической паталогии вводят в/в болюсно в течении 3-4 минуты , максимальная разовая доза 100 мг"],
@@ -199,8 +199,8 @@ const formulas = [
       const result2 = result1 / 250;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["50мг/кг: 13мл в разведении NaCl 0.9% -250ml в/в кап. 2 кап./кг в мин - строго 30 минут"],
@@ -214,8 +214,8 @@ const formulas = [
       const result2 = result1 /10;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Ограничений нет по возрасту"],
@@ -239,8 +239,8 @@ const formulas = [
       const result2 = result1 /10;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["От 2 лет, Травма головы, эпилептический статус,острая алкогольная интексикация,нельзя при приеме антидепресантов,  Введение дробное (возможность угнетение дыхания) антидот налоксон"],
@@ -254,8 +254,8 @@ const formulas = [
       const result2 = result1 /0.4;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["вводят в/в медленно (в течение 2-3 мин), с осторожностью при травмах головы, эпилептических препадках(усиливает отек мозга).При необходимости дозу можно повторно ввести через 2-3 мин"],
@@ -278,8 +278,8 @@ const formulas = [
           dosage = 5; // Для возраста от 5 лет и старше
         }
   
-        const result1 = `${dosage} мг`;
-        const result2 = `${dosage / 2.5} мл`; // Расчет в миллилитрах
+        const result1 = dosage; // мг
+        const result2 = dosage / 2.5; // мл
   
         return { result1, result2 };
       } else {
@@ -296,8 +296,8 @@ const formulas = [
       const result2 = result1 /100;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Ограничений нет"],
@@ -323,8 +323,8 @@ const formulas = [
         }
   
         return {
-          result: `${result.toFixed(3)} мг`,
-          resultInMl: `${(result / 2).toFixed(3)} ml`, // Для 2mg/ml - 1 ml
+          result: result, // мг
+          resultInMl: (result / 2), // мл
         };
       } else {
         return { error: 'Недопустимые данные для расчета' };
@@ -340,7 +340,7 @@ const formulas = [
       const result1 = mass * 15;
       
       return {
-        result1: `${result1} мг`,
+        result1: result1, // мг
       };
     },
     warnings: ["старше 1 месяца,варикозно раширенные вены пишевода "],
@@ -359,8 +359,8 @@ const formulas = [
       const result2 = result1 /30;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Ограничений нет, для скорой помощи максимальное разовое введение по алгоритмам СМП 120 мг(4 ампулы)"],
@@ -379,8 +379,8 @@ const formulas = [
       const result2 = result1 /5;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Макс разовая доза:  до 5 лет 5 мг, старше 5 лет 10мг, В/В ВВОДИТЬ МЕДЛЕННО НЕ МЕНЕЕ 2 МИНУТ,Повторное введение возможно через 10 минут, максимальная суточная доза 8 мл"],
@@ -400,7 +400,7 @@ const formulas = [
     description: ' Sol. Thiamini 50mg/ml - 1 ml',
     inputs: { age: 'Возраст' },
     formula: ({ age }) => ({
-      result1: `${0.1 * age} мл`,
+      result1: 0.1 * age, // мл
     }),
     warnings: ["Ограничений нет"],
   },
@@ -412,7 +412,7 @@ const formulas = [
       const result1 = mass * 1;
       
       return {
-        result2: `${result1} мл`,
+        result2: result1, // мл
       };
     },
     warnings: ["ограничений по возрасту нет , максимальная доза 50 мл"],
@@ -426,8 +426,8 @@ const formulas = [
       const result2 = result1 /50;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Старше 1 года, Допустимо введение не более 100 мг каждые 6 часов"],
@@ -441,8 +441,8 @@ const formulas = [
       const result2 = result1 /50;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Старше 2 лет"],
@@ -456,8 +456,8 @@ const formulas = [
       const result2 = result1 /50;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Старше 18 лет"],
@@ -477,8 +477,8 @@ const formulas = [
       const volume = dose / concentration; // Рассчитываем объем
     
       return {
-        dose: `${dose} мкг`,
-        volume: `${volume.toFixed(3)} мл`, // Ограничиваем до тысячных
+        dose: dose, // мкг
+        volume: volume, // мл
       };
     },
     warnings: ["расчет производиться для указанного весса по минимальной дозе 1мкг/кг (возможнное введение от 1мкг/кг - 4мкг/кг)"],
@@ -497,8 +497,8 @@ const formulas = [
       const result2 = result1 /10;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Суточная доза до 160 мг взрослым, Детям 6 мг/кг/сут"],
@@ -512,8 +512,8 @@ const formulas = [
       const result2 = result1 /10;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["максимально 1 мл;(супрастин)"],
@@ -527,8 +527,8 @@ const formulas = [
       const result2 = result1 /5;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["старше 2 лет, от 12 лет макс доза 2 мл"],
@@ -542,8 +542,8 @@ const formulas = [
       const result2 = result1 /50;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["Суточная доза до 4 г, для в/в 1г цифтриаксона растовряют в 20 мл одного из инфуз. р-р (без содержания кальция) вводят с помощью перфузора в теч 30 минут (при минингите предварительно инфузионная терапия)"],
@@ -572,8 +572,8 @@ const formulas = [
       const result2 = result1 /125;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["(Викасол, Дицинон,) Запрещено при тромбозах и тромбоэмболиях "],
@@ -587,8 +587,8 @@ const formulas = [
       const result2 = result1 /24;
       
       return {
-        result1: `${result1} мг`,
-        result2: `${result2} мл`,
+        result1: result1, // мг
+        result2: result2, // мл
       };
     },
     warnings: ["(Аминофиллин) в/в в разведении Nacl . Запрещено при тахиаритмии , эпилепсия , гипотония , язвенная болезнь в стад.обострения, кровоизлияние в сетчатку глаза. Максимальная разовая доза 500 мг взрослому и 7 мг/кг ребенку"],
