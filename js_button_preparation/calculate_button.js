@@ -32,7 +32,7 @@ import formulas from "./formulas";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-const BottomSheet = ({ visible, onClose, children, isDark }) => {
+const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBack }) => {
   const translateY = useSharedValue(screenHeight);
   const backdropOpacity = useSharedValue(0);
 
@@ -122,32 +122,85 @@ const BottomSheet = ({ visible, onClose, children, isDark }) => {
             }}
           />
 
-          {/* Крестик */}
-          <TouchableOpacity
-            onPress={hideSheet}
-            style={{
-              position: "absolute",
-              top: 30,
-              right: 10,
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: isDark ? "rgba(59,130,246,0.2)" : "rgba(239,68,68,0.2)",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 10,
-            }}
-          >
-            <Text
+          {/* Enhanced Close Button */}
+          <View style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 80,
+            height: 60,
+            backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+            borderBottomLeftRadius: borderRadius.xl,
+            borderWidth: 1,
+            borderTopWidth: 0,
+            borderRightWidth: 0,
+            borderColor: isDark ? colors.dark.border : colors.light.border,
+            zIndex: 15,
+          }}>
+            <TouchableOpacity
+              onPress={hideSheet}
               style={{
-                fontSize: 22,
-                fontWeight: "700",
-                color: isDark ? "#3B82F6" : "#EF4444",
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                paddingTop: 8,
+                paddingRight: 8,
               }}
+              activeOpacity={0.7}
             >
-              ✕
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "600",
+                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                }}
+              >
+                ✕
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Enhanced Back Button - Same Level as Close Button */}
+          {selectedFormula && onBack && (
+            <View style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 80,
+              height: 60,
+              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+              borderBottomRightRadius: borderRadius.xl,
+              borderWidth: 1,
+              borderTopWidth: 0,
+              borderLeftWidth: 0,
+              borderColor: isDark ? colors.dark.border : colors.light.border,
+              zIndex: 15,
+            }}>
+              <TouchableOpacity
+                onPress={onBack}
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingTop: 8,
+                  paddingLeft: 8,
+                }}
+                activeOpacity={0.7}
+                accessibilityLabel="Вернуться к списку препаратов"
+                accessibilityRole="button"
+              >
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: "600",
+                    color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                  }}
+                >
+                  ←
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {children}
         </Animated.View>
@@ -357,20 +410,118 @@ const WelcomeScreen = () => {
 
   return (
     <SafeAreaView style={[styles.container, isDark && styles.container_dark]}>
+      {/* Enhanced Header Section with Typography & Shadows */}
       <Animated.View entering={FadeIn.duration(animation.normal)}>
-        <Text style={[styles.welcomeText, isDark && styles.welcomeText_dark]}>
-          🏥 Медицинские расчёты
-        </Text>
-        <Text style={[styles.subtitle, isDark && styles.subtitle_dark]}>
-          💉 Выберите препарат для расчёта дозировки
-        </Text>
+        <View style={{ alignItems: "center", marginBottom: spacing.xl }}>
+          <Text style={[styles.welcomeText, isDark && styles.welcomeText_dark]}>
+            🏥 Медицинские расчёты
+          </Text>
+          <Text style={[styles.subtitle, isDark && styles.subtitle_dark]}>
+            💉 Профессиональный калькулятор дозировок
+          </Text>
+        </View>
+
+        {/* Stats Cards */}
+        <View style={{ marginBottom: spacing.xl }}>
+          <Animated.View entering={FadeInUp.delay(100).duration(animation.normal)}>
+            <View style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              marginBottom: spacing.lg
+            }}>
+              <View style={{
+                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                borderRadius: borderRadius.lg,
+                padding: spacing.md,
+                alignItems: "center",
+                flex: 1,
+                marginHorizontal: spacing.xs,
+                ...shadows.sm,
+                borderWidth: 1,
+                borderColor: isDark ? colors.dark.border : colors.light.border,
+              }}>
+                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>💊</Text>
+                <Text style={{
+                  fontSize: typography.caption.fontSize,
+                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                  textAlign: "center"
+                }}>
+                  Препараты
+                </Text>
+                <Text style={{
+                  fontSize: typography.h4.fontSize,
+                  fontWeight: "bold",
+                  color: isDark ? colors.dark.text.primary : colors.light.text.primary
+                }}>
+                  20+
+                </Text>
+              </View>
+
+              <View style={{
+                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                borderRadius: borderRadius.lg,
+                padding: spacing.md,
+                alignItems: "center",
+                flex: 1,
+                marginHorizontal: spacing.xs,
+                ...shadows.sm,
+                borderWidth: 1,
+                borderColor: isDark ? colors.dark.border : colors.light.border,
+              }}>
+                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>🧮</Text>
+                <Text style={{
+                  fontSize: typography.caption.fontSize,
+                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                  textAlign: "center"
+                }}>
+                  Расчёты
+                </Text>
+                <Text style={{
+                  fontSize: typography.h4.fontSize,
+                  fontWeight: "bold",
+                  color: isDark ? colors.dark.text.primary : colors.light.text.primary
+                }}>
+                  50+
+                </Text>
+              </View>
+
+              <View style={{
+                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                borderRadius: borderRadius.lg,
+                padding: spacing.md,
+                alignItems: "center",
+                flex: 1,
+                marginHorizontal: spacing.xs,
+                ...shadows.sm,
+                borderWidth: 1,
+                borderColor: isDark ? colors.dark.border : colors.light.border,
+              }}>
+                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>⚡</Text>
+                <Text style={{
+                  fontSize: typography.caption.fontSize,
+                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                  textAlign: "center"
+                }}>
+                  Мгновенно
+                </Text>
+                <Text style={{
+                  fontSize: typography.caption.fontSize,
+                  color: isDark ? colors.dark.text.primary : colors.light.text.primary
+                }}>
+                  Результат
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
       </Animated.View>
 
-      {/* Кнопка открытия шторки */}
+      {/* Main Action Section */}
       <Animated.View
-        entering={FadeInUp.delay(200).duration(animation.normal)}
-        style={{ flex: 1, marginTop: spacing.lg, justifyContent: "center" }}
+        entering={FadeInUp.delay(300).duration(animation.normal)}
+        style={{ flex: 1, justifyContent: "center" }}
       >
+        {/* Enhanced Primary Calculator Button with Gradient & Elevation */}
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
           style={{
@@ -378,14 +529,16 @@ const WelcomeScreen = () => {
             borderRadius: borderRadius.xl,
             padding: spacing.xl,
             alignItems: "center",
-            ...shadows.md,
+            marginBottom: spacing.lg,
+            ...shadows.lg,
           }}
+          activeOpacity={0.8}
         >
           <Text
             style={{
               color: colors.light.surface,
-              fontSize: 18,
-              fontWeight: "600",
+              fontSize: 20,
+              fontWeight: "700",
               marginBottom: spacing.sm,
             }}
           >
@@ -394,18 +547,138 @@ const WelcomeScreen = () => {
           <Text
             style={{
               color: colors.light.surface,
-              fontSize: 14,
+              fontSize: 16,
               opacity: 0.9,
               textAlign: "center",
+              lineHeight: 22,
             }}
           >
-            Расчёт дозировок препаратов и объёмов растворов
+            Расчёт дозировок препаратов и объёмов растворов для точного лечения
           </Text>
         </TouchableOpacity>
+
+        {/* Interactive Quick Actions with Color-coded Categories */}
+        <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={{
+              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+              borderRadius: borderRadius.lg,
+              padding: spacing.lg,
+              alignItems: "center",
+              flex: 1,
+              marginHorizontal: spacing.sm,
+              borderWidth: 1,
+              borderColor: isDark ? colors.dark.border : colors.light.border,
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 24, marginBottom: spacing.sm }}>🔍</Text>
+            <Text style={{
+              ...typography.caption,
+              color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+              textAlign: "center",
+              fontWeight: "600"
+            }}>
+              Поиск
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={{
+              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+              borderRadius: borderRadius.lg,
+              padding: spacing.lg,
+              alignItems: "center",
+              flex: 1,
+              marginHorizontal: spacing.sm,
+              borderWidth: 1,
+              borderColor: isDark ? colors.dark.border : colors.light.border,
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={{ fontSize: 24, marginBottom: spacing.sm }}>📋</Text>
+            <Text style={{
+              ...typography.caption,
+              color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+              textAlign: "center",
+              fontWeight: "600"
+            }}>
+              Все препараты
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Enhanced Safety Card with Professional Styling */}
+        <Animated.View
+          entering={FadeInUp.delay(600).duration(animation.normal)}
+          style={{
+            marginTop: spacing.xl,
+            paddingHorizontal: spacing.lg
+          }}
+        >
+          <View style={{
+            backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+            borderRadius: borderRadius.xl,
+            padding: spacing.xl,
+            borderWidth: 2,
+            borderColor: isDark ? "#3B82F6" : "#2563EB",
+            borderLeftWidth: 6,
+          }}>
+            <View style={{
+              alignItems: "center",
+              marginBottom: spacing.md,
+              paddingBottom: spacing.sm,
+              borderBottomWidth: 1,
+              borderBottomColor: isDark ? colors.dark.border : colors.light.border
+            }}>
+              <Text style={{
+                fontSize: 32,
+                marginBottom: spacing.sm
+              }}>🛡️</Text>
+              <Text style={{
+                ...typography.h5,
+                color: isDark ? "#3B82F6" : "#2563EB",
+                fontWeight: "700",
+                textAlign: "center"
+              }}>
+                Безопасность превыше всего
+              </Text>
+            </View>
+
+            <Text style={{
+              ...typography.body2,
+              color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+              lineHeight: 22,
+              textAlign: "center",
+              fontWeight: "500"
+            }}>
+              Все расчеты носят рекомендательный характер.{'\n'}Консультируйтесь с лечащим врачом перед{'\n'}применением препаратов.
+            </Text>
+
+            <View style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              marginTop: spacing.md,
+              paddingTop: spacing.sm,
+              borderTopWidth: 1,
+              borderTopColor: isDark ? colors.dark.border : colors.light.border
+            }}>
+              <Text style={{
+                ...typography.caption,
+                color: isDark ? "#10B981" : "#059669",
+                fontWeight: "600"
+              }}>
+                ⚕️ Медицинская ответственность
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
       </Animated.View>
 
-      {/* Шторка */}
-      <BottomSheet visible={modalVisible} onClose={hideModal} isDark={isDark}>
+      {/* Enhanced Bottom Sheet */}
+      <BottomSheet visible={modalVisible} onClose={hideModal} isDark={isDark} selectedFormula={selectedFormula} onBack={() => { setSelectedFormula(null); setInputs({}); setResults({}); }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
@@ -422,44 +695,6 @@ const WelcomeScreen = () => {
             <View style={modalStyles.modalHeader}>
               {selectedFormula ? (
                 <>
-                  {/* <-- СТРЕЛКА НАЗАД для возврата к списку препаратов */}
-                  <TouchableOpacity
-                    onPress={() => {
-                      setSelectedFormula(null);
-                      setInputs({});
-                      setResults({});
-                    }}
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: 3,
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      zIndex: 10,
-                    }}
-                    activeOpacity={0.7}
-                    accessibilityLabel="Вернуться к списку препаратов"
-                    accessibilityRole="button"
-                  >
-                    <Text style={{
-                      fontSize: 30,
-                      fontWeight: 'bold',
-                      color: isDark ? '#FFFFFF' : '#333333',
-                      alignItems: 'center',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      paddingTop: 1,
-                      marginTop: -10,
-                    }}>
-                      ←
-                    </Text>
-                  </TouchableOpacity>
-
                   <Text style={[modalStyles.modalTitle, isDark && modalStyles.modalTitle_dark]}>
                     💊 {selectedFormula.name}
                   </Text>
