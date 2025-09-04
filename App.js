@@ -26,35 +26,55 @@ export default function App() {
           component={ButtonApp}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
-        <Stack.Screen name="Tabnav" component={Tabnav} />
-        <Stack.Screen name="CalcShockIndexScreen" component={CalcShockIndexScreen} />
-        <Stack.Screen name="Date_pregnancy" component={Date_pregnancy} />
-        <Stack.Screen name="Tabnav_oxy" component={Tabnav_oxy} />
+        <Stack.Screen
+          name="Расчет лекарств"
+          component={WelcomeScreen}
+          options={{ title: 'Расчет дозировок препаратов' }}
+        />
+        <Stack.Screen
+          name="Tabnav"
+          component={Tabnav}
+          options={{ title: 'Расчеты интубации' }}
+        />
+        <Stack.Screen
+          name="CalcShockIndexScreen"
+          component={CalcShockIndexScreen}
+          options={{ title: 'Шоковый индекс' }}
+        />
+        <Stack.Screen
+          name="Date_pregnancy"
+          component={Date_pregnancy}
+          options={{ title: 'Калькулятор беременности' }}
+        />
+        <Stack.Screen
+          name="Tabnav_oxy"
+          component={Tabnav_oxy}
+          options={{ title: 'Кислородные расчеты' }}
+        />
         <Stack.Screen
           name="Calc_max_time_o2"
           component={Calc_max_time_o2}
-          options={{ title: 'Максимальное время ингаляции' }}
+          options={{ title: '⏱️ Время работы кислородного баллона' }}
         />
         <Stack.Screen
           name="Calc_dorbinyn"
           component={Calc_dorbinyn}
-          options={{ title: 'Формула Дарбиняна' }}
+          options={{ title: '📊 Минутный объем дыхания' }}
         />
         <Stack.Screen
           name="Calc_aparat_IVL"
           component={Calc_aparat_IVL}
-          options={{ title: 'Аппаратная ИВЛ' }}
+          options={{ title: '🏥 Настройка аппарата ИВЛ' }}
         />
         <Stack.Screen
           name="IntubationTubeCalculation"
           component={IntubationTubeCalculation}
-          options={{ title: 'Эндотрахеальная трубка' }}
+          options={{ title: '🫁 Расчет размера эндотрахеальной трубки' }}
         />
         <Stack.Screen
           name="Button_Tube_Calculation"
           component={LaryngealTubeCalculation}
-          options={{ title: 'Ларингеальная трубка' }}
+          options={{ title: '👄 Расчет размера ларингеальной маски' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

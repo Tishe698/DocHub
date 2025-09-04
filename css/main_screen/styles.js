@@ -18,11 +18,20 @@ const buttonStyles = StyleSheet.create({
         backgroundColor: colors.dark.background,
     },
 
-    // Header section
+    // Header section with gradient background
+    headerGradient: {
+        marginTop: spacing.md,
+        marginHorizontal: spacing.lg,
+        borderRadius: borderRadius.xl,
+        marginBottom: spacing.xl,
+        ...shadows.md,
+        overflow: 'hidden',
+    },
+
     header: {
         alignItems: 'center',
-        marginBottom: spacing.xl,
-        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xl,
+        paddingHorizontal: spacing.lg,
     },
 
     appTitle: {
@@ -31,6 +40,15 @@ const buttonStyles = StyleSheet.create({
         fontWeight: '700',
         marginBottom: spacing.xs,
         textAlign: 'center',
+    },
+
+    appTitleGradient: {
+        textShadowColor: 'rgba(0,0,0,0.1)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+        fontSize: 36,
+        fontWeight: '800',
+        letterSpacing: 1,
     },
 
     appTitle_dark: {
@@ -44,6 +62,15 @@ const buttonStyles = StyleSheet.create({
         lineHeight: 24,
     },
 
+    appSubtitleGradient: {
+        textShadowColor: 'rgba(0,0,0,0.1)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+        fontSize: 14,
+        fontWeight: '600',
+        letterSpacing: 0.5,
+    },
+
     appSubtitle_dark: {
         color: colors.dark.text.secondary,
     },
@@ -51,28 +78,50 @@ const buttonStyles = StyleSheet.create({
     // Cards grid
     cardsContainer: {
         flex: 1,
+        paddingBottom: spacing.md,
     },
 
-    // Modern medical card design
+    cardsContainer_dark: {
+        backgroundColor: 'transparent',
+    },
+
+    // Modern medical card design with gradients
     card: {
         width: cardWidth,
-        backgroundColor: colors.light.cardBackground,
         borderRadius: borderRadius.xl,
-        padding: spacing.lg,
         marginBottom: spacing.md,
         marginHorizontal: spacing.xs,
-        ...shadows.md,
-        borderWidth: 2,
-        borderColor: colors.light.primary + '20', // 20% opacity medical blue
-        minHeight: 180,
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        minHeight: 200,
+        overflow: 'hidden',
         position: 'relative',
+        ...shadows.lg,
     },
 
     card_dark: {
-        backgroundColor: colors.dark.cardBackground,
-        borderColor: colors.dark.primary + '30', // 30% opacity medical blue
+        // No border in dark mode
+    },
+
+    // Background image for cards
+    cardBackgroundImage: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: borderRadius.xl,
+        width: '100%',
+        height: '100%',
+    },
+
+    // Overlay for text readability on images
+    cardOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: borderRadius.xl,
     },
 
     // Pressed state with modern animation
@@ -81,27 +130,21 @@ const buttonStyles = StyleSheet.create({
         ...shadows.sm,
     },
 
-    // Icon container with gradient background
+    // Icon container - minimal
     iconContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: borderRadius.xl,
-        backgroundColor: colors.light.primary,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.md,
-        ...shadows.sm,
     },
 
     iconContainer_dark: {
-        backgroundColor: colors.dark.primary,
+        // No background in dark mode
     },
 
     // Icon styles
     icon: {
         width: 40,
         height: 40,
-        tintColor: colors.light.surface,
     },
 
     // Medical emoji overlay
@@ -218,6 +261,115 @@ const buttonStyles = StyleSheet.create({
 
     cardFocused_dark: {
         borderColor: colors.dark.primary,
+    },
+
+    // Enhanced status badge with pulse effect
+    statusBadgeInner: {
+        width: 4,
+        height: 4,
+        borderRadius: borderRadius.full,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -2 }, { translateY: -2 }],
+    },
+
+    // Dark mode medical emoji
+    medicalEmoji_dark: {
+        textShadowColor: colors.dark.shadow,
+    },
+
+    // Decorative medical pattern
+    decorativePattern: {
+        position: 'absolute',
+        bottom: spacing.sm,
+        right: spacing.sm,
+        opacity: 0.1,
+    },
+
+    patternIcon: {
+        fontSize: 20,
+        color: colors.light.surface,
+        textShadowColor: colors.light.shadow,
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
+
+    // Enhanced glass effect for icon containers
+    iconContainerGlass: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+
+    iconContainerGlass_dark: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 12,
+    },
+
+    // Enhanced card title with better contrast on gradients
+    cardTitleEnhanced: {
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+
+    cardTitleEnhanced_dark: {
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
+
+    // Enhanced card description with better readability
+    cardDescriptionEnhanced: {
+        textShadowColor: 'rgba(0,0,0,0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 1,
+        fontWeight: '500',
+        letterSpacing: 0.25,
+        opacity: 0.9,
+    },
+
+    cardDescriptionEnhanced_dark: {
+        textShadowColor: 'rgba(0,0,0,0.4)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+        opacity: 0.85,
+    },
+
+    // Text styles for images
+    cardTitleOnImage: {
+        color: '#FFFFFF',
+        textShadowColor: 'rgba(0,0,0,0.8)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+        fontWeight: '800',
+        fontSize: 18,
+    },
+
+    cardTitleOnImage_dark: {
+        textShadowColor: 'rgba(0,0,0,0.9)',
+    },
+
+    cardDescriptionOnImage: {
+        color: '#FFFFFF',
+        textShadowColor: 'rgba(0,0,0,0.8)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+        fontWeight: '600',
+        opacity: 0.95,
+    },
+
+    cardDescriptionOnImage_dark: {
+        opacity: 0.9,
     },
 });
 

@@ -8,38 +8,49 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  runOnJS
+  runOnJS,
+  Easing,
+  SlideInRight,
+  ZoomIn
 } from 'react-native-reanimated';
 import buttonStyles from '../css/main_screen/styles';
-import { colors, spacing, animation, typography } from '../theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, spacing, animation, typography, borderRadius } from '../theme';
 
-// Modern Card Component
+// Modern Card Component with Background Images
 const ModernCard = ({ item, index, onPress, isDark }) => {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
+  const rotateY = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { scale: scale.value },
+      { rotateY: `${rotateY.value}deg` }
+    ],
     opacity: opacity.value,
   }));
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.96, { damping: 15 });
-    opacity.value = withTiming(0.9, { duration: 100 });
+    scale.value = withSpring(0.94, { damping: 20, stiffness: 300 });
+    opacity.value = withTiming(0.95, { duration: 80 });
+    rotateY.value = withTiming(2, { duration: 150, easing: Easing.out(Easing.exp) });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15 });
-    opacity.value = withTiming(1, { duration: 100 });
+    scale.value = withSpring(1, { damping: 20, stiffness: 300 });
+    opacity.value = withTiming(1, { duration: 120 });
+    rotateY.value = withTiming(0, { duration: 200, easing: Easing.out(Easing.exp) });
   };
 
   const handlePress = () => {
     runOnJS(onPress)(item.screenName);
   };
 
+
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 100).duration(400)}
+      entering={SlideInRight.delay(index * 150).duration(600).springify()}
       style={animatedStyle}
     >
       <TouchableOpacity
@@ -52,33 +63,41 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
         accessibilityRole="button"
         accessibilityHint={`Открыть раздел ${item.title}`}
       >
-        {/* Status Badge */}
-        <View style={[buttonStyles.statusBadge, isDark && buttonStyles.statusBadge_dark]} />
+        {/* Background Image */}
+        <Animated.Image
+          source={item.icon}
+          style={buttonStyles.cardBackgroundImage}
+          entering={FadeIn.delay(index * 100).duration(500)}
+          resizeMode="cover"
+        />
 
-        {/* Medical Icon Container */}
-        <View style={[buttonStyles.iconContainer, isDark && buttonStyles.iconContainer_dark]}>
-          <Animated.Image
-            source={item.icon}
-            style={buttonStyles.icon}
-            entering={FadeIn.delay(300 + index * 100).duration(animation.fast)}
-          />
-          {/* Medical emoji overlay */}
-          <Animated.Text
-            style={buttonStyles.medicalEmoji}
-            entering={FadeIn.delay(500 + index * 100).duration(animation.fast)}
-          >
-            {item.medicalIcon}
-          </Animated.Text>
-        </View>
+        {/* Dark Overlay for Text Readability */}
+        <View style={buttonStyles.cardOverlay} />
 
-        {/* Card Content */}
+        {/* Card Content with Enhanced Typography */}
         <View style={buttonStyles.cardContent}>
-          <Text style={[buttonStyles.cardTitle, isDark && buttonStyles.cardTitle_dark]}>
+          <Animated.Text
+            style={[
+              buttonStyles.cardTitle,
+              buttonStyles.cardTitleOnImage,
+              isDark && buttonStyles.cardTitle_dark,
+              isDark && buttonStyles.cardTitleOnImage_dark
+            ]}
+            entering={FadeInUp.delay(700 + index * 100).duration(400)}
+          >
             {item.title}
-          </Text>
-          <Text style={[buttonStyles.cardDescription, isDark && buttonStyles.cardDescription_dark]}>
+          </Animated.Text>
+          <Animated.Text
+            style={[
+              buttonStyles.cardDescription,
+              buttonStyles.cardDescriptionOnImage,
+              isDark && buttonStyles.cardDescription_dark,
+              isDark && buttonStyles.cardDescriptionOnImage_dark
+            ]}
+            entering={FadeInUp.delay(800 + index * 100).duration(400)}
+          >
             {item.description}
-          </Text>
+          </Animated.Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -91,44 +110,39 @@ const ButtonApp = ({ navigation }) => {
 
   const data = [
     {
-      screenName: 'WelcomeScreen',
+      screenName: 'Расчет лекарств',
       icon: require('./Icon1.png'),
       title: '💊 Расчет лекарств',
       description: 'Подбор дозировок и объемов препаратов',
-      accessibilityLabel: 'Перейти к расчету лекарств',
-      medicalIcon: '💊'
+      accessibilityLabel: 'Перейти к расчету лекарств'
     },
     {
       screenName: 'Tabnav',
       icon: require('./Icon2.png'),
       title: '🫁 Трубки',
       description: 'Расчет размера эндотрахеальных трубок',
-      accessibilityLabel: 'Перейти к расчету размера трубок',
-      medicalIcon: '🫁'
+      accessibilityLabel: 'Перейти к расчету размера трубок'
     },
     {
       screenName: 'CalcShockIndexScreen',
       icon: require('./icon3.png'),
       title: '❤️ Шоковый индекс',
       description: 'Расчет индекса Альговера',
-      accessibilityLabel: 'Перейти к расчету шокового индекса Альговера',
-      medicalIcon: '❤️'
+      accessibilityLabel: 'Перейти к расчету шокового индекса Альговера'
     },
     {
       screenName: 'Date_pregnancy',
       icon: require('./icon4.png'),
       title: '🤰 Беременность',
       description: 'Расчет срока беременности',
-      accessibilityLabel: 'Перейти к расчету срока беременности',
-      medicalIcon: '🤰'
+      accessibilityLabel: 'Перейти к расчету срока беременности'
     },
     {
       screenName: 'Tabnav_oxy',
       icon: require('./Icon7.png'),
       title: '🫁 Кислород',
       description: 'Расчет потребления кислорода',
-      accessibilityLabel: 'Перейти к расчету кислорода',
-      medicalIcon: '🫁'
+      accessibilityLabel: 'Перейти к расчету кислорода'
     },
   ];
 
@@ -147,23 +161,39 @@ const ButtonApp = ({ navigation }) => {
 
   return (
     <SafeAreaView style={[buttonStyles.container, isDark && buttonStyles.container_dark]}>
-      {/* Header Section */}
-      <Animated.View
-        entering={FadeIn.duration(animation.normal)}
-        style={buttonStyles.header}
+      {/* Header Section with Gradient Background */}
+      <LinearGradient
+        colors={isDark
+          ? ['#0f172a', '#1e293b', '#334155']
+          : ['#f8fafc', '#e2e8f0', '#cbd5e1']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={buttonStyles.headerGradient}
       >
-        <Text style={[buttonStyles.appTitle, isDark && buttonStyles.appTitle_dark]}>
-          🏥 DocHub
-        </Text>
-        <Text style={[buttonStyles.appSubtitle, isDark && buttonStyles.appSubtitle_dark]}>
-          🩺 Медицинские расчеты и справочники
-        </Text>
-      </Animated.View>
+        <Animated.View
+          entering={ZoomIn.duration(600).springify()}
+          style={buttonStyles.header}
+        >
+          <Animated.Text
+            style={[buttonStyles.appTitle, buttonStyles.appTitleGradient, isDark && buttonStyles.appTitle_dark]}
+            entering={FadeInUp.delay(200).duration(500)}
+          >
+            🏥 DocHub
+          </Animated.Text>
+          <Animated.Text
+            style={[buttonStyles.appSubtitle, buttonStyles.appSubtitleGradient, isDark && buttonStyles.appSubtitle_dark]}
+            entering={FadeInUp.delay(400).duration(500)}
+          >
+            🩺 Медицинские расчеты и справочники
+          </Animated.Text>
+        </Animated.View>
+      </LinearGradient>
 
-      {/* Cards Grid */}
+      {/* Cards Grid with Enhanced Container */}
       <Animated.View
         entering={FadeInUp.delay(300).duration(animation.normal)}
-        style={buttonStyles.cardsContainer}
+        style={[buttonStyles.cardsContainer, isDark && buttonStyles.cardsContainer_dark]}
       >
         <FlatList
           data={data}
