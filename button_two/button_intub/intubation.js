@@ -1,116 +1,211 @@
 import React, { useState } from 'react';
-import {
-    Text,
-    TextInput,
-    View,
-    Modal,
-    TouchableOpacity,
-    Image,
-    TouchableWithoutFeedback,Keyboard,
-    Platform,
-} from 'react-native';
-import { styles_tube_calculate } from '../../css/Tube calculation/Tube calculation_css';
+import { View, Text, TextInput, Switch, TouchableOpacity, Platform } from 'react-native';
 import { calculateIntubationTubeLogic } from './CalculateIntubationTube';
 
-const IntubationTubeCalculation = ({ navigation }) => {
-    const [patientWeight, setPatientWeight] = useState('');
-    const [tubeInnerDiameter, setTubeInnerDiameter] = useState('');
-    const [tubeInsertionDepth, setTubeInsertionDepth] = useState('');
-    const [tubeSizeGroup, setTubeSizeGroup] = useState('');
-    const [modalVisible, setModalVisible] = useState(false);
-    const [imageModalVisible, setImageModalVisible] = useState(false);
+const Label = ({ children }) => (
+  <Text style={{ fontSize: 14, color: '#374151', marginBottom: 6 }}>{children}</Text>
+);
 
-    const calculateIntubationTube = () => {
-        const weight = parseFloat(patientWeight);
-        const { innerDiameter, insertionDepth, sizeGroup } = calculateIntubationTubeLogic(weight);
+const Box = ({ children }) => (
+  <View style={{
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    marginBottom: 12
+  }}>{children}</View>
+);
 
-        setTubeInnerDiameter(innerDiameter.toString());
-        setTubeInsertionDepth(insertionDepth.toString());
-        setTubeSizeGroup(sizeGroup.toString());
-        setModalVisible(true);
-    };
+const Row = ({ children }) => (
+  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>{children}</View>
+);
 
-    const closeModals = () => {
-        setModalVisible(false);
-        setImageModalVisible(false);
-    };
+const Pill = ({ active, onPress, children }) => (
+  <TouchableOpacity
+    onPress={onPress}
+    accessibilityRole="button"
+    accessibilityLabel={`Выбрать: ${children}`}
+    style={{
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 999,
+      backgroundColor: active ? '#2563EB' : '#E5E7EB'
+    }}
+  >
+    <Text style={{ color: active ? '#FFFFFF' : '#111827', fontWeight: '600' }}>{children}</Text>
+  </TouchableOpacity>
+);
 
-    const openImageModal = () => {
-        setImageModalVisible(true);
-    };
-    const dismissKeyboard = () => {
-        Keyboard.dismiss();
-    };
-    return (
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
-            <View style={styles_tube_calculate.container}>
-                <TouchableOpacity onPress={openImageModal}>
-                    <Image
-                        source={require('./intub_img.png')}
-                        style={{
-                            width: 300,
-                            height: 300,
-                            resizeMode: 'contain',
-                            marginTop: 10,
-                        }}
-                    />
-                </TouchableOpacity>
+const NumberInput = ({ value, onChangeText, placeholder }) => (
+  <TextInput
+    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
+    value={value}
+    onChangeText={onChangeText}
+    placeholder={placeholder}
+    style={{
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 10,
+      padding: 10,
+      fontSize: 16,
+      flex: 1
+    }}
+  />
+);
 
-                <View style={styles_tube_calculate.inputContainer}>
-                    <View style={styles_tube_calculate.inputContainer1}>
-                        <Text style={{ fontSize: 18, marginTop: 10 }}>Введите массу пациента:</Text>
-                        <View style={styles_tube_calculate.inputContainer2}>
-                            <TextInput
-                                onChangeText={(text) => setPatientWeight(text)}
-                                value={patientWeight}
-                                keyboardType="numeric"
-                                style={styles_tube_calculate.input}
-                            />
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                <Text style={{ marginLeft: 5, fontSize: 18 }}>кг</Text>
-                            </View>
-                        </View>
-                    </View>
-                </View>
+const ResultRow = ({ label, value }) => (
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+    <Text style={{ color: '#6B7280' }}>{label}</Text>
+    <Text style={{ fontWeight: '700' }}>{value}</Text>
+  </View>
+);
 
-                <TouchableOpacity onPress={calculateIntubationTube} style={styles_tube_calculate.button_Tube_calc}>
-                    <Text style={{ fontSize: 18, textAlign: 'center', color: '#363636', fontWeight: '300' }}>
-                        Рассчитать интубационную трубку
-                    </Text>
-                </TouchableOpacity>
+const IntubationTubeCalculation = () => {
+  const [heightCm, setHeightCm] = useState('');
+  const [ageYears, setAgeYears] = useState('');
+  const [ageMonths, setAgeMonths] = useState('');
+  const [weightKg, setWeightKg] = useState('');
+  const [cuffed, setCuffed] = useState(false);
+  const [route, setRoute] = useState('both');
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-                <Modal visible={modalVisible} onRequestClose={closeModals}>
-                    <View style={styles_tube_calculate.modalContainer}>
-                        <View style={styles_tube_calculate.modalContent}>
-                            <Text style={{ fontSize: 18 }}>Внутренний диаметр трубки: {tubeInnerDiameter}</Text>
-                            <Text style={{ fontSize: 18 }}>Глубина введения: {tubeInsertionDepth}</Text>
-                            <Text style={{ fontSize: 18 }}>Размерная группа: {tubeSizeGroup}</Text>
-                            <TouchableOpacity onPress={closeModals} style={styles_tube_calculate.closeButton_1}>
-                                <Text style={styles_tube_calculate.closeButtonText}>Закрыть</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </Modal>
+  const onCalculate = () => {
+    setError(null);
+    try {
+      const h = heightCm ? parseFloat(heightCm.replace(',', '.')) : undefined;
+      const ageY = ageYears ? parseFloat(ageYears.replace(',', '.')) : undefined;
+      const ageM = ageMonths ? parseFloat(ageMonths.replace(',', '.')) : undefined;
+      const w = weightKg ? parseFloat(weightKg.replace(',', '.')) : undefined;
 
-                <Modal visible={imageModalVisible} transparent={true} onRequestClose={closeModals}>
-                    <View style={styles_tube_calculate.imageModalContainer}>
-                        <TouchableOpacity onPress={closeModals} style={styles_tube_calculate.closeButton}>
-                            <Text style={styles_tube_calculate.closeButtonText}>Закрыть</Text>
-                        </TouchableOpacity>
-                        <Image
-                            source={require('./intub_img.png')}
-                            style={{
-                                width: '90%',
-                                height: '90%',
-                                resizeMode: 'contain',
-                            }}
-                        />
-                    </View>
-                </Modal>
+      const res = calculateIntubationTubeLogic({
+        heightCm: isFinite(h) ? h : undefined,
+        ageYears: isFinite(ageY) ? ageY : undefined,
+        ageMonths: isFinite(ageM) ? ageM : undefined,
+        weightKg: isFinite(w) ? w : undefined,
+        cuffed,
+        route,
+      });
+      setResult(res);
+    } catch (e) {
+      setResult(null);
+      setError(e?.message || 'Ошибка расчёта');
+    }
+  };
+
+  const clearAll = () => {
+    setHeightCm('');
+    setAgeYears('');
+    setAgeMonths('');
+    setWeightKg('');
+    setCuffed(false);
+    setRoute('both');
+    setResult(null);
+    setError(null);
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F3F4F6', padding: 16 }}>
+      <Text style={{ fontSize: 20, fontWeight: '800', marginBottom: 12 }}>
+        Расчёт эндотрахеальной трубки (Скорая помощь)
+      </Text>
+
+      <Box>
+        <Label>Рост (см) — приоритетно для СМП (Broselow)</Label>
+        <Row>
+          <NumberInput value={heightCm} onChangeText={setHeightCm} placeholder="Напр. 92" />
+        </Row>
+
+        <View style={{ height: 12 }} />
+
+        <Label>Возраст</Label>
+        <Row>
+          <NumberInput value={ageYears} onChangeText={setAgeYears} placeholder="Годы" />
+          <NumberInput value={ageMonths} onChangeText={setAgeMonths} placeholder="Месяцы" />
+        </Row>
+
+        <View style={{ height: 12 }} />
+
+        <Label>Вес (кг)</Label>
+        <Row>
+          <NumberInput value={weightKg} onChangeText={setWeightKg} placeholder="Напр. 3.2" />
+        </Row>
+
+        <View style={{ height: 12 }} />
+
+        <Label>Манжетка</Label>
+        <Row>
+          <Text>Без манжетки</Text>
+          <Switch value={cuffed} onValueChange={setCuffed} />
+          <Text>С манжеткой</Text>
+        </Row>
+
+        <View style={{ height: 12 }} />
+
+        <Label>Путь</Label>
+        <Row>
+          <Pill active={route === 'oral'} onPress={() => setRoute('oral')}>Оральная</Pill>
+          <Pill active={route === 'nasal'} onPress={() => setRoute('nasal')}>Назальная</Pill>
+          <Pill active={route === 'both'} onPress={() => setRoute('both')}>Обе</Pill>
+        </Row>
+      </Box>
+
+      <Row>
+        <TouchableOpacity
+          onPress={onCalculate}
+          style={{ backgroundColor: '#10B981', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12 }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '700' }}>🔢 Рассчитать</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={clearAll}
+          style={{ backgroundColor: '#E5E7EB', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12 }}
+        >
+          <Text style={{ color: '#111827', fontWeight: '700' }}>♻️ Очистить</Text>
+        </TouchableOpacity>
+      </Row>
+
+      {error && (
+        <Box>
+          <Text style={{ color: '#B91C1C' }}>Ошибка: {error}</Text>
+          <Text style={{ color: '#6B7280', marginTop: 6, fontSize: 12 }}>
+            Приоритет расчёта: Рост → Вес (&lt;1 года) → Возраст (≥1 года).
+          </Text>
+        </Box>
+      )}
+
+      {result && (
+        <Box>
+          <Text style={{ fontWeight: '800', marginBottom: 8 }}>Результаты</Text>
+          <ResultRow label="Метод" value={
+            result.method === 'height' ? 'по росту (Broselow)' :
+            result.method === 'weight' ? 'по весу' : 'по возрасту'
+          } />
+          {result.broselowZone && <ResultRow label="Зона Broselow" value={result.broselowZone} />}
+          {result.approxWeightKg && <ResultRow label="Примерный вес (кг)" value={String(result.approxWeightKg)} />}
+          <ResultRow label="Рекомендуемый диаметр (мм)" value={String(result.tubeIDmm)} />
+          <ResultRow label="Альтернативы (мм)" value={`${result.alternativesMm[0]} / ${result.alternativesMm[1]}`} />
+          {(route === 'oral' || route === 'both') && (
+            <ResultRow label="Глубина оральная (см)" value={`${result.depthOralCm}`} />
+          )}
+          {(route === 'nasal' || route === 'both') && (
+            <ResultRow label="Глубина назальная (см)" value={`${result.depthNasalCm}`} />
+          )}
+          {!!result?.notes?.length && (
+            <View style={{ marginTop: 8 }}>
+              {result.notes.map((n, i) => (
+                <Text key={i} style={{ color: '#6B7280', fontSize: 12, marginBottom: 2 }}>• {n}</Text>
+              ))}
             </View>
-        </TouchableWithoutFeedback>
-    );
+          )}
+        </Box>
+      )}
+    </View>
+  );
 };
 
 export default IntubationTubeCalculation;
-

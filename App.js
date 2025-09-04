@@ -8,6 +8,9 @@ import Tabnav from './button_two/navigate_button/TabnavTube';
 import CalcShockIndexScreen from './shock_index_algovera/shock_algov_app';
 import Date_pregnancy from './pregnancy/pregnancy';
 import Tabnav_oxy from './calculate_o2/tabnav_oxy';
+import Calc_max_time_o2 from './calculate_o2/calc_max_time_o2';
+import Calc_dorbinyn from './calculate_o2/calc_dorbinyn';
+import Calc_aparat_IVL from './calculate_o2/calc_aparat_IVl';
 import IntubationTubeCalculation from './button_two/button_intub/IntubationTubeCalculation';
 import LaryngealTubeCalculation from './button_two/button_laring/LaryngealTubeCalculation';
 
@@ -28,6 +31,21 @@ export default function App() {
         <Stack.Screen name="CalcShockIndexScreen" component={CalcShockIndexScreen} />
         <Stack.Screen name="Date_pregnancy" component={Date_pregnancy} />
         <Stack.Screen name="Tabnav_oxy" component={Tabnav_oxy} />
+        <Stack.Screen
+          name="Calc_max_time_o2"
+          component={Calc_max_time_o2}
+          options={{ title: 'Максимальное время ингаляции' }}
+        />
+        <Stack.Screen
+          name="Calc_dorbinyn"
+          component={Calc_dorbinyn}
+          options={{ title: 'Формула Дарбиняна' }}
+        />
+        <Stack.Screen
+          name="Calc_aparat_IVL"
+          component={Calc_aparat_IVL}
+          options={{ title: 'Аппаратная ИВЛ' }}
+        />
         <Stack.Screen
           name="IntubationTubeCalculation"
           component={IntubationTubeCalculation}

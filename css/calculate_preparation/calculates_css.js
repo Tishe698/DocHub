@@ -79,11 +79,13 @@ const styles = StyleSheet.create({
 
   // Formula list container
   listContainer: {
+    flex: 1,
     backgroundColor: colors.light.surface,
     borderRadius: borderRadius.lg,
     marginVertical: spacing.sm,
     borderWidth: 1,
     borderColor: colors.light.divider,
+    minHeight: 200, // Ensure minimum height for scrolling
   },
 
   listContainer_dark: {
