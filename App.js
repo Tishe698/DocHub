@@ -13,6 +13,7 @@ import Calc_dorbinyn from './calculate_o2/calc_dorbinyn';
 import Calc_aparat_IVL from './calculate_o2/calc_aparat_IVl';
 import IntubationTubeCalculation from './button_two/button_intub/IntubationTubeCalculation';
 import LaryngealTubeCalculation from './button_two/button_laring/LaryngealTubeCalculation';
+import ICDSearchScreen from './mkb10/mkbscreen';
 
 const Stack = createStackNavigator();
 
@@ -75,6 +76,11 @@ export default function App() {
           name="Button_Tube_Calculation"
           component={LaryngealTubeCalculation}
           options={{ title: '👄 Расчет размера ларингеальной маски' }}
+        />
+        <Stack.Screen
+          name="MKBScreen"
+          component={ICDSearchScreen}
+          options={{ title: '📋 МКБ-10 — Международная классификация болезней' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

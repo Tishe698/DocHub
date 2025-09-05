@@ -14,8 +14,20 @@ import Animated, {
   ZoomIn
 } from 'react-native-reanimated';
 import buttonStyles from '../css/main_screen/styles';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing, animation, typography, borderRadius } from '../theme';
+
+// Импорт LinearGradient с fallback
+let LinearGradient;
+try {
+  LinearGradient = require('expo-linear-gradient').LinearGradient;
+} catch (error) {
+  // Fallback для случаев, когда expo-linear-gradient недоступен
+  LinearGradient = ({ children, ...props }) => (
+    <View {...props}>
+      {children}
+    </View>
+  );
+}
 
 // Modern Card Component with Background Images
 const ModernCard = ({ item, index, onPress, isDark }) => {
@@ -143,6 +155,13 @@ const ButtonApp = ({ navigation }) => {
       title: '🫁 Кислород',
       description: 'Расчет потребления кислорода',
       accessibilityLabel: 'Перейти к расчету кислорода'
+    },
+    {
+      screenName: 'MKBScreen',
+      icon: require('./Icon6.png'),
+      title: '📋 МКБ-10',
+      description: 'Международная классификация болезней',
+      accessibilityLabel: 'Перейти к МКБ-10'
     },
   ];
 
