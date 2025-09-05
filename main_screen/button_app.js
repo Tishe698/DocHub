@@ -1,6 +1,13 @@
-// Modern ButtonApp.js - Complete Redesign 2025
 import React from 'react';
-import { View, Text, SafeAreaView, FlatList, useColorScheme, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  FlatList,
+  useColorScheme,
+  TouchableOpacity,
+  Image
+} from 'react-native';
 import Animated, {
   FadeInUp,
   FadeIn,
@@ -14,32 +21,24 @@ import Animated, {
   ZoomIn
 } from 'react-native-reanimated';
 import buttonStyles from '../css/main_screen/styles';
-import { colors, spacing, animation, typography, borderRadius } from '../theme';
+import { spacing, animation } from '../theme';
 
 // Импорт LinearGradient с fallback
 let LinearGradient;
 try {
   LinearGradient = require('expo-linear-gradient').LinearGradient;
 } catch (error) {
-  // Fallback для случаев, когда expo-linear-gradient недоступен
-  LinearGradient = ({ children, ...props }) => (
-    <View {...props}>
-      {children}
-    </View>
-  );
+  LinearGradient = ({ children, ...props }) => <View {...props}>{children}</View>;
 }
 
-// Modern Card Component with Background Images
+// Карточка
 const ModernCard = ({ item, index, onPress, isDark }) => {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(1);
   const rotateY = useSharedValue(0);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotateY: `${rotateY.value}deg` }
-    ],
+    transform: [{ scale: scale.value }, { rotateY: `${rotateY.value}deg` }],
     opacity: opacity.value,
   }));
 
@@ -59,7 +58,6 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
     runOnJS(onPress)(item.screenName);
   };
 
-
   return (
     <Animated.View
       entering={SlideInRight.delay(index * 150).duration(600).springify()}
@@ -75,18 +73,13 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
         accessibilityRole="button"
         accessibilityHint={`Открыть раздел ${item.title}`}
       >
-        {/* Background Image */}
         <Animated.Image
           source={item.icon}
           style={buttonStyles.cardBackgroundImage}
           entering={FadeIn.delay(index * 100).duration(500)}
           resizeMode="cover"
         />
-
-        {/* Dark Overlay for Text Readability */}
         <View style={buttonStyles.cardOverlay} />
-
-        {/* Card Content with Enhanced Typography */}
         <View style={buttonStyles.cardContent}>
           <Animated.Text
             style={[
@@ -212,22 +205,17 @@ const ButtonApp = ({ navigation }) => {
   };
 
   const renderCard = ({ item, index }) => (
-    <ModernCard
-      item={item}
-      index={index}
-      onPress={handleCardPress}
-      isDark={isDark}
-    />
+    <ModernCard item={item} index={index} onPress={handleCardPress} isDark={isDark} />
   );
 
   return (
-    <SafeAreaView style={[buttonStyles.container, isDark && buttonStyles.container_dark]}>
-      {/* Header Section with Gradient Background */}
+    <SafeAreaView
+      // ВСЕГДА белый фон, независимо от темы
+      style={[buttonStyles.container, { backgroundColor: '#ffffff' }]}
+    >
+      {/* Шапка: ВСЕГДА тёмный градиент как в dark */}
       <LinearGradient
-        colors={isDark
-          ? ['#0f172a', '#1e293b', '#334155']
-          : ['#f8fafc', '#e2e8f0', '#cbd5e1']
-        }
+        colors={['#0f172a', '#1e293b', '#334155']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={buttonStyles.headerGradient}
@@ -237,13 +225,14 @@ const ButtonApp = ({ navigation }) => {
           style={buttonStyles.header}
         >
           <Animated.Text
-            style={[buttonStyles.appTitle, buttonStyles.appTitleGradient, isDark && buttonStyles.appTitle_dark]}
+            // Текст всегда контрастный (белый) поверх тёмного градиента
+            style={[buttonStyles.appTitle, buttonStyles.appTitleGradient, { color: '#ffffff' }]}
             entering={FadeInUp.delay(200).duration(500)}
           >
             🏥 DocHub
           </Animated.Text>
           <Animated.Text
-            style={[buttonStyles.appSubtitle, buttonStyles.appSubtitleGradient, isDark && buttonStyles.appSubtitle_dark]}
+            style={[buttonStyles.appSubtitle, buttonStyles.appSubtitleGradient, { color: '#e2e8f0' }]}
             entering={FadeInUp.delay(400).duration(500)}
           >
             🩺 Медицинские расчеты и справочники
@@ -251,10 +240,10 @@ const ButtonApp = ({ navigation }) => {
         </Animated.View>
       </LinearGradient>
 
-      {/* Cards Grid with Enhanced Container */}
+      {/* Контейнер карточек */}
       <Animated.View
         entering={FadeInUp.delay(300).duration(animation.normal)}
-        style={[buttonStyles.cardsContainer, isDark && buttonStyles.cardsContainer_dark]}
+        style={[buttonStyles.cardsContainer]}
       >
         <FlatList
           data={data}
@@ -262,12 +251,8 @@ const ButtonApp = ({ navigation }) => {
           keyExtractor={(item, index) => `${item.screenName}-${index}`}
           numColumns={2}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: spacing.xl,
-          }}
-          columnWrapperStyle={{
-            justifyContent: 'space-between',
-          }}
+          contentContainerStyle={{ paddingBottom: spacing.xl }}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
         />
       </Animated.View>
     </SafeAreaView>
