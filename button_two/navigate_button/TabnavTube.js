@@ -71,7 +71,7 @@ const Tabnav = ({ navigation }) => {
                     <TubeOption
                         title="Эндотрахеальная"
                         subtitle="Расчет по росту, возрасту и весу ребенка"
-                        icon={require('./1.png')}
+                        icon={require('./1.jpeg')}
                         onPress={() => handleButtonPress('IntubationTubeCalculation')}
                         accessibilityLabel="Перейти к расчету эндотрахеальной трубки"
                     />
@@ -79,7 +79,7 @@ const Tabnav = ({ navigation }) => {
                     <TubeOption
                         title="Ларингеальная"
                         subtitle="Расчет по весу и росту"
-                        icon={require('./2.png')}
+                        icon={require('./2.jpeg')}
                         onPress={() => handleButtonPress('Button_Tube_Calculation')}
                         accessibilityLabel="Перейти к расчету ларингеальной трубки"
                     />

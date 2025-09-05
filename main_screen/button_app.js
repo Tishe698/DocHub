@@ -179,28 +179,28 @@ const ButtonApp = ({ navigation }) => {
     },
     {
       screenName: 'GCScreen',
-      icon: require('../assets/11.png'),
+      icon: require('../assets/11.jpeg'),
       title: '🧠 Шкала Глазго',
       description: 'Оценка уровня сознания по шкале комы Глазго',
       accessibilityLabel: 'Перейти к шкале комы Глазго'
     },
     {
       screenName: 'GenevaScoreScreen',
-      icon: require('../assets/12.png'),
+      icon: require('../assets/12.jpeg'),
       title: '🫁 Шкала ТЭЛА',
       description: 'Оценка вероятности тромбоэмболии лёгочной артерии',
       accessibilityLabel: 'Перейти к шкале вероятности ТЭЛА'
     },
     {
       screenName: 'SHOKSScreen',
-      icon: require('../assets/13.png'),
+      icon: require('../assets/13.jpeg'),
       title: '❤️ Шкала ШОКС',
       description: 'Оценка клинической симптоматики при сердечной недостаточности',
       accessibilityLabel: 'Перейти к шкале ШОКС'
     },
     {
       screenName: 'NorepinephrineScreen',
-      icon: require('../assets/14.png'),
+      icon: require('../assets/14.jpeg'),
       title: '💉 Норадреналин',
       description: 'Расчёт скорости инфузии норадреналина',
       accessibilityLabel: 'Перейти к расчёту норадреналина'
