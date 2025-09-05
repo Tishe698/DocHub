@@ -14,6 +14,12 @@ import Calc_aparat_IVL from './calculate_o2/calc_aparat_IVl';
 import IntubationTubeCalculation from './button_two/button_intub/IntubationTubeCalculation';
 import LaryngealTubeCalculation from './button_two/button_laring/LaryngealTubeCalculation';
 import ICDSearchScreen from './mkb10/mkbscreen';
+import PediatricNormsScreen from './fiz_norm/pediatric_norms_screen';
+import BloodGroupScreen from './blood_group/blood_group_screen';
+import GCScreen from './glazgo/glazgo';
+import GenevaScoreScreen from './Tela/tela';
+import SHOKSScreen from './shoks/shoks';
+import NorepinephrineScreen from './Norepinephrine/NorepinephrineScreen';
 
 const Stack = createStackNavigator();
 
@@ -81,6 +87,36 @@ export default function App() {
           name="MKBScreen"
           component={ICDSearchScreen}
           options={{ title: '📋 МКБ-10 — Международная классификация болезней' }}
+        />
+        <Stack.Screen
+          name="PediatricNormsScreen"
+          component={PediatricNormsScreen}
+          options={{ title: '👶 Физиологические нормы в педиатрии' }}
+        />
+        <Stack.Screen
+          name="BloodGroupScreen"
+          component={BloodGroupScreen}
+          options={{ title: '🩸 Определение группы крови' }}
+        />
+        <Stack.Screen
+          name="GCScreen"
+          component={GCScreen}
+          options={{ title: '🧠 Шкала комы Глазго' }}
+        />
+        <Stack.Screen
+          name="GenevaScoreScreen"
+          component={GenevaScoreScreen}
+          options={{ title: '🫁 Шкала вероятности ТЭЛА' }}
+        />
+        <Stack.Screen
+          name="SHOKSScreen"
+          component={SHOKSScreen}
+          options={{ title: '❤️ Шкала ШОКС' }}
+        />
+        <Stack.Screen
+          name="NorepinephrineScreen"
+          component={NorepinephrineScreen}
+          options={{ title: '💉 Норадреналин' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

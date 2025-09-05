@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, SafeAreaView, Text, View } from 'react-native';
+import { TouchableOpacity, SafeAreaView, Text, View, Image } from 'react-native';
 import { colors, spacing, borderRadius, typography, shadows } from '../../theme';
 
 const Tabnav = ({ navigation }) => {
@@ -25,9 +25,17 @@ const Tabnav = ({ navigation }) => {
             accessibilityLabel={accessibilityLabel}
             accessibilityRole="button"
         >
-            <Text style={{ fontSize: 48, marginBottom: spacing.sm }}>
-                {icon}
-            </Text>
+            {icon ? (
+                <Image
+                    source={icon}
+                    style={{ width: 80, height: 80, marginBottom: spacing.sm }}
+                    resizeMode="contain"
+                />
+            ) : (
+                <Text style={{ fontSize: 48, marginBottom: spacing.sm }}>
+                    🫁
+                </Text>
+            )}
             <Text style={[typography.h3, {
                 color: colors.light.primary,
                 marginBottom: spacing.xs,
@@ -62,8 +70,8 @@ const Tabnav = ({ navigation }) => {
                 <View style={{ flex: 1, justifyContent: 'center' }}>
                     <TubeOption
                         title="Эндотрахеальная"
-                        subtitle="Расчет по весу ребенка"
-                        icon="🫁"
+                        subtitle="Расчет по росту, возрасту и весу ребенка"
+                        icon={require('./1.png')}
                         onPress={() => handleButtonPress('IntubationTubeCalculation')}
                         accessibilityLabel="Перейти к расчету эндотрахеальной трубки"
                     />
@@ -71,7 +79,7 @@ const Tabnav = ({ navigation }) => {
                     <TubeOption
                         title="Ларингеальная"
                         subtitle="Расчет по весу и росту"
-                        icon="🫁"
+                        icon={require('./2.png')}
                         onPress={() => handleButtonPress('Button_Tube_Calculation')}
                         accessibilityLabel="Перейти к расчету ларингеальной трубки"
                     />

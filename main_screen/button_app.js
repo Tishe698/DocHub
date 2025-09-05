@@ -163,6 +163,48 @@ const ButtonApp = ({ navigation }) => {
       description: 'Международная классификация болезней',
       accessibilityLabel: 'Перейти к МКБ-10'
     },
+    {
+      screenName: 'PediatricNormsScreen',
+      icon: require('./Icon5.png'),
+      title: '👶 Педиатрия',
+      description: 'Физиологические нормы для детей',
+      accessibilityLabel: 'Перейти к нормам в педиатрии'
+    },
+    {
+      screenName: 'BloodGroupScreen',
+      icon: require('../assets/Icon_10.jpeg'),
+      title: '🩸 Группа крови',
+      description: 'Определение группы крови',
+      accessibilityLabel: 'Перейти к определению группы крови'
+    },
+    {
+      screenName: 'GCScreen',
+      icon: require('../assets/11.png'),
+      title: '🧠 Шкала Глазго',
+      description: 'Оценка уровня сознания по шкале комы Глазго',
+      accessibilityLabel: 'Перейти к шкале комы Глазго'
+    },
+    {
+      screenName: 'GenevaScoreScreen',
+      icon: require('../assets/12.png'),
+      title: '🫁 Шкала ТЭЛА',
+      description: 'Оценка вероятности тромбоэмболии лёгочной артерии',
+      accessibilityLabel: 'Перейти к шкале вероятности ТЭЛА'
+    },
+    {
+      screenName: 'SHOKSScreen',
+      icon: require('../assets/13.png'),
+      title: '❤️ Шкала ШОКС',
+      description: 'Оценка клинической симптоматики при сердечной недостаточности',
+      accessibilityLabel: 'Перейти к шкале ШОКС'
+    },
+    {
+      screenName: 'NorepinephrineScreen',
+      icon: require('../assets/14.png'),
+      title: '💉 Норадреналин',
+      description: 'Расчёт скорости инфузии норадреналина',
+      accessibilityLabel: 'Перейти к расчёту норадреналина'
+    },
   ];
 
   const handleCardPress = (screenName) => {
