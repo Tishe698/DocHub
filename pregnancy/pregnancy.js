@@ -1,7 +1,19 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+// Date_pregnancy.jsx — стабильный placeholder (оверлей), Expo + Android friendly
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  View, Text, TextInput, TouchableWithoutFeedback, Keyboard,
-  KeyboardAvoidingView, Platform, ScrollView, Animated, Easing, Alert, Pressable, StyleSheet
+  View,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Animated,
+  Easing,
+  Alert,
+  Pressable,
+  StyleSheet,
 } from "react-native";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
@@ -9,20 +21,18 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const Date_pregnancy = () => {
-  // ВАЖНО: expo-video требует dev build (не Expo Go)
+  // --- video (expo-video требует dev build/сборку, не Expo Go) ---
   const videoRef = useRef(null);
-
   const player = useVideoPlayer(require("../g.mp4"), (p) => {
     p.loop = true;
     p.muted = false;
     p.volume = 1.0;
-    // Автостарт — по желанию:
     p.play();
   });
+  const [isPlaying, setIsPlaying] = useState(false);
+  useEvent(player, "playingChange", (e) => setIsPlaying(!!e.isPlaying));
 
-  // Корректный способ получать статус/playing:
-  const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
-
+  // --- state ---
   const [lastMenstrualPeriod, setLastMenstrualPeriod] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [manualDateInput, setManualDateInput] = useState("");
@@ -30,19 +40,35 @@ const Date_pregnancy = () => {
   const [dueDate, setDueDate] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Анимации
+  // --- animations ---
   const fadeCards = useRef(new Animated.Value(0)).current;
   const slideVideo = useRef(new Animated.Value(20)).current;
   const slideForm = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeCards, { toValue: 1, duration: 350, useNativeDriver: true, easing: Easing.out(Easing.cubic) }),
-      Animated.timing(slideVideo, { toValue: 0, duration: 400, useNativeDriver: true, easing: Easing.out(Easing.cubic) }),
-      Animated.timing(slideForm, { toValue: 0, duration: 450, useNativeDriver: true, easing: Easing.out(Easing.cubic) }),
+      Animated.timing(fadeCards, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+      Animated.timing(slideVideo, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
+      Animated.timing(slideForm, {
+        toValue: 0,
+        duration: 450,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.cubic),
+      }),
     ]).start();
   }, []);
 
+  // --- calc week & due date ---
   useEffect(() => {
     if (lastMenstrualPeriod) {
       const today = new Date();
@@ -57,9 +83,14 @@ const Date_pregnancy = () => {
     }
   }, [lastMenstrualPeriod]);
 
+  // --- helpers ---
   const formatRussianDate = (date) => {
     try {
-      return new Intl.DateTimeFormat("ru-RU", { year: "numeric", month: "long", day: "numeric" }).format(date);
+      return new Intl.DateTimeFormat("ru-RU", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(date);
     } catch {
       const dd = String(date.getDate()).padStart(2, "0");
       const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -104,7 +135,10 @@ const Date_pregnancy = () => {
     if (selectedDate) {
       setLastMenstrualPeriod(selectedDate);
       setManualDateInput(
-        `${String(selectedDate.getDate()).padStart(2, "0")}.${String(selectedDate.getMonth() + 1).padStart(2, "0")}.${selectedDate.getFullYear()}`
+        `${String(selectedDate.getDate()).padStart(2, "0")}.${String(selectedDate.getMonth() + 1).padStart(
+          2,
+          "0"
+        )}.${selectedDate.getFullYear()}`
       );
     }
   };
@@ -119,12 +153,16 @@ const Date_pregnancy = () => {
 
   const titleToday = useMemo(() => {
     const d = new Date();
-    return new Intl.DateTimeFormat("ru-RU", { year: "numeric", month: "long", day: "numeric" }).format(d);
+    return new Intl.DateTimeFormat("ru-RU", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(d);
   }, []);
 
-  // Полноэкранный режим
   const enterFs = () => videoRef.current?.enterFullscreen();
 
+  // --- render ---
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -142,7 +180,7 @@ const Date_pregnancy = () => {
               <View style={styles.cardHeader}>
                 <MaterialCommunityIcons name="video-outline" size={22} color="#FF6B9D" />
                 <Text style={styles.cardHeaderText}>
-                  Инфармационное видео о поэтапном развитии ребенка в утробе матери
+                  Информационное видео о поэтапном развитии ребёнка в утробе матери
                 </Text>
               </View>
 
@@ -151,18 +189,18 @@ const Date_pregnancy = () => {
                   ref={videoRef}
                   style={styles.video}
                   player={player}
-                  nativeControls   // <— просто boolean
+                  nativeControls
                   contentFit="contain"
                   allowsFullscreen
                   allowsPictureInPicture
-                  // при желании: onFullscreenEnter / onFullscreenExit
                 />
               </View>
 
-              {/* Свои кнопки (дублируют нативные) */}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 10, justifyContent: "center" }}>
-                <Pressable style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
-                  onPress={() => (isPlaying ? player.pause() : player.play())}>
+                <Pressable
+                  style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
+                  onPress={() => (isPlaying ? player.pause() : player.play())}
+                >
                   <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#0F172A" />
                   <Text style={styles.controlBtnText}>{isPlaying ? "Пауза" : "Пуск"}</Text>
                 </Pressable>
@@ -171,7 +209,6 @@ const Date_pregnancy = () => {
                   <Ionicons name="expand" size={18} color="#0F172A" />
                   <Text style={styles.controlBtnText}>На весь экран</Text>
                 </Pressable>
-
               </View>
             </Animated.View>
 
@@ -181,18 +218,37 @@ const Date_pregnancy = () => {
                 <View>
                   <Text style={styles.las_day_menstr}>{"Введите первый день  \nпоследней менструации"}</Text>
 
+                  {/* Поле ввода с НАДЁЖНЫМ кастомным плейсхолдером (оверлей) */}
                   <View style={{ position: "relative", marginTop: 8 }}>
-                    <Ionicons name="calendar-outline" size={18} color="#64748B" style={{ position: "absolute", left: 12, top: 14 }} />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={18}
+                      color="#64748B"
+                      style={{ position: "absolute", left: 12, top: 14 }}
+                    />
+
                     <TextInput
-                      placeholder="Введите дату в формате дд.мм.гггг"
+                      // системный placeholder выключаем — рисуем свой
+                      placeholder=""
                       value={manualDateInput}
-                      onChangeText={(t) => { handleManualDateChange(t); setIsTyping(!!t); }}
+                      onChangeText={(t) => {
+                        handleManualDateChange(t);
+                        setIsTyping(!!t);
+                      }}
+                      // можно оставить numeric — оверлей всё равно виден
+                      keyboardType={Platform.OS === "ios" ? "decimal-pad" : "numeric"}
                       style={[styles.input, { paddingLeft: 38 }]}
-                      keyboardType="numeric"
                       onFocus={() => setIsTyping(true)}
                       onBlur={() => setIsTyping(false)}
                       accessibilityLabel="Поле ввода даты в формате дд.мм.гггг"
                     />
+
+                    {/* Кастомный плейсхолдер: показывается, когда value пустое */}
+                    {!manualDateInput && (
+                      <View pointerEvents="none" style={styles.phWrap}>
+                        <Text style={styles.phText}>Введите дату в формате дд.мм.гггг</Text>
+                      </View>
+                    )}
                   </View>
 
                   {!isTyping && (
@@ -201,17 +257,16 @@ const Date_pregnancy = () => {
                       onPress={() => setShowDatePicker(true)}
                       android_ripple={{ color: "#e2e8f0" }}
                       accessibilityRole="button"
-                      accessibilityLabel="Открыть каледарь"
+                      accessibilityLabel="Открыть календарь"
                     >
                       <Ionicons name="calendar" size={18} color="#0F172A" />
-                      <Text style={styles.las_day_menstr}>Открыть каледарь</Text>
+                      <Text style={styles.las_day_menstr}>Открыть календарь</Text>
                     </Pressable>
                   )}
 
                   {showDatePicker && (
                     <View style={{ marginTop: 8 }}>
                       <DateTimePicker
-                        testID="dateTimePicker"
                         value={lastMenstrualPeriod || new Date()}
                         mode="date"
                         display={Platform.OS === "ios" ? "spinner" : "default"}
@@ -234,10 +289,10 @@ const Date_pregnancy = () => {
                     onPress={handleRecalculate}
                     android_ripple={{ color: "#e2e8f0" }}
                     accessibilityRole="button"
-                    accessibilityLabel="Повторный расчет"
+                    accessibilityLabel="Повторный расчёт"
                   >
                     <Ionicons name="refresh" size={18} color="#0F172A" />
-                    <Text style={styles.las_day_menstr_1}>Повторный расчет</Text>
+                    <Text style={styles.las_day_menstr_1}>Повторный расчёт</Text>
                   </Pressable>
                 </View>
               )}
@@ -251,36 +306,97 @@ const Date_pregnancy = () => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#F8FAFC" },
-  header: { paddingTop: 18, paddingBottom: 22, paddingHorizontal: 16, backgroundColor: "#8B5CF6", overflow: "hidden" },
+  header: {
+    paddingTop: 18,
+    paddingBottom: 22,
+    paddingHorizontal: 16,
+    backgroundColor: "#8B5CF6",
+    overflow: "hidden",
+  },
   headerBgOverlay: { position: "absolute", inset: 0, backgroundColor: "#7C3AED", opacity: 0.18 },
   headerTitle: { color: "#fff", fontSize: 20, fontWeight: "800" },
   headerSubtitle: { color: "rgba(255,255,255,0.9)", marginTop: 4 },
   containerScroll: { padding: 16 },
+
   card: {
-    backgroundColor: "#FFFFFF", borderRadius: 16, borderWidth: 1, borderColor: "#E2E8F0", padding: 14, marginBottom: 14,
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: 14,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   cardHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 },
   cardHeaderText: { flex: 1, color: "#0F172A", fontWeight: "700" },
+
   videoWrap: { borderRadius: 12, overflow: "hidden" },
   video: { width: "100%", aspectRatio: 16 / 9 },
+
   las_day_menstr: { fontSize: 19, marginVertical: 10, fontWeight: "500", textAlign: "center", color: "#0F172A" },
   las_day_menstr_1: { fontSize: 19, marginVertical: 10, fontWeight: "300", textAlign: "center", color: "#0F172A" },
   result_pregnancy: { fontSize: 25, fontWeight: "normal", marginVertical: 14, textAlign: "center", color: "#0F172A" },
+
   input: {
-    backgroundColor: "#FFFFFF", borderRadius: 12, borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
-    paddingHorizontal: 12, height: 48,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+    paddingHorizontal: 12,
+    height: 48,
   },
+
+  // Кастомный placeholder-оверлей
+  phWrap: {
+    position: "absolute",
+    left: 38, // отступ с учётом иконки
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+  },
+  phText: { color: "#94A3B8", fontSize: 16 },
+
   button: {
-    backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1, borderColor: "#E2E8F0",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
-    paddingHorizontal: 14, height: 48, alignItems: "center", justifyContent: "center", marginTop: 18, flexDirection: "row", gap: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    paddingHorizontal: 14,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 18,
+    flexDirection: "row",
+    gap: 8,
   },
   buttonPressed: { transform: [{ scale: 0.98 }] },
+
   controlBtn: {
-    backgroundColor: "#FFFFFF", borderRadius: 12, borderWidth: 1, borderColor: "#E2E8F0",
-    paddingHorizontal: 12, height: 42, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 12,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   controlBtnText: { color: "#0F172A", fontWeight: "600" },
 });
