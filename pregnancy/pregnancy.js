@@ -23,14 +23,29 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 const Date_pregnancy = () => {
   // --- video (expo-video требует dev build/сборку, не Expo Go) ---
   const videoRef = useRef(null);
-  const player = useVideoPlayer(require("../g.mp4"), (p) => {
-    p.loop = true;
-    p.muted = false;
-    p.volume = 1.0;
-    p.play();
-  });
+
+  // Безопасная инициализация плеера для Expo Go
+  let player;
+  try {
+    player = useVideoPlayer(require("../g.mp4"), (p) => {
+      if (p) {
+        p.loop = true;
+        p.muted = false;
+        p.volume = 1.0;
+        p.play();
+      }
+    });
+  } catch (error) {
+    // Fallback для Expo Go
+    player = null;
+  }
+
   const [isPlaying, setIsPlaying] = useState(false);
-  useEvent(player, "playingChange", (e) => setIsPlaying(!!e.isPlaying));
+
+  // Безопасное использование useEvent только если player существует
+  if (player) {
+    useEvent(player, "playingChange", (e) => setIsPlaying(!!e?.isPlaying));
+  }
 
   // --- state ---
   const [lastMenstrualPeriod, setLastMenstrualPeriod] = useState(null);
@@ -160,7 +175,11 @@ const Date_pregnancy = () => {
     }).format(d);
   }, []);
 
-  const enterFs = () => videoRef.current?.enterFullscreen();
+  const enterFs = () => {
+    if (videoRef.current) {
+      videoRef.current.enterFullscreen();
+    }
+  };
 
   // --- render ---
   return (
@@ -185,27 +204,52 @@ const Date_pregnancy = () => {
               </View>
 
               <View style={styles.videoWrap}>
-                <VideoView
-                  ref={videoRef}
-                  style={styles.video}
-                  player={player}
-                  nativeControls
-                  contentFit="contain"
-                  allowsFullscreen
-                  allowsPictureInPicture
-                />
+                {player ? (
+                  <VideoView
+                    ref={videoRef}
+                    style={styles.video}
+                    player={player}
+                    nativeControls
+                    contentFit="contain"
+                    allowsFullscreen
+                    allowsPictureInPicture
+                  />
+                ) : (
+                  <View style={[styles.video, styles.videoFallback]}>
+                    <Ionicons name="videocam-off" size={48} color="#64748B" />
+                    <Text style={styles.videoFallbackText}>
+                      Видео недоступно в Expo Go{'\n'}Работает в собранном приложении
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 10, justifyContent: "center" }}>
                 <Pressable
                   style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
-                  onPress={() => (isPlaying ? player.pause() : player.play())}
+                  onPress={() => {
+                    if (player) {
+                      isPlaying ? player.pause() : player.play();
+                    } else {
+                      // Fallback для Expo Go - показать сообщение
+                      Alert.alert("Видео недоступно", "Видео работает только в собранном приложении");
+                    }
+                  }}
                 >
                   <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#0F172A" />
                   <Text style={styles.controlBtnText}>{isPlaying ? "Пауза" : "Пуск"}</Text>
                 </Pressable>
 
-                <Pressable style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]} onPress={enterFs}>
+                <Pressable
+                  style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
+                  onPress={() => {
+                    if (player) {
+                      enterFs();
+                    } else {
+                      Alert.alert("Полноэкранный режим недоступен", "Эта функция работает только в собранном приложении");
+                    }
+                  }}
+                >
                   <Ionicons name="expand" size={18} color="#0F172A" />
                   <Text style={styles.controlBtnText}>На весь экран</Text>
                 </Pressable>
@@ -336,6 +380,19 @@ const styles = StyleSheet.create({
 
   videoWrap: { borderRadius: 12, overflow: "hidden" },
   video: { width: "100%", aspectRatio: 16 / 9 },
+  videoFallback: {
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+  },
+  videoFallbackText: {
+    color: "#64748B",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 12,
+    lineHeight: 20,
+  },
 
   las_day_menstr: { fontSize: 19, marginVertical: 10, fontWeight: "500", textAlign: "center", color: "#0F172A" },
   las_day_menstr_1: { fontSize: 19, marginVertical: 10, fontWeight: "300", textAlign: "center", color: "#0F172A" },

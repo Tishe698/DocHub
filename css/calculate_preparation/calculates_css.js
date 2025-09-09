@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   },
 
   searchInputWithIcon: {
-    backgroundColor: colors.light.surfaceVariant,
+    backgroundColor: '#ffffff', // Белый фон для поля поиска
     borderRadius: borderRadius.xl,
     height: 56, // Larger touch target
     paddingHorizontal: spacing.lg,
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
 
   searchInputWithIcon_dark: {
-    backgroundColor: colors.dark.surfaceVariant,
+    backgroundColor: '#ffffff', // Белый фон для поля поиска в темной теме
     color: colors.dark.text.primary,
     borderColor: colors.dark.border,
   },

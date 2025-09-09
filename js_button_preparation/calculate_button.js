@@ -110,7 +110,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
             left: 0,
             right: 0,
             height: screenHeight * 0.95,
-            backgroundColor: isDark ? colors.dark.surfaceElevated : colors.light.surface,
+            backgroundColor: '#ffffff', // Белый фон для основного контейнера
             borderTopLeftRadius: borderRadius.xxl,
             borderTopRightRadius: borderRadius.xxl,
             ...shadows.lg,
@@ -126,7 +126,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
             right: 0,
             width: 80,
             height: 60,
-            backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+            backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
             borderBottomLeftRadius: borderRadius.xl,
             borderWidth: 1,
             borderTopWidth: 0,
@@ -147,7 +147,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
               style={{
                 fontSize: 20,
                 fontWeight: "600",
-                color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
               }}
               allowFontScaling
               maxFontSizeMultiplier={FONT_LIMIT.h2}
@@ -166,7 +166,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
               left: 0,
               width: 80,
               height: 60,
-              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+              backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
               borderBottomRightRadius: borderRadius.xl,
               borderWidth: 1,
               borderTopWidth: 0,
@@ -187,7 +187,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
                 style={{
                   fontSize: 20,
                   fontWeight: "600",
-                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                  color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                 }}
                 allowFontScaling
                 maxFontSizeMultiplier={FONT_LIMIT.h2}
@@ -205,7 +205,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
             alignSelf: "center",
             width: 40,
             height: 4,
-            backgroundColor: isDark ? colors.dark.divider : colors.light.divider,
+            backgroundColor: '#e5e7eb', // Серый цвет для разделителя
             borderRadius: 2,
             marginTop: spacing.sm,
             marginBottom: spacing.md,
@@ -285,9 +285,9 @@ const WelcomeScreen = () => {
         <Text
           key={i}
           style={{
-            backgroundColor: isDark ? colors.dark.primary + "40" : colors.light.primary + "40",
+            backgroundColor: '#dbeafe', // Светло-синий фон для выделения
             fontWeight: "600",
-            color: isDark ? colors.dark.primary : colors.light.primary,
+            color: '#1e40af', // Темно-синий для выделенного текста
           }}
           allowFontScaling
           maxFontSizeMultiplier={FONT_LIMIT.body}
@@ -496,24 +496,24 @@ const WelcomeScreen = () => {
         <Animated.View entering={FadeIn.duration(animation.normal)}>
           <View style={{ alignItems: "center", marginBottom: spacing.md, paddingHorizontal: spacing.lg }}>
             <Text
-              style={[styles.welcomeText, isDark && styles.welcomeText_dark, { fontSize: 24 }]}
+              style={[styles.welcomeText, isDark && styles.welcomeText_dark, { fontSize: 24, color: 'rgb(31, 41, 55)' }]}
               allowFontScaling
               maxFontSizeMultiplier={FONT_LIMIT.h1}
               numberOfLines={1}
               adjustsFontSizeToFit
             >
-              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>🏥 </Text>
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ color: 'rgb(31, 41, 55)' }}>🏥 </Text>
               Медицинские расчёты
             </Text>
 
             <Text
-              style={[styles.subtitle, isDark && styles.subtitle_dark, { fontSize: 16, marginBottom: spacing.sm }]}
+              style={[styles.subtitle, isDark && styles.subtitle_dark, { fontSize: 16, marginBottom: spacing.sm, color: 'rgb(31, 41, 55)' }]}
               allowFontScaling
               maxFontSizeMultiplier={FONT_LIMIT.h2}
               numberOfLines={2}
               adjustsFontSizeToFit
             >
-              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>💉 </Text>
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ color: 'rgb(31, 41, 55)' }}>💉 </Text>
               Профессиональный калькулятор дозировок
             </Text>
           </View>
@@ -534,7 +534,7 @@ const WelcomeScreen = () => {
                 {/* Карта 1 */}
                 <View
                   style={{
-                    backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                    backgroundColor: 'rgb(59, 130, 246)', // Синий фон для блока Препараты
                     borderRadius: borderRadius.lg,
                     padding: spacing.sm,
                     alignItems: "center",
@@ -543,7 +543,7 @@ const WelcomeScreen = () => {
                     minHeight: 80,
                     ...shadows.sm,
                     borderWidth: 1,
-                    borderColor: isDark ? colors.dark.border : colors.light.border,
+                    borderColor: '#d1d5db', // Серый цвет границ
                   }}
                 >
                   <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 20, marginBottom: spacing.xs }}>
@@ -552,7 +552,7 @@ const WelcomeScreen = () => {
                   <Text
                     style={{
                       fontSize: 12,
-                      color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                      color: '#ffffff', // Белый текст для видимости на синем фоне
                       textAlign: "center",
                     }}
                     allowFontScaling
@@ -565,7 +565,7 @@ const WelcomeScreen = () => {
                     style={{
                       fontSize: 18,
                       fontWeight: "bold",
-                      color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                      color: '#ffffff', // Белый текст для видимости на синем фоне
                     }}
                     allowFontScaling
                     maxFontSizeMultiplier={FONT_LIMIT.h2}
@@ -578,7 +578,7 @@ const WelcomeScreen = () => {
                 {/* Карта 2 */}
                 <View
                   style={{
-                    backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                    backgroundColor: 'rgb(59, 130, 246)', // Синий фон для блока Мгновенный результат
                     borderRadius: borderRadius.lg,
                     padding: spacing.sm,
                     alignItems: "center",
@@ -587,7 +587,7 @@ const WelcomeScreen = () => {
                     minHeight: 80,
                     ...shadows.sm,
                     borderWidth: 1,
-                    borderColor: isDark ? colors.dark.border : colors.light.border,
+                    borderColor: '#d1d5db', // Серый цвет границ
                   }}
                 >
                   <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 20, marginBottom: spacing.xs }}>
@@ -596,7 +596,7 @@ const WelcomeScreen = () => {
                   <Text
                     style={{
                       fontSize: 12,
-                      color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                      color: '#ffffff', // Белый текст для видимости на синем фоне
                       textAlign: "center",
                     }}
                     allowFontScaling
@@ -609,7 +609,7 @@ const WelcomeScreen = () => {
                     style={{
                       fontSize: 18,
                       fontWeight: "bold",
-                      color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                      color: '#ffffff', // Белый текст для видимости на синем фоне
                     }}
                     allowFontScaling
                     maxFontSizeMultiplier={FONT_LIMIT.h2}
@@ -676,7 +676,7 @@ const WelcomeScreen = () => {
             <TouchableOpacity
               onPress={() => setModalVisible(true)}
               style={{
-                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                 borderRadius: borderRadius.lg,
                 padding: spacing.lg,
                 alignItems: "center",
@@ -698,7 +698,7 @@ const WelcomeScreen = () => {
               <Text
                 style={{
                   ...typography.caption,
-                  color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                  color: '#1f2937', // Темно-серый для текста кнопки поиска
                   textAlign: "center",
                   fontWeight: "600",
                 }}
@@ -723,11 +723,11 @@ const WelcomeScreen = () => {
         >
           <View
             style={{
-              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+              backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
               borderRadius: borderRadius.xl,
               padding: spacing.xl,
               borderWidth: 2,
-              borderColor: isDark ? "#3B82F6" : "#2563EB",
+              borderColor: isDark ? "#6B7280" : "#9CA3AF",
               borderLeftWidth: 6,
             }}
           >
@@ -737,7 +737,7 @@ const WelcomeScreen = () => {
                 marginBottom: spacing.md,
                 paddingBottom: spacing.sm,
                 borderBottomWidth: 1,
-                borderBottomColor: isDark ? colors.dark.border : colors.light.border,
+                borderBottomColor: '#d1d5db', // Серый цвет границы
               }}
             >
               <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 32, marginBottom: spacing.sm }}>
@@ -746,7 +746,7 @@ const WelcomeScreen = () => {
               <Text
                 style={{
                   ...typography.h5,
-                  color: isDark ? "#3B82F6" : "#2563EB",
+                  color: isDark ? "#374151" : "#6B7280",
                   fontWeight: "700",
                   textAlign: "center",
                 }}
@@ -762,7 +762,7 @@ const WelcomeScreen = () => {
             <Text
               style={{
                 ...typography.body2,
-                color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                color: '#1f2937', // Темно-серый для текста безопасности
                 lineHeight: 22,
                 textAlign: "center",
                 fontWeight: "500",
@@ -910,7 +910,7 @@ const WelcomeScreen = () => {
                     <Text
                       style={{
                         fontSize: 16,
-                        color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                        color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                         textAlign: "center",
                       }}
                       allowFontScaling
@@ -947,13 +947,13 @@ const WelcomeScreen = () => {
                       style={{
                         paddingHorizontal: spacing.sm,
                         paddingVertical: spacing.xs,
-                        backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                        backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                         borderRadius: borderRadius.sm,
                       }}
                     >
                       <Text
                         style={{
-                          color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                          color: '#1f2937', // Темно-серый для основного текста на белом фоне
                           fontSize: 12,
                           fontWeight: "500",
                         }}
@@ -975,9 +975,9 @@ const WelcomeScreen = () => {
                           modalStyles.formulaTouchable,
                           isDark && modalStyles.formulaTouchablePressed_dark,
                           {
-                            backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                            backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                             borderWidth: 1,
-                            borderColor: isDark ? colors.dark.border : colors.light.border,
+                            borderColor: '#d1d5db', // Серый цвет границ
                             marginBottom: spacing.sm,
                             borderRadius: borderRadius.lg,
                             padding: spacing.md,
@@ -1067,7 +1067,7 @@ const WelcomeScreen = () => {
                           style={{
                             fontSize: 14,
                             fontWeight: "600",
-                            color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                            color: '#1f2937', // Темно-серый для основного текста на белом фоне
                             marginBottom: spacing.xs,
                           }}
                           allowFontScaling
@@ -1080,12 +1080,12 @@ const WelcomeScreen = () => {
                         <View style={{ position: "relative" }}>
                           <TextInput
                             style={{
-                              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                              backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                               borderRadius: borderRadius.lg,
                               padding: spacing.md,
                               paddingRight: spacing.xxxl,
                               fontSize: 16,
-                              color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                              color: '#1f2937', // Темно-серый для основного текста на белом фоне
                               borderWidth: 2,
                               borderColor: hasValue
                                 ? (isValid ? colors.light.success : colors.light.danger)
@@ -1122,7 +1122,7 @@ const WelcomeScreen = () => {
                                 style={{
                                   fontSize: 12,
                                   fontWeight: "600",
-                                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                                  color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                                 }}
                                 allowFontScaling
                                 maxFontSizeMultiplier={FONT_LIMIT.small}
@@ -1291,7 +1291,7 @@ const WelcomeScreen = () => {
                               <Text
                                 style={{
                                   fontSize: 12,
-                                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                                  color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                                   fontWeight: "500",
                                 }}
                                 allowFontScaling
@@ -1314,7 +1314,7 @@ const WelcomeScreen = () => {
                               <Text
                                 style={{
                                   fontSize: 12,
-                                  color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                                  color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                                   fontWeight: "500",
                                 }}
                                 allowFontScaling
@@ -1331,7 +1331,7 @@ const WelcomeScreen = () => {
                         <Text
                           style={{
                             fontSize: 14,
-                            color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                            color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
                             marginBottom: spacing.md,
                             fontStyle: "italic",
                           }}
@@ -1368,7 +1368,7 @@ const WelcomeScreen = () => {
                                 flexDirection: "row",
                                 alignItems: "center",
                                 justifyContent: "space-between",
-                                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                                backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                                 borderRadius: borderRadius.lg,
                                 padding: spacing.md,
                                 marginBottom: spacing.sm,
@@ -1425,7 +1425,7 @@ const WelcomeScreen = () => {
               <Text
                 style={{
                   fontSize: 14,
-                  color: isDark ? colors.dark.text.tertiary : colors.light.text.tertiary,
+                  color: '#6b7280', // Серый для мелкого текста на белом фоне
                   textAlign: "center",
                   paddingHorizontal: spacing.lg,
                 }}

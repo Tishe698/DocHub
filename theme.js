@@ -48,16 +48,16 @@ export const colors = {
     warning: '#F59E0B',          // Bright caution orange
     info: '#06B6D4',             // Bright info cyan
 
-    background: '#0F172A',       // Deep medical navy
+    background: '#FFFFFF',       // White background
     surface: 'rgba(30,41,59,0.9)', // Semi-transparent medical slate
-    surfaceVariant: 'rgba(30,41,59,0.7)', // More transparent
+    surfaceVariant: '#FFFFFF', // White surface variant
     surfaceElevated: 'rgba(30,41,59,0.95)', // Elevated medical surfaces
     cardBackground: 'rgba(30,41,59,0.8)', // Medical card background
 
     text: {
-      primary: '#F1F5F9',        // Almost white
-      secondary: '#CBD5E1',      // Light medical slate
-      tertiary: '#94A3B8',       // Medium medical slate
+      primary: '#000000',        // Black text
+      secondary: '#000000',      // Black secondary text
+      tertiary: '#000000',       // Black tertiary text
       inverse: '#0F172A',        // Dark on light
       onPrimary: '#0F172A',      // Dark on primary
       medical: '#60A5FA',        // Light medical blue text
