@@ -118,6 +118,9 @@ const ButtonApp = ({ navigation }) => {
   const colorScheme = useColorScheme() || 'light';
   const isDark = colorScheme === 'dark';
 
+  // Всегда одна колонка для простоты и единообразия
+  const numColumns = 1;
+
   const data = [
     {
       screenName: 'Расчет лекарств',
@@ -258,10 +261,12 @@ const ButtonApp = ({ navigation }) => {
           data={data}
           renderItem={renderCard}
           keyExtractor={(item, index) => `${item.screenName}-${index}`}
-          numColumns={2}
+          numColumns={1}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: spacing.xl }}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          contentContainerStyle={{
+            paddingBottom: spacing.xl,
+            alignItems: 'center'
+          }}
         />
       </Animated.View>
     </SafeAreaView>
