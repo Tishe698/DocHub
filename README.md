@@ -2,6 +2,7 @@
 
 [![React Native](https://img.shields.io/badge/React%20Native-0.79.5-blue.svg)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-~53.0.0-black.svg)](https://expo.dev/)
+[![Download APK](https://img.shields.io/badge/Download-APK-brightgreen.svg)](https://expo.dev/artifacts/eas/t6epoKB5zhD88pCDTeYXKZ.apk)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 
@@ -321,6 +322,8 @@ npx expo start --android
 npx expo start --ios
 ```
 
+
+
 ### Сборка для продакшена
 
 #### Android APK
@@ -430,6 +433,19 @@ npx eas build --platform ios --profile production
 - 📱 Улучшенная адаптивность
 - 🔧 Оптимизация производительности
 - 🆕 Добавлены новые медицинские инструменты
+
+### 📥 Скачать готовое приложение
+
+#### 🚀 Текущая версия: v2.0.0
+**Android APK**: [Скачать с Expo](https://expo.dev/artifacts/eas/t6epoKB5zhD88pCDTeYXKZ.apk)
+
+```bash
+# Скачать APK напрямую:
+curl -L -o DocHub.apk https://expo.dev/artifacts/eas/t6epoKB5zhD88pCDTeYXKZ.apk
+
+# Или собрать самостоятельно:
+npx eas build --platform android --profile preview
+```
 
 ### v1.0.0
 - 🚀 Первый релиз
