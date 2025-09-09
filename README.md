@@ -4,6 +4,7 @@
 [![Expo](https://img.shields.io/badge/Expo-~53.0.0-black.svg)](https://expo.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+
 **DocHub** - профессиональное мобильное приложение для медицинских расчетов и диагностики, разработанное для врачей и медицинского персонала.
 
 ## 📋 Оглавление
@@ -412,9 +413,8 @@ npx eas build --platform ios --profile production
 
 ## 📞 Контакты
 
-- **Email**: support@dochub.app
-- **Telegram**: @DocHubSupport
-- **GitHub Issues**: [Создать issue](https://github.com/your-username/DocHub/issues)
+- **Email**: govard6981@outlook.com
+- **Telegram**: @Ivan_tishe
 
 ---
 
