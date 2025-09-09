@@ -3,7 +3,8 @@ import { StyleSheet, Dimensions } from "react-native";
 import { colors, spacing, borderRadius, typography, shadows } from "../../theme";
 
 const { width: screenWidth } = Dimensions.get('window');
-const cardWidth = (screenWidth - spacing.xl * 2 - spacing.md) / 2; // 2 columns
+// Карточки теперь занимают почти всю ширину экрана с отступами
+const cardWidth = screenWidth - (spacing.xl * 2); // Одна колонка, максимальная ширина
 
 const buttonStyles = StyleSheet.create({
     // Main container
@@ -89,11 +90,15 @@ const buttonStyles = StyleSheet.create({
     card: {
         width: cardWidth,
         borderRadius: borderRadius.xl,
-        marginBottom: spacing.md,
-        marginHorizontal: spacing.xs,
-        minHeight: 200,
+        marginBottom: 0, // Убираем вертикальный отступ, используем ItemSeparatorComponent
+        marginHorizontal: 0, // Убираем горизонтальный отступ, используем padding FlatList
+        minHeight: 180, // Более компактная высота
+        maxHeight: 220, // Ограничение максимальной высоты
         overflow: 'hidden',
         position: 'relative',
+        backgroundColor: colors.light.surface,
+        borderWidth: 1,
+        borderColor: colors.light.border,
         ...shadows.lg,
     },
 
@@ -101,7 +106,7 @@ const buttonStyles = StyleSheet.create({
         // No border in dark mode
     },
 
-    // Background image for cards
+    // Background image for cards with improved styling
     cardBackgroundImage: {
         position: 'absolute',
         top: 0,
@@ -111,17 +116,29 @@ const buttonStyles = StyleSheet.create({
         borderRadius: borderRadius.xl,
         width: '100%',
         height: '100%',
+        opacity: 0.85, // Более естественный вид
     },
 
-    // Overlay for text readability on images
+    // Enhanced overlay for text readability with gradient
     cardOverlay: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)', // Более прозрачный
         borderRadius: borderRadius.xl,
+    },
+
+    // Gradient overlay for better visual appeal
+    cardGradient: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: borderRadius.xl,
+        backgroundColor: 'linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
     },
 
     // Pressed state with modern animation
@@ -141,10 +158,16 @@ const buttonStyles = StyleSheet.create({
         // No background in dark mode
     },
 
-    // Icon styles
+    // Enhanced icon styles for better visibility
     icon: {
-        width: 40,
-        height: 40,
+        width: 60, // Увеличенный размер
+        height: 60,
+        borderRadius: borderRadius.lg,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 4,
     },
 
     // Medical emoji overlay
@@ -165,12 +188,14 @@ const buttonStyles = StyleSheet.create({
     },
 
     cardTitle: {
-        ...typography.body1,
-        fontWeight: '600',
+        ...typography.h3, // Более крупный размер
+        fontWeight: '700',
         color: colors.light.text.primary,
         textAlign: 'center',
-        marginTop: spacing.sm,
-        lineHeight: 20,
+        marginTop: spacing.md,
+        marginBottom: spacing.xs,
+        lineHeight: 24,
+        letterSpacing: 0.5,
     },
 
     cardTitle_dark: {
@@ -178,11 +203,14 @@ const buttonStyles = StyleSheet.create({
     },
 
     cardDescription: {
-        ...typography.caption,
+        ...typography.body2, // Более читаемый размер
         color: colors.light.text.secondary,
         textAlign: 'center',
-        marginTop: spacing.xs,
-        lineHeight: 16,
+        marginTop: spacing.sm,
+        marginBottom: spacing.md,
+        lineHeight: 20,
+        letterSpacing: 0.25,
+        fontWeight: '500',
     },
 
     cardDescription_dark: {
@@ -345,14 +373,15 @@ const buttonStyles = StyleSheet.create({
         opacity: 0.85,
     },
 
-    // Text styles for images
+    // Enhanced text styles for images
     cardTitleOnImage: {
         color: '#FFFFFF',
-        textShadowColor: 'rgba(0,0,0,0.8)',
-        textShadowOffset: { width: 0, height: 2 },
-        textShadowRadius: 4,
+        textShadowColor: 'rgba(0,0,0,0.9)',
+        textShadowOffset: { width: 0, height: 3 },
+        textShadowRadius: 6,
         fontWeight: '800',
-        fontSize: 18,
+        fontSize: 22, // Увеличенный размер
+        letterSpacing: 0.5,
     },
 
     cardTitleOnImage_dark: {
@@ -362,13 +391,61 @@ const buttonStyles = StyleSheet.create({
     cardDescriptionOnImage: {
         color: '#FFFFFF',
         textShadowColor: 'rgba(0,0,0,0.8)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 3,
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
         fontWeight: '600',
+        fontSize: 14, // Более читаемый размер
         opacity: 0.95,
+        letterSpacing: 0.25,
     },
 
     cardDescriptionOnImage_dark: {
+        opacity: 0.9,
+    },
+
+    // Decorative elements for enhanced visual appeal
+    cardDecorativeElement: {
+        position: 'absolute',
+        top: spacing.md,
+        right: spacing.md,
+        width: 32,
+        height: 32,
+        borderRadius: borderRadius.lg,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backdropFilter: 'blur(10px)',
+    },
+
+    decorativeIcon: {
+        fontSize: 16,
+        color: '#FFFFFF',
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
+    },
+
+    // Enhanced card border with gradient effect
+    cardBorderGradient: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        borderRadius: borderRadius.xl,
+        padding: 1,
+        backgroundColor: 'transparent',
+    },
+
+    cardInner: {
+        flex: 1,
+        borderRadius: borderRadius.xl,
+        overflow: 'hidden',
+    },
+
+    // Hover/press effect for better feedback
+    cardHoverEffect: {
+        transform: [{ scale: 0.98 }],
         opacity: 0.9,
     },
 });

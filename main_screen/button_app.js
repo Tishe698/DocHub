@@ -81,6 +81,13 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
           resizeMode="cover"
         />
         <View style={buttonStyles.cardOverlay} />
+        <View style={buttonStyles.cardGradient} />
+
+        {/* Decorative element */}
+        <View style={buttonStyles.cardDecorativeElement}>
+          <Text style={buttonStyles.decorativeIcon}>✨</Text>
+        </View>
+
         <View style={buttonStyles.cardContent}>
           <Animated.Text
             style={[
@@ -265,8 +272,11 @@ const ButtonApp = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingBottom: spacing.xl,
+            paddingHorizontal: spacing.md,
             alignItems: 'center'
           }}
+          // Убираем лишние отступы между элементами
+          ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         />
       </Animated.View>
     </SafeAreaView>
