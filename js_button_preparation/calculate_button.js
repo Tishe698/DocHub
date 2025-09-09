@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback } from "react";
+// WelcomeScreen.jsx — адаптировано под большие шрифты/иконки (доступность), без налезаний
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -25,14 +26,22 @@ import { colors, spacing, animation, borderRadius, shadows, typography } from ".
 import styles from "../css/calculate_preparation/WelcomeScreenStyles";
 import modalStyles from "../css/calculate_preparation/calculates_css";
 import formulas from "./formulas";
-// Используем новый API Clipboard из Expo
-import { Clipboard } from 'expo-clipboard';
+// ✅ Правильный импорт Clipboard
+import * as Clipboard from "expo-clipboard";
 
 const { height: screenHeight } = Dimensions.get("window");
 
-/** ===== helpers ===== **/
+/** ===================== Настройки масштабирования шрифтов ===================== **/
+const FONT_LIMIT = {
+  h1: 1.25,   // большие заголовки
+  h2: 1.2,    // подзаголовки/крупные кнопки
+  body: 1.15, // обычный текст
+  small: 1.1, // подписи/бейджи
+  emoji: 1.0, // декоративные эмодзи не масштабируем
+};
 
-// аккуратный парсер числа: поддерживает запятую и точку, но не обе сразу; исключает мусор
+/** ============================== Хелперы ============================== **/
+// аккуратный парсер числа: поддерживает запятую и точку, но не обе сразу
 const parseNum = (v) => {
   if (v === null || v === undefined) return undefined;
   const s = String(v).trim();
@@ -44,6 +53,7 @@ const parseNum = (v) => {
   return Number.isFinite(n) ? n : undefined;
 };
 
+/** ============================== BottomSheet ============================== **/
 const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBack }) => {
   const translateY = useSharedValue(screenHeight * 0.05);
   const backdropOpacity = useSharedValue(0);
@@ -62,6 +72,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
   React.useEffect(() => {
     if (visible) showSheet();
     else hideSheet();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const sheetStyle = useAnimatedStyle(() => ({
@@ -88,6 +99,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
         },
         backdropStyle,
       ]}
+      pointerEvents="auto"
     >
       {/* Шторка с контентом */}
       <Animated.View
@@ -106,21 +118,7 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
           sheetStyle,
         ]}
       >
-        {/* Полоска/кнопка закрытия */}
-        <TouchableOpacity
-          onPress={hideSheet}
-          style={{
-            alignSelf: "center",
-            width: 40,
-            height: 4,
-            backgroundColor: isDark ? colors.dark.divider : colors.light.divider,
-            borderRadius: 2,
-            marginTop: spacing.sm,
-            marginBottom: spacing.md,
-          }}
-        />
-
-        {/* Close */}
+        {/* Кнопка закрытия (угол) */}
         <View
           style={{
             position: "absolute",
@@ -136,17 +134,14 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
             borderColor: isDark ? colors.dark.border : colors.light.border,
             zIndex: 15,
           }}
+          pointerEvents="box-none"
         >
           <TouchableOpacity
             onPress={hideSheet}
-            style={{
-              flex: 1,
-              justifyContent: "center",
-              alignItems: "center",
-              paddingTop: 8,
-              paddingRight: 8,
-            }}
+            style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 8, paddingRight: 8 }}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Закрыть окно расчётов"
           >
             <Text
               style={{
@@ -154,13 +149,15 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
                 fontWeight: "600",
                 color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
               }}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.h2}
             >
               ✕
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Back */}
+        {/* Кнопка назад (угол) */}
         {selectedFormula && onBack && (
           <View
             style={{
@@ -177,16 +174,11 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
               borderColor: isDark ? colors.dark.border : colors.light.border,
               zIndex: 15,
             }}
+            pointerEvents="box-none"
           >
             <TouchableOpacity
               onPress={onBack}
-              style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
-                paddingTop: 8,
-                paddingLeft: 8,
-              }}
+              style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 8, paddingLeft: 8 }}
               activeOpacity={0.7}
               accessibilityLabel="Вернуться к списку препаратов"
               accessibilityRole="button"
@@ -197,6 +189,8 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
                   fontWeight: "600",
                   color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
                 }}
+                allowFontScaling
+                maxFontSizeMultiplier={FONT_LIMIT.h2}
               >
                 ←
               </Text>
@@ -204,14 +198,31 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
           </View>
         )}
 
+        {/* Перетягиваемая полоска */}
+        <TouchableOpacity
+          onPress={hideSheet}
+          style={{
+            alignSelf: "center",
+            width: 40,
+            height: 4,
+            backgroundColor: isDark ? colors.dark.divider : colors.light.divider,
+            borderRadius: 2,
+            marginTop: spacing.sm,
+            marginBottom: spacing.md,
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Закрыть окно"
+        />
+
         {children}
       </Animated.View>
     </Animated.View>
   );
 };
 
+/** ============================== Экран ============================== **/
 const WelcomeScreen = () => {
-  const colorScheme = useColorScheme() || "light";
+  const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -221,7 +232,7 @@ const WelcomeScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const scrollRef = useRef(null);
 
-  const hasFormulaToCalculate = selectedFormula?.formula !== undefined;
+  const hasFormulaToCalculate = !!selectedFormula?.formula;
 
   // Динамические цифры
   const totalDrugs = formulas.length;
@@ -230,8 +241,9 @@ const WelcomeScreen = () => {
     []
   );
 
+  /** ============================== UI-хелперы ============================== **/
   const showModal = (formula) => {
-    setSelectedFormula(formula);
+    setSelectedFormula(formula ?? null);
     setModalVisible(true);
     setInputs({});
     setResults({});
@@ -245,7 +257,6 @@ const WelcomeScreen = () => {
     setSearchTerm("");
   };
 
-  // Тип поля
   const getInputType = (inputName, inputLabel) => {
     const lowerName = (inputName || "").toLowerCase();
     const lowerLabel = (inputLabel || "").toLowerCase();
@@ -264,9 +275,8 @@ const WelcomeScreen = () => {
     return "numeric";
   };
 
-  // highlight без "миганий"
   const highlightSearchTerm = (text, term) => {
-    if (!term.trim()) return <Text>{text}</Text>;
+    if (!term.trim()) return <Text allowFontScaling maxFontSizeMultiplier={FONT_LIMIT.body}>{text}</Text>;
     const safe = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp(`(${safe})`, "i"); // без 'g'
     const parts = String(text).split(re);
@@ -279,21 +289,24 @@ const WelcomeScreen = () => {
             fontWeight: "600",
             color: isDark ? colors.dark.primary : colors.light.primary,
           }}
+          allowFontScaling
+          maxFontSizeMultiplier={FONT_LIMIT.body}
         >
           {part}
         </Text>
       ) : (
-        <Text key={i}>{part}</Text>
+        <Text key={i} allowFontScaling maxFontSizeMultiplier={FONT_LIMIT.body}>
+          {part}
+        </Text>
       )
     );
   };
 
-  // Больше не парсим здесь — храним то, что ввёл пользователь
   const handleInputChange = (name, value) => {
     setInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Валидация всех входов + нормализация чисел
+  /** ============================== Валидация и расчёты ============================== **/
   const validateInputs = (formula) => {
     const errors = [];
     const clean = {};
@@ -318,7 +331,6 @@ const WelcomeScreen = () => {
     return { ok: errors.length === 0, errors, clean };
   };
 
-  // форматирование значений под единицы
   const fmtValue = (v, unit) => {
     if (unit === "таб") {
       const quarters = Math.round(v * 4 + Number.EPSILON) / 4;
@@ -331,22 +343,22 @@ const WelcomeScreen = () => {
     return String(v);
   };
 
-  // Копировать результаты
   const copyResults = async () => {
     try {
       if (!results?.success) return;
       const lines = [
         `📝 ${results.formula}`,
-        ...results.items.map((i) => `${i.name}: ${i.text}${i.status === "high" ? " (↑)" : i.status === "low" ? " (↓)" : ""}`),
+        ...results.items.map(
+          (i) => `${i.name}: ${i.text}${i.status === "high" ? " (↑)" : i.status === "low" ? " (↓)" : ""}`
+        ),
       ];
-      await Clipboard.setString(lines.join("\n"));
+      await Clipboard.setStringAsync(lines.join("\n")); // ✅ корректный метод
       Alert.alert("Скопировано", "Результаты скопированы в буфер обмена");
     } catch {
       Alert.alert("Ошибка", "Не удалось скопировать результаты");
     }
   };
 
-  // Расчёт (без эвристики единиц; только units/labels из формулы)
   const calculateResult = () => {
     if (!selectedFormula) return;
 
@@ -390,7 +402,13 @@ const WelcomeScreen = () => {
             status, // ok | low | high
           });
         } else if (typeof val === "string" && val.trim()) {
-          items.push({ name: labels[key] || "Примечание", unit: "", value: null, text: val, status: "info" });
+          items.push({
+            name: labels[key] || "Примечание",
+            unit: "",
+            value: null,
+            text: val,
+            status: "info",
+          });
         }
       };
 
@@ -412,7 +430,7 @@ const WelcomeScreen = () => {
     }
   };
 
-  // Поиск
+  /** ============================== Поиск ============================== **/
   const getFilteredFormulas = () => {
     if (!searchTerm.trim()) return formulas;
 
@@ -461,195 +479,248 @@ const WelcomeScreen = () => {
       });
   };
 
+  /** ============================== Рендер ============================== **/
   return (
     <SafeAreaView style={[styles.container, isDark && styles.container_dark]}>
-      {/* Header */}
-      <Animated.View entering={FadeIn.duration(animation.normal)}>
-        <View style={{ alignItems: "center", marginBottom: spacing.xl }}>
-          <Text style={[styles.welcomeText, isDark && styles.welcomeText_dark]}>🏥 Медицинские расчёты</Text>
-          <Text style={[styles.subtitle, isDark && styles.subtitle_dark]}>
-            💉 Профессиональный калькулятор дозировок
-          </Text>
-        </View>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: spacing.xl * 2,
+        }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        alwaysBounceVertical={false}
+      >
+        {/* Header */}
+        <Animated.View entering={FadeIn.duration(animation.normal)}>
+          <View style={{ alignItems: "center", marginBottom: spacing.md, paddingHorizontal: spacing.lg }}>
+            <Text
+              style={[styles.welcomeText, isDark && styles.welcomeText_dark, { fontSize: 24 }]}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.h1}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>🏥 </Text>
+              Медицинские расчёты
+            </Text>
 
-        {/* Stats */}
-        <View style={{ marginBottom: spacing.xl }}>
-          <Animated.View entering={FadeInUp.delay(100).duration(animation.normal)}>
-            <View style={{ flexDirection: "row", justifyContent: "space-around", marginBottom: spacing.lg }}>
+            <Text
+              style={[styles.subtitle, isDark && styles.subtitle_dark, { fontSize: 16, marginBottom: spacing.sm }]}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.h2}
+              numberOfLines={2}
+              adjustsFontSizeToFit
+            >
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>💉 </Text>
+              Профессиональный калькулятор дозировок
+            </Text>
+          </View>
+
+          {/* Stats (резиновая сетка) */}
+          <View style={{ marginBottom: spacing.lg, paddingHorizontal: spacing.lg }}>
+            <Animated.View entering={FadeInUp.delay(100).duration(animation.normal)}>
               <View
                 style={{
-                  backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
-                  borderRadius: borderRadius.lg,
-                  padding: spacing.md,
-                  alignItems: "center",
-                  flex: 1,
-                  marginHorizontal: spacing.xs,
-                  ...shadows.sm,
-                  borderWidth: 1,
-                  borderColor: isDark ? colors.dark.border : colors.light.border,
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  justifyContent: "space-between",
+                  rowGap: spacing.xs,
+                  columnGap: spacing.xs,
+                  marginBottom: spacing.lg,
                 }}
               >
-                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>💊</Text>
-                <Text
+                {/* Карта 1 */}
+                <View
                   style={{
-                    fontSize: typography.caption.fontSize,
-                    color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
-                    textAlign: "center",
+                    backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                    borderRadius: borderRadius.lg,
+                    padding: spacing.sm,
+                    alignItems: "center",
+                    flexBasis: "45%",
+                    minWidth: 140,
+                    minHeight: 80,
+                    ...shadows.sm,
+                    borderWidth: 1,
+                    borderColor: isDark ? colors.dark.border : colors.light.border,
                   }}
                 >
-                  Препараты
-                </Text>
-                <Text
-                  style={{
-                    fontSize: typography.h4.fontSize,
-                    fontWeight: "bold",
-                    color: isDark ? colors.dark.text.primary : colors.light.text.primary,
-                  }}
-                >
-                  {totalDrugs}
-                </Text>
-              </View>
+                  <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 20, marginBottom: spacing.xs }}>
+                    💊
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                      textAlign: "center",
+                    }}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.small}
+                    numberOfLines={1}
+                  >
+                    Препараты
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                    }}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.h2}
+                    numberOfLines={1}
+                  >
+                    {totalDrugs}
+                  </Text>
+                </View>
 
-              <View
-                style={{
-                  backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
-                  borderRadius: borderRadius.lg,
-                  padding: spacing.md,
-                  alignItems: "center",
-                  flex: 1,
-                  marginHorizontal: spacing.xs,
-                  ...shadows.sm,
-                  borderWidth: 1,
-                  borderColor: isDark ? colors.dark.border : colors.light.border,
-                }}
-              >
-                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>🧮</Text>
-                <Text
+                {/* Карта 2 */}
+                <View
                   style={{
-                    fontSize: typography.caption.fontSize,
-                    color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
-                    textAlign: "center",
+                    backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                    borderRadius: borderRadius.lg,
+                    padding: spacing.sm,
+                    alignItems: "center",
+                    flexBasis: "45%",
+                    minWidth: 140,
+                    minHeight: 80,
+                    ...shadows.sm,
+                    borderWidth: 1,
+                    borderColor: isDark ? colors.dark.border : colors.light.border,
                   }}
                 >
-                  Расчёты
-                </Text>
-                <Text
-                  style={{
-                    fontSize: typography.h4.fontSize,
-                    fontWeight: "bold",
-                    color: isDark ? colors.dark.text.primary : colors.light.text.primary,
-                  }}
-                >
-                  {totalCalcs}
-                </Text>
+                  <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 20, marginBottom: spacing.xs }}>
+                    ⚡
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                      textAlign: "center",
+                    }}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.small}
+                    numberOfLines={1}
+                  >
+                    Мгновенный
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: "bold",
+                      color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                    }}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.h2}
+                    numberOfLines={1}
+                  >
+                    Результат
+                  </Text>
+                </View>
               </View>
+            </Animated.View>
+          </View>
+        </Animated.View>
 
-              <View
-                style={{
-                  backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
-                  borderRadius: borderRadius.lg,
-                  padding: spacing.md,
-                  alignItems: "center",
-                  flex: 1,
-                  marginHorizontal: spacing.xs,
-                  ...shadows.sm,
-                  borderWidth: 1,
-                  borderColor: isDark ? colors.dark.border : colors.light.border,
-                }}
-              >
-                <Text style={{ fontSize: 24, marginBottom: spacing.xs }}>⚡</Text>
-                <Text
-                  style={{
-                    fontSize: typography.caption.fontSize,
-                    color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
-                    textAlign: "center",
-                  }}
-                >
-                  Мгновенно
-                </Text>
-                <Text
-                  style={{
-                    fontSize: typography.caption.fontSize,
-                    color: isDark ? colors.dark.text.primary : colors.light.text.primary,
-                  }}
-                >
-                  Результат
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-        </View>
-      </Animated.View>
-
-      {/* Main CTA */}
-      <Animated.View entering={FadeInUp.delay(300).duration(animation.normal)} style={{ flex: 1, justifyContent: "center" }}>
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
+        {/* Главный CTA */}
+        <Animated.View
+          entering={FadeInUp.delay(300).duration(animation.normal)}
           style={{
-            backgroundColor: isDark ? colors.dark.primary : colors.light.primary,
-            borderRadius: borderRadius.xl,
-            padding: spacing.xl,
-            alignItems: "center",
-            marginBottom: spacing.lg,
-            ...shadows.lg,
+            marginBottom: spacing.xl,
+            paddingHorizontal: spacing.lg,
+            flexShrink: 0,
           }}
-          activeOpacity={0.8}
         >
-          <Text
-            style={{
-              color: colors.light.surface,
-              fontSize: 20,
-              fontWeight: "700",
-              marginBottom: spacing.sm,
-            }}
-          >
-            💊 Медицинский калькулятор
-          </Text>
-          <Text
-            style={{
-              color: colors.light.surface,
-              fontSize: 16,
-              opacity: 0.9,
-              textAlign: "center",
-              lineHeight: 22,
-            }}
-          >
-            Расчёт дозировок препаратов и объёмов растворов для точного лечения
-          </Text>
-        </TouchableOpacity>
-
-        {/* Быстрый доступ */}
-        <View style={{ flexDirection: "row", justifyContent: "center" }}>
           <TouchableOpacity
             onPress={() => setModalVisible(true)}
             style={{
-              backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
-              borderRadius: borderRadius.lg,
-              padding: spacing.lg,
+              backgroundColor: isDark ? colors.dark.primary : colors.light.primary,
+              borderRadius: borderRadius.xl,
+              padding: spacing.xl,
               alignItems: "center",
-              width: 200,
-              marginHorizontal: spacing.sm,
-              borderWidth: 1,
-              borderColor: isDark ? colors.dark.border : colors.light.border,
+              marginBottom: spacing.lg,
+              alignSelf: "stretch",
+              minHeight: 112,
+              flexShrink: 0,
+              ...shadows.lg,
             }}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Открыть медицинский калькулятор"
           >
-            <Text style={{ fontSize: 24, marginBottom: spacing.sm }}>🔍</Text>
             <Text
-              style={{
-                ...typography.caption,
-                color: isDark ? colors.dark.text.primary : colors.light.text.primary,
-                textAlign: "center",
-                fontWeight: "600",
-              }}
+              style={{ color: colors.light.surface, fontSize: 20, fontWeight: "700", marginBottom: spacing.sm, textAlign: "center" }}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.h2}
+              numberOfLines={2}
+              {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
             >
-              Поиск
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>💊 </Text>
+              Медицинский калькулятор
+            </Text>
+
+            <Text
+              style={{ color: colors.light.surface, fontSize: 16, opacity: 0.9, textAlign: "center", lineHeight: 22 }}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.body}
+              numberOfLines={3}
+              {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
+            >
+              Расчёт дозировок препаратов и объёмов растворов для точного лечения
             </Text>
           </TouchableOpacity>
-        </View>
+
+          {/* Быстрый доступ */}
+          <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: spacing.xl }}>
+            <TouchableOpacity
+              onPress={() => setModalVisible(true)}
+              style={{
+                backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
+                borderRadius: borderRadius.lg,
+                padding: spacing.lg,
+                alignItems: "center",
+                minWidth: 200,
+                maxWidth: "90%",
+                alignSelf: "center",
+                marginHorizontal: spacing.sm,
+                borderWidth: 1,
+                borderColor: isDark ? colors.dark.border : colors.light.border,
+                flexShrink: 0,
+              }}
+              activeOpacity={0.7}
+              accessibilityLabel="Открыть поиск препаратов"
+              accessibilityRole="button"
+            >
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 24, marginBottom: spacing.sm }}>
+                🔍
+              </Text>
+              <Text
+                style={{
+                  ...typography.caption,
+                  color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                  textAlign: "center",
+                  fontWeight: "600",
+                }}
+                allowFontScaling
+                maxFontSizeMultiplier={FONT_LIMIT.body}
+                numberOfLines={1}
+              >
+                Поиск
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
 
         {/* Safety */}
-        <Animated.View entering={FadeInUp.delay(600).duration(animation.normal)} style={{ marginTop: spacing.xl, paddingHorizontal: spacing.lg }}>
+        <Animated.View
+          entering={FadeInUp.delay(600).duration(animation.normal)}
+          style={{
+            marginBottom: spacing.xl,
+            paddingHorizontal: spacing.lg,
+            flexShrink: 0,
+          }}
+        >
           <View
             style={{
               backgroundColor: isDark ? colors.dark.surface : colors.light.surface,
@@ -669,7 +740,9 @@ const WelcomeScreen = () => {
                 borderBottomColor: isDark ? colors.dark.border : colors.light.border,
               }}
             >
-              <Text style={{ fontSize: 32, marginBottom: spacing.sm }}>🛡️</Text>
+              <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 32, marginBottom: spacing.sm }}>
+                🛡️
+              </Text>
               <Text
                 style={{
                   ...typography.h5,
@@ -677,6 +750,10 @@ const WelcomeScreen = () => {
                   fontWeight: "700",
                   textAlign: "center",
                 }}
+                allowFontScaling
+                maxFontSizeMultiplier={FONT_LIMIT.h2}
+                numberOfLines={1}
+                {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
               >
                 Безопасность превыше всего
               </Text>
@@ -690,6 +767,8 @@ const WelcomeScreen = () => {
                 textAlign: "center",
                 fontWeight: "500",
               }}
+              allowFontScaling
+              maxFontSizeMultiplier={FONT_LIMIT.body}
             >
               Все расчеты носят рекомендательный характер.{"\n"}Консультируйтесь с лечащим врачом перед{"\n"}применением препаратов.
             </Text>
@@ -704,13 +783,18 @@ const WelcomeScreen = () => {
                 borderTopColor: isDark ? colors.dark.border : colors.light.border,
               }}
             >
-              <Text style={{ ...typography.caption, color: isDark ? "#10B981" : "#059669", fontWeight: "600" }}>
+              <Text
+                style={{ ...typography.caption, color: isDark ? "#10B981" : "#059669", fontWeight: "600" }}
+                allowFontScaling
+                maxFontSizeMultiplier={FONT_LIMIT.small}
+                numberOfLines={1}
+              >
                 ⚕️ Медицинская ответственность
               </Text>
             </View>
           </View>
         </Animated.View>
-      </Animated.View>
+      </ScrollView>
 
       {/* BottomSheet */}
       <BottomSheet
@@ -724,17 +808,20 @@ const WelcomeScreen = () => {
           setResults({});
         }}
       >
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }} keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        >
           <ScrollView
             ref={scrollRef}
             style={{ flex: 1, paddingHorizontal: spacing.lg }}
-            showsVerticalScrollIndicator={true}
+            showsVerticalScrollIndicator
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: spacing.xl * 2, flexGrow: 1, minHeight: screenHeight * 0.85 }}
             scrollEventThrottle={16}
             bounces
             alwaysBounceVertical
-            scrollEnabled
             pointerEvents="auto"
             nestedScrollEnabled
           >
@@ -742,17 +829,45 @@ const WelcomeScreen = () => {
             <View style={[modalStyles.modalHeader, { marginTop: spacing.xl }]}>
               {selectedFormula ? (
                 <>
-                  <Text style={[modalStyles.modalTitle, isDark && modalStyles.modalTitle_dark, { fontSize: 24 }]} numberOfLines={2}>
-                    💊 {selectedFormula.name}
+                  <Text
+                    style={[modalStyles.modalTitle, isDark && modalStyles.modalTitle_dark, { fontSize: 24 }]}
+                    numberOfLines={2}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.h2}
+                    {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
+                  >
+                    <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>💊 </Text>
+                    {selectedFormula.name}
                   </Text>
-                  <Text style={[modalStyles.modalSubtitle, isDark && modalStyles.modalSubtitle_dark]}>🩺 Введите необходимые значения</Text>
+                  <Text
+                    style={[modalStyles.modalSubtitle, isDark && modalStyles.modalSubtitle_dark]}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.body}
+                    numberOfLines={2}
+                  >
+                    🩺 Введите необходимые значения
+                  </Text>
                 </>
               ) : (
                 <>
-                  <Text style={[modalStyles.modalTitle, isDark && modalStyles.modalTitle_dark, { fontSize: 24 }]} numberOfLines={2}>
-                    💊 Калькулятор препаратов
+                  <Text
+                    style={[modalStyles.modalTitle, isDark && modalStyles.modalTitle_dark, { fontSize: 24 }]}
+                    numberOfLines={2}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.h2}
+                    {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
+                  >
+                    <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji}>💊 </Text>
+                    Калькулятор препаратов
                   </Text>
-                  <Text style={[modalStyles.modalSubtitle, isDark && modalStyles.modalSubtitle_dark]}>🔍 Поиск и расчет дозировок</Text>
+                  <Text
+                    style={[modalStyles.modalSubtitle, isDark && modalStyles.modalSubtitle_dark]}
+                    allowFontScaling
+                    maxFontSizeMultiplier={FONT_LIMIT.body}
+                    numberOfLines={2}
+                  >
+                    🔍 Поиск и расчет дозировок
+                  </Text>
                 </>
               )}
             </View>
@@ -764,16 +879,24 @@ const WelcomeScreen = () => {
                   style={[modalStyles.searchInputWithIcon, isDark && modalStyles.searchInputWithIcon_dark]}
                   placeholder="🔍 Поиск препаратов (анальгин, адреналин...)"
                   placeholderTextColor={isDark ? colors.dark.text.tertiary : colors.light.text.tertiary}
-                  onChangeText={(text) => setSearchTerm(text)}
+                  onChangeText={setSearchTerm}
                   value={searchTerm}
                   accessibilityLabel="Поле поиска формул"
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="search"
+                  allowFontScaling
                 />
                 {searchTerm.length > 0 && (
-                  <TouchableOpacity onPress={() => setSearchTerm("")} style={modalStyles.crossIcon} accessibilityLabel="Очистить поиск" accessibilityRole="button">
-                    <Text style={modalStyles.crossImage}>✕</Text>
+                  <TouchableOpacity
+                    onPress={() => setSearchTerm("")}
+                    style={modalStyles.crossIcon}
+                    accessibilityLabel="Очистить поиск"
+                    accessibilityRole="button"
+                  >
+                    <Text style={modalStyles.crossImage} allowFontScaling maxFontSizeMultiplier={FONT_LIMIT.h2}>
+                      ✕
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -784,7 +907,15 @@ const WelcomeScreen = () => {
               <View style={[modalStyles.listContainer, isDark && modalStyles.listContainer_dark]}>
                 {getFilteredFormulas().length === 0 && searchTerm.trim() !== "" && (
                   <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingVertical: spacing.xl }}>
-                    <Text style={{ fontSize: 16, color: isDark ? colors.dark.text.secondary : colors.light.text.secondary, textAlign: "center" }}>
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
+                        textAlign: "center",
+                      }}
+                      allowFontScaling
+                      maxFontSizeMultiplier={FONT_LIMIT.body}
+                    >
                       🔍 Препараты не найдены{"\n"}Попробуйте другой поисковый запрос
                     </Text>
                   </View>
@@ -803,7 +934,12 @@ const WelcomeScreen = () => {
                       justifyContent: "space-between",
                     }}
                   >
-                    <Text style={{ color: isDark ? colors.dark.text.secondary : colors.light.text.secondary, fontSize: 14 }}>
+                    <Text
+                      style={{ color: isDark ? colors.dark.text.secondary : colors.light.text.secondary, fontSize: 14 }}
+                      allowFontScaling
+                      maxFontSizeMultiplier={FONT_LIMIT.small}
+                      numberOfLines={1}
+                    >
                       🔍 Найдено: {getFilteredFormulas().length} из {formulas.length}
                     </Text>
                     <TouchableOpacity
@@ -815,12 +951,22 @@ const WelcomeScreen = () => {
                         borderRadius: borderRadius.sm,
                       }}
                     >
-                      <Text style={{ color: isDark ? colors.dark.text.primary : colors.light.text.primary, fontSize: 12, fontWeight: "500" }}>✕ Очистить</Text>
+                      <Text
+                        style={{
+                          color: isDark ? colors.dark.text.primary : colors.light.text.primary,
+                          fontSize: 12,
+                          fontWeight: "500",
+                        }}
+                        allowFontScaling
+                        maxFontSizeMultiplier={FONT_LIMIT.small}
+                      >
+                        ✕ Очистить
+                      </Text>
                     </TouchableOpacity>
                   </Animated.View>
                 )}
 
-                {getFilteredFormulas().length > 0 ? (
+                {getFilteredFormulas().length > 0 &&
                   getFilteredFormulas().map((formula, index) => (
                     <Animated.View key={formula.name} entering={FadeInUp.delay(index * 50).duration(animation.fast)}>
                       <TouchableOpacity
@@ -841,37 +987,40 @@ const WelcomeScreen = () => {
                         accessibilityRole="button"
                       >
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                          <View style={{ flex: 1 }}>
-                            <Text style={[modalStyles.formulaName, isDark && modalStyles.formulaName_dark]}>
+                          <View style={{ flex: 1, paddingRight: spacing.sm }}>
+                            <Text
+                              style={[modalStyles.formulaName, isDark && modalStyles.formulaName_dark]}
+                              allowFontScaling
+                              maxFontSizeMultiplier={FONT_LIMIT.h2}
+                              numberOfLines={2}
+                              {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
+                            >
                               {highlightSearchTerm(formula.name, searchTerm)}
                             </Text>
-                            {formula.description && (
-                              <Text style={[modalStyles.formulaDescription, isDark && modalStyles.formulaDescription_dark]}>
+                            {!!formula.description && (
+                              <Text
+                                style={[modalStyles.formulaDescription, isDark && modalStyles.formulaDescription_dark]}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.body}
+                                numberOfLines={2}
+                              >
                                 {highlightSearchTerm(formula.description, searchTerm)}
                               </Text>
                             )}
                           </View>
-                          {formula.warnings && formula.warnings.length > 0 && <Text style={{ fontSize: 16, color: colors.light.warning }}>⚠️</Text>}
+                          {formula.warnings && formula.warnings.length > 0 && (
+                            <Text
+                              style={{ fontSize: 16, color: colors.light.warning }}
+                              allowFontScaling={false}
+                              maxFontSizeMultiplier={FONT_LIMIT.emoji}
+                            >
+                              ⚠️
+                            </Text>
+                          )}
                         </View>
                       </TouchableOpacity>
                     </Animated.View>
-                  ))
-                ) : searchTerm.trim() !== "" ? (
-                  <Animated.View entering={FadeIn.duration(animation.fast)} style={[modalStyles.warningContainer, isDark && modalStyles.warningContainer_dark]}>
-                    <Text style={{ fontSize: 48, marginBottom: spacing.sm }}>🔍</Text>
-                    <Text style={[modalStyles.warningText, isDark && modalStyles.warningText_dark]}>"{searchTerm}" не найдено</Text>
-                    <Text
-                      style={{
-                        ...typography.caption,
-                        color: isDark ? colors.dark.text.tertiary : colors.light.text.tertiary,
-                        marginTop: spacing.sm,
-                        textAlign: "center",
-                      }}
-                    >
-                      Попробуйте ввести часть названия или проверьте орфографию
-                    </Text>
-                  </Animated.View>
-                ) : null}
+                  ))}
               </View>
             )}
 
@@ -887,6 +1036,8 @@ const WelcomeScreen = () => {
                           key={`warning-${index}`}
                           entering={FadeInUp.delay(index * 50).duration(animation.fast)}
                           style={[modalStyles.warningText, isDark && { color: colors.dark.danger }]}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.body}
                         >
                           ⚠️ Внимание: {warning}
                         </Animated.Text>
@@ -904,10 +1055,11 @@ const WelcomeScreen = () => {
                     const hasValue = type === "text" ? !!(raw && String(raw).trim() !== "") : raw !== undefined && String(raw) !== "";
                     const isValid = type === "text" ? hasValue : num !== undefined && num > 0;
 
-                    // подсказка единиц по label
                     const labelText = (label || "").toLowerCase();
                     const unitHint =
-                      labelText.includes("вес") ? "кг" : labelText.includes("возраст") ? "лет" : labelText.includes("рост") ? "см" : null;
+                      labelText.includes("вес") ? "кг" :
+                      labelText.includes("возраст") ? "лет" :
+                      labelText.includes("рост") ? "см" : null;
 
                     return (
                       <Animated.View key={inputName} entering={FadeInUp.delay(index * 100).duration(animation.normal)} style={{ marginBottom: spacing.md }}>
@@ -918,6 +1070,9 @@ const WelcomeScreen = () => {
                             color: isDark ? colors.dark.text.primary : colors.light.text.primary,
                             marginBottom: spacing.xs,
                           }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.small}
+                          numberOfLines={2}
                         >
                           📝 {label}
                         </Text>
@@ -933,12 +1088,8 @@ const WelcomeScreen = () => {
                               color: isDark ? colors.dark.text.primary : colors.light.text.primary,
                               borderWidth: 2,
                               borderColor: hasValue
-                                ? isValid
-                                  ? colors.light.success
-                                  : colors.light.danger
-                                : isDark
-                                ? colors.dark.border
-                                : colors.light.border,
+                                ? (isValid ? colors.light.success : colors.light.danger)
+                                : (isDark ? colors.dark.border : colors.light.border),
                               ...shadows.sm,
                             }}
                             onChangeText={(text) => handleInputChange(inputName, text)}
@@ -948,6 +1099,8 @@ const WelcomeScreen = () => {
                             placeholderTextColor={isDark ? colors.dark.text.tertiary : colors.light.text.tertiary}
                             accessibilityLabel={`Введите ${label}`}
                             autoCapitalize={type === "text" ? "none" : "sentences"}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.body}
                           />
 
                           {/* Подсказка единицы */}
@@ -963,6 +1116,7 @@ const WelcomeScreen = () => {
                                 paddingHorizontal: spacing.xs,
                                 paddingVertical: 2,
                               }}
+                              pointerEvents="none"
                             >
                               <Text
                                 style={{
@@ -970,6 +1124,8 @@ const WelcomeScreen = () => {
                                   fontWeight: "600",
                                   color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
                                 }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.small}
                               >
                                 {unitHint}
                               </Text>
@@ -991,8 +1147,11 @@ const WelcomeScreen = () => {
                                 justifyContent: "center",
                                 alignItems: "center",
                               }}
+                              pointerEvents="none"
                             >
-                              <Text style={{ fontSize: 10, color: "#FFFFFF", fontWeight: "bold" }}>{isValid ? "✓" : "!"}</Text>
+                              <Text style={{ fontSize: 10, color: "#FFFFFF", fontWeight: "bold" }} allowFontScaling={false}>
+                                {isValid ? "✓" : "!"}
+                              </Text>
                             </View>
                           )}
                         </View>
@@ -1017,8 +1176,20 @@ const WelcomeScreen = () => {
                         accessibilityLabel="Выполнить расчет"
                         accessibilityRole="button"
                       >
-                        <Text style={{ color: colors.light.surface, fontSize: 18, fontWeight: "700", textAlign: "center" }}>🧮 Рассчитать</Text>
-                        <Text style={{ color: colors.light.surface, fontSize: 14, opacity: 0.9, marginTop: spacing.xs, textAlign: "center" }}>
+                        <Text
+                          style={{ color: colors.light.surface, fontSize: 18, fontWeight: "700", textAlign: "center" }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.h2}
+                          numberOfLines={1}
+                        >
+                          🧮 Рассчитать
+                        </Text>
+                        <Text
+                          style={{ color: colors.light.surface, fontSize: 14, opacity: 0.9, marginTop: spacing.xs, textAlign: "center" }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.small}
+                          numberOfLines={2}
+                        >
                           Нажмите для получения результата
                         </Text>
                       </TouchableOpacity>
@@ -1041,7 +1212,14 @@ const WelcomeScreen = () => {
                           accessibilityLabel="Очистить все поля и результаты"
                           accessibilityRole="button"
                         >
-                          <Text style={{ color: isDark ? "#FCA5A5" : "#DC2626", fontSize: 16, fontWeight: "600", textAlign: "center" }}>🗑️ Очистить всё</Text>
+                          <Text
+                            style={{ color: isDark ? "#FCA5A5" : "#DC2626", fontSize: 16, fontWeight: "600", textAlign: "center" }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.body}
+                            numberOfLines={1}
+                          >
+                            🗑️ Очистить всё
+                          </Text>
                         </TouchableOpacity>
                       )}
                     </Animated.View>
@@ -1064,19 +1242,40 @@ const WelcomeScreen = () => {
                           marginBottom: spacing.md,
                         }}
                       >
-                        <Text style={{ fontSize: 16, fontWeight: "600", color: isDark ? "#FCA5A5" : "#DC2626", textAlign: "center", marginBottom: spacing.xs }}>
+                        <Text
+                          style={{ fontSize: 16, fontWeight: "600", color: isDark ? "#FCA5A5" : "#DC2626", textAlign: "center", marginBottom: spacing.xs }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.h2}
+                          numberOfLines={1}
+                        >
                           ⚠️ {results.type === "validation" ? "Необходимо заполнить" : "Ошибка расчёта"}
                         </Text>
-                        <Text style={{ fontSize: 14, color: isDark ? "#FCA5A5" : "#DC2626", textAlign: "center", lineHeight: 20 }}>{results.message}</Text>
+                        <Text
+                          style={{ fontSize: 14, color: isDark ? "#FCA5A5" : "#DC2626", textAlign: "center", lineHeight: 20 }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.body}
+                        >
+                          {results.message}
+                        </Text>
                       </Animated.View>
                     )}
 
                     {/* Успех */}
                     {results.success && (
-                      <Animated.View entering={FadeInUp.duration(animation.normal)} style={[modalStyles.resultsContainer, isDark && modalStyles.resultsContainer_dark]}>
+                      <Animated.View
+                        entering={FadeInUp.duration(animation.normal)}
+                        style={[modalStyles.resultsContainer, isDark && modalStyles.resultsContainer_dark]}
+                      >
                         {/* Header */}
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md }}>
-                          <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? colors.dark.primary : colors.light.primary }}>🧮 Результат расчёта</Text>
+                          <Text
+                            style={{ fontSize: 18, fontWeight: "700", color: isDark ? colors.dark.primary : colors.light.primary }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.h2}
+                            numberOfLines={1}
+                          >
+                            🧮 Результат расчёта
+                          </Text>
 
                           <View style={{ flexDirection: "row" }}>
                             <TouchableOpacity
@@ -1095,6 +1294,9 @@ const WelcomeScreen = () => {
                                   color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
                                   fontWeight: "500",
                                 }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.small}
+                                numberOfLines={1}
                               >
                                 📋 Копировать
                               </Text>
@@ -1115,6 +1317,9 @@ const WelcomeScreen = () => {
                                   color: isDark ? colors.dark.text.secondary : colors.light.text.secondary,
                                   fontWeight: "500",
                                 }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.small}
+                                numberOfLines={1}
                               >
                                 ✕ Сбросить
                               </Text>
@@ -1130,37 +1335,28 @@ const WelcomeScreen = () => {
                             marginBottom: spacing.md,
                             fontStyle: "italic",
                           }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.small}
+                          numberOfLines={2}
                         >
                           📝 Препарат: {results.formula}
                         </Text>
 
-                        {/* Сами результаты с подсветкой лимитов */}
+                        {/* Строки результатов */}
                         {results.items.map((row, index) => {
                           const border =
                             row.status === "high"
-                              ? isDark
-                                ? "#F87171"
-                                : "#DC2626"
+                              ? (isDark ? "#F87171" : "#DC2626")
                               : row.status === "low"
-                              ? isDark
-                                ? "#FBBF24"
-                                : "#D97706"
-                              : isDark
-                              ? colors.dark.border
-                              : colors.light.border;
+                              ? (isDark ? "#FBBF24" : "#D97706")
+                              : (isDark ? colors.dark.border : colors.light.border);
 
                           const valueColor =
                             row.status === "high"
-                              ? isDark
-                                ? "#F87171"
-                                : "#DC2626"
+                              ? (isDark ? "#F87171" : "#DC2626")
                               : row.status === "low"
-                              ? isDark
-                                ? "#FBBF24"
-                                : "#D97706"
-                              : isDark
-                              ? colors.dark.primary
-                              : colors.light.primary;
+                              ? (isDark ? "#FBBF24" : "#D97706")
+                              : (isDark ? colors.dark.primary : colors.light.primary);
 
                           const badge = row.status === "high" ? "↑ выше макс." : row.status === "low" ? "↓ ниже мин." : null;
 
@@ -1183,19 +1379,34 @@ const WelcomeScreen = () => {
                             >
                               <View style={{ flex: 1, paddingRight: spacing.sm }}>
                                 <Text
-                                  style={{
-                                    fontSize: 16,
-                                    fontWeight: "600",
-                                    color: isDark ? colors.dark.text.primary : colors.light.text.primary,
-                                  }}
+                                  style={{ fontSize: 16, fontWeight: "600", color: isDark ? colors.dark.text.primary : colors.light.text.primary }}
+                                  allowFontScaling
+                                  maxFontSizeMultiplier={FONT_LIMIT.body}
+                                  numberOfLines={2}
+                                  {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
                                 >
                                   {row.name}
                                 </Text>
                                 {!!badge && (
-                                  <Text style={{ marginTop: 4, fontSize: 12, fontWeight: "600", color: valueColor }}>{badge}</Text>
+                                  <Text
+                                    style={{ marginTop: 4, fontSize: 12, fontWeight: "600", color: valueColor }}
+                                    allowFontScaling
+                                    maxFontSizeMultiplier={FONT_LIMIT.small}
+                                    numberOfLines={1}
+                                  >
+                                    {badge}
+                                  </Text>
                                 )}
                               </View>
-                              <Text style={{ fontSize: 18, fontWeight: "700", color: valueColor, textAlign: "right" }}>{row.text}</Text>
+                              <Text
+                                style={{ fontSize: 18, fontWeight: "700", color: valueColor, textAlign: "right" }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.h2}
+                                numberOfLines={1}
+                                {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
+                              >
+                                {row.text}
+                              </Text>
                             </Animated.View>
                           );
                         })}
@@ -1206,7 +1417,7 @@ const WelcomeScreen = () => {
               </View>
             )}
 
-            {/* Небольшой отступ снизу */}
+            {/* Отступ */}
             <View style={{ height: spacing.xl }} />
 
             {/* Футер */}
@@ -1218,6 +1429,8 @@ const WelcomeScreen = () => {
                   textAlign: "center",
                   paddingHorizontal: spacing.lg,
                 }}
+                allowFontScaling
+                maxFontSizeMultiplier={FONT_LIMIT.small}
               >
                 📱 Для дополнительной информации обратитесь к лечащему врачу
               </Text>

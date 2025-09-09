@@ -69,8 +69,8 @@ const Chip = ({ label, color }) => (
 );
 
 const CalcShockIndexScreen = () => {
-  const [sbp, setSbp] = useState('120');
-  const [hr, setHr] = useState('100');
+  const [sbp, setSbp] = useState('');
+  const [hr, setHr] = useState('');
   const [ageYears, setAgeYears] = useState('');
   const [pregnant, setPregnant] = useState(false);
   const [trauma, setTrauma] = useState(false);
@@ -133,11 +133,27 @@ const CalcShockIndexScreen = () => {
           <Row>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={{ color: theme.sub }}>Беременность</Text>
-              <Switch value={pregnant} onValueChange={setPregnant} />
+              <Switch
+                value={pregnant}
+                onValueChange={setPregnant}
+                trackColor={{
+                  false: Platform.OS === 'android' ? '#E5E7EB' : undefined,
+                  true: Platform.OS === 'android' ? theme.accent : undefined
+                }}
+                thumbColor={Platform.OS === 'android' ? (pregnant ? '#FFFFFF' : '#F9FAFB') : undefined}
+              />
             </View>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Text style={{ color: theme.sub }}>Травма</Text>
-              <Switch value={trauma} onValueChange={setTrauma} />
+              <Switch
+                value={trauma}
+                onValueChange={setTrauma}
+                trackColor={{
+                  false: Platform.OS === 'android' ? '#E5E7EB' : undefined,
+                  true: Platform.OS === 'android' ? theme.accent : undefined
+                }}
+                thumbColor={Platform.OS === 'android' ? (trauma ? '#FFFFFF' : '#F9FAFB') : undefined}
+              />
             </View>
           </Row>
         </Section>

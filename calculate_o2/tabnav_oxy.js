@@ -10,7 +10,10 @@ const Tabnav_oxy = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.container_2}>
             <StatusBar barStyle="dark-content" backgroundColor="#f8fbff" />
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ flexGrow: 1, padding: 16, paddingBottom: 32 }}
+            >
                 {/* Заголовок */}
                 <Text style={styles.header}>Кислородные расчеты</Text>
 
@@ -18,15 +21,6 @@ const Tabnav_oxy = ({ navigation }) => {
                 <Text style={styles.subtitle}>
                     Выберите необходимый тип расчета для проведения кислородной терапии
                 </Text>
-
-                {/* Информационная карточка */}
-                <View style={styles.infoCard}>
-                    <Text style={styles.infoCardTitle}>💡 Важная информация</Text>
-                    <Text style={styles.infoCardText}>
-                        Все расчеты основаны на современных медицинских стандартах и рекомендациях ВОЗ
-                    </Text>
-                </View>
-
                 {/* Кнопки с иконками */}
                 <View style={styles.buttonGroup}>
                     <TouchableOpacity
@@ -67,7 +61,6 @@ const Tabnav_oxy = ({ navigation }) => {
                             </View>
                         </View>
                     </TouchableOpacity>
-
                 </View>
 
                 {/* Дополнительная информация внизу */}
@@ -77,6 +70,7 @@ const Tabnav_oxy = ({ navigation }) => {
                         Обратитесь к врачу для точной диагностики.
                     </Text>
                 </View>
+
             </ScrollView>
         </SafeAreaView>
     );

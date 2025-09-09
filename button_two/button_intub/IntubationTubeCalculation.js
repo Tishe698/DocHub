@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Switch, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, TextInput, Switch, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import { calculateIntubationTubeLogic } from './CalculateIntubationTube';
 
 const Label = ({ children }) => (
@@ -42,10 +42,12 @@ const Pill = ({ active, onPress, children }) => (
 
 const NumberInput = ({ value, onChangeText, placeholder }) => (
   <TextInput
-    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-    value={value}
+    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'number-pad'}
+    value={value || ''}
     onChangeText={onChangeText}
     placeholder={placeholder}
+    placeholderTextColor="#9CA3AF"
+    textAlignVertical="center"
     style={{
       borderWidth: 1,
       borderColor: '#E5E7EB',
@@ -109,7 +111,17 @@ const IntubationTubeCalculation = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F3F4F6', padding: 16 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: '#F3F4F6' }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        padding: 16,
+        paddingBottom: 32,
+      }}
+      showsVerticalScrollIndicator={false}
+      bounces={false}
+      alwaysBounceVertical={false}
+    >
       <Text style={{ fontSize: 20, fontWeight: '800', marginBottom: 12 }}>
         Расчёт эндотрахеальной трубки (Скорая помощь)
       </Text>
@@ -204,7 +216,7 @@ const IntubationTubeCalculation = () => {
           )}
         </Box>
       )}
-    </View>
+    </ScrollView>
   );
 };
 

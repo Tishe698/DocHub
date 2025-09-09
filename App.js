@@ -2,6 +2,24 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Text, TextInput } from 'react-native';
+import { fontScaling } from './theme';
+
+// Глобальное отключение масштабирования шрифтов для стабильной верстки
+Text.defaultProps = {
+  ...Text.defaultProps,
+  allowFontScaling: fontScaling.default,
+  maxFontSizeMultiplier: fontScaling.maxScale,
+  minFontSizeMultiplier: fontScaling.minScale,
+};
+
+// Аналогично для TextInput
+TextInput.defaultProps = {
+  ...TextInput.defaultProps,
+  allowFontScaling: fontScaling.default,
+  maxFontSizeMultiplier: fontScaling.maxScale,
+  minFontSizeMultiplier: fontScaling.minScale,
+};
 import ButtonApp from './main_screen/button_app';
 import WelcomeScreen from './js_button_preparation/calculate_button';
 import Tabnav from './button_two/navigate_button/TabnavTube';

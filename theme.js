@@ -175,6 +175,21 @@ export const dimensions = {
   isLargeScreen: screenWidth > 428,
 };
 
+// Font scaling utilities
+export const fontScaling = {
+  // Глобально отключено по умолчанию
+  default: false,
+
+  // Точечное включение
+  enabled: true,
+
+  // Максимальный коэффициент масштабирования
+  maxScale: 1.2,
+
+  // Минимальный коэффициент масштабирования
+  minScale: 0.8,
+};
+
 // Common component styles
 export const componentStyles = {
   button: {

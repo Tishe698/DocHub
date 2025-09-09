@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image
 } from 'react-native';
+import { ScaledText, AdaptiveText } from '../components/FontScaling';
 import Animated, {
   FadeInUp,
   FadeIn,
@@ -89,6 +90,8 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
               isDark && buttonStyles.cardTitleOnImage_dark
             ]}
             entering={FadeInUp.delay(700 + index * 100).duration(400)}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}
           >
             {item.title}
           </Animated.Text>
@@ -100,6 +103,8 @@ const ModernCard = ({ item, index, onPress, isDark }) => {
               isDark && buttonStyles.cardDescriptionOnImage_dark
             ]}
             entering={FadeInUp.delay(800 + index * 100).duration(400)}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}
           >
             {item.description}
           </Animated.Text>
@@ -228,12 +233,16 @@ const ButtonApp = ({ navigation }) => {
             // Текст всегда контрастный (белый) поверх тёмного градиента
             style={[buttonStyles.appTitle, buttonStyles.appTitleGradient, { color: '#ffffff' }]}
             entering={FadeInUp.delay(200).duration(500)}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}
           >
             🏥 DocHub
           </Animated.Text>
           <Animated.Text
             style={[buttonStyles.appSubtitle, buttonStyles.appSubtitleGradient, { color: '#e2e8f0' }]}
             entering={FadeInUp.delay(400).duration(500)}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}
           >
             🩺 Медицинские расчеты и справочники
           </Animated.Text>

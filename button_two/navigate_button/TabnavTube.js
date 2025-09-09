@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, SafeAreaView, Text, View, Image } from 'react-native';
+import { TouchableOpacity, SafeAreaView, Text, View, Image, ScrollView } from 'react-native';
 import { colors, spacing, borderRadius, typography, shadows } from '../../theme';
+import { ScaledText } from '../../components/FontScaling';
 
 const Tabnav = ({ navigation }) => {
     const handleButtonPress = (screenName) => {
@@ -17,8 +18,10 @@ const Tabnav = ({ navigation }) => {
                 marginBottom: spacing.lg,
                 ...shadows.md,
                 borderWidth: 2,
-                borderColor: colors.light.primary + '20',
+                borderColor: 'rgba(37, 99, 235, 0.2)',
                 minHeight: 140,
+                width: '100%',
+                maxWidth: 320,
                 justifyContent: 'center',
                 alignItems: 'center',
             }}
@@ -40,14 +43,18 @@ const Tabnav = ({ navigation }) => {
                 color: colors.light.primary,
                 marginBottom: spacing.xs,
                 textAlign: 'center'
-            }]}>
+            }]}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}>
                 {title}
             </Text>
             <Text style={[typography.body2, {
                 color: colors.light.text.secondary,
                 textAlign: 'center',
                 lineHeight: 20
-            }]}>
+            }]}
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1.2}>
                 {subtitle}
             </Text>
         </TouchableOpacity>
@@ -55,19 +62,35 @@ const Tabnav = ({ navigation }) => {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.light.background }}>
-            <View style={{ flex: 1, padding: spacing.lg }}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    padding: spacing.lg,
+                    paddingBottom: spacing.xl
+                }}
+            >
                 {/* Header */}
                 <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-                    <Text style={[typography.h1, { color: colors.light.primary, marginBottom: spacing.sm }]}>
+                    <Text style={[typography.h1, { color: colors.light.primary, marginBottom: spacing.sm }]}
+                    allowFontScaling={false}
+                    maxFontSizeMultiplier={1.2}>
                         🫁 Расчет трубок
                     </Text>
-                    <Text style={[typography.body1, { color: colors.light.text.secondary, textAlign: 'center' }]}>
+                    <Text style={[typography.body1, { color: colors.light.text.secondary, textAlign: 'center' }]}
+                    allowFontScaling={false}
+                    maxFontSizeMultiplier={1.2}>
                         Выберите тип трубки для расчета
                     </Text>
                 </View>
 
                 {/* Options */}
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingVertical: spacing.lg
+                }}>
                     <TubeOption
                         title="Эндотрахеальная"
                         subtitle="Расчет по росту, возрасту и весу ребенка"
@@ -97,13 +120,15 @@ const Tabnav = ({ navigation }) => {
                         color: colors.light.text.secondary,
                         textAlign: 'center',
                         lineHeight: 18
-                    }]}>
+                    }]}
+                    allowFontScaling={false}
+                    maxFontSizeMultiplier={1.2}>
                         • Всегда проверяйте размер перед использованием{'\n'}
                         • Следуйте инструкциям производителя{'\n'}
                         • При сомнениях используйте меньший размер
                     </Text>
                 </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 };

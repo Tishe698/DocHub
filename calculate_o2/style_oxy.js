@@ -41,7 +41,8 @@ const styles = StyleSheet.create({
     },
     // Медицинский голубой вариант
     container_2: {
-        minHeight: "100%",
+        flex: 1,
+        minHeight: "auto",
         backgroundColor: '#f8fbff',
         paddingTop: 20,
     },
@@ -205,9 +206,11 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         marginTop: 20,
-        width: '90%',
+        width: 'auto',
         borderWidth: 1,
         borderColor: '#ffeaa7',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     footerText: {
         fontSize: 12,

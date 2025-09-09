@@ -206,7 +206,7 @@ export default function Calc_aparat_IVL_pretty() {
     <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
       <Header />
 
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         {/* Памятки */}
         <Card
           title={original1}

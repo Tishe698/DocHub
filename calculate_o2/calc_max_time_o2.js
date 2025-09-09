@@ -29,7 +29,7 @@ const Calc_max_time_o2 = () => {
     return (
         <SafeAreaView style={styles.container_2}>
             <StatusBar barStyle="dark-content" backgroundColor="#f8fbff" />
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <ScrollView contentContainerStyle={[styles.scrollViewContent, { paddingBottom: 32 }]}>
                 {/* Заголовок */}
                 <Text style={styles.header}>Максимальное время ингаляции</Text>
 
