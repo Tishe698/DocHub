@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "DocHub",
+    "slug": "DocHub",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "package": "com.pulsetech7812.dochub",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0f172a"
+      }
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-video"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1d1be0c3-f657-4b15-a455-9cf90c1fd224"
+      }
+    },
+    "owner": "pulsetech7812"
+  }
+}
