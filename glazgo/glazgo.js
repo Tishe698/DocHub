@@ -34,16 +34,18 @@ const M_OPTIONS = [
 ];
 
 const colorBySeverity = (sum) => {
-  if (sum >= 13) return '#10B981'; // зелёный — лёгкая
-  if (sum >= 9)  return '#F59E0B'; // жёлтый — средняя
-  return '#EF4444';                // красный — тяжёлая
-};
-
-const verdict = (sum) => {
-  if (sum >= 13) return 'Лёгкая ЧМТ (13–15)';
-  if (sum >= 9)  return 'Средняя ЧМТ (9–12)';
-  return 'Тяжёлая ЧМТ (≤8)';
-};
+    if (sum === 15) return '#10B981'; // зелёный — ясное
+    if (sum >= 13) return '#3B82F6'; // синий — оглушение
+    if (sum >= 9)  return '#F59E0B'; // жёлтый — сопор
+    return '#EF4444';                // красный — кома
+  };
+  
+  const verdict = (sum) => {
+    if (sum === 15) return 'Ясное сознание (15)';
+    if (sum >= 13)  return 'Оглушение (13–14)';
+    if (sum >= 9)   return 'Сопор (9–12)';
+    return 'Кома (≤8)';
+  };
 
 const Section = ({ title, options, selectedId, onSelect }) => (
   <View style={styles.section}>

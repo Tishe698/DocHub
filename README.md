@@ -437,11 +437,11 @@ npx eas build --platform ios --profile production
 ### 📥 Скачать готовое приложение
 
 #### 🚀 Текущая версия: v2.0.0
-**Android APK**: [Скачать с Expo](https://expo.dev/artifacts/eas/t6epoKB5zhD88pCDTeYXKZ.apk)
+**Android APK**: [Скачать с Expo](https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk)
 
 ```bash
 # Скачать APK напрямую:
-curl -L -o DocHub.apk https://expo.dev/artifacts/eas/t6epoKB5zhD88pCDTeYXKZ.apk
+curl -L -o DocHub.apk https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk
 
 # Или собрать самостоятельно:
 npx eas build --platform android --profile preview

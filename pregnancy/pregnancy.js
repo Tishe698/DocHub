@@ -1,11 +1,8 @@
-// Date_pregnancy.jsx — стабильный placeholder (оверлей), Expo + Android friendly
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +11,8 @@ import {
   Alert,
   Pressable,
   StyleSheet,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
@@ -21,33 +20,30 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
 const Date_pregnancy = () => {
-  // --- video (expo-video требует dev build/сборку, не Expo Go) ---
   const videoRef = useRef(null);
 
-  // Безопасная инициализация плеера для Expo Go
-  let player;
+  // Инициализация плеера БЕЗ автозапуска
+  let player = null;
   try {
     player = useVideoPlayer(require("../g.mp4"), (p) => {
-      if (p) {
-        p.loop = true;
-        p.muted = false;
-        p.volume = 1.0;
-        p.play();
-      }
+      if (!p) return;
+      p.loop = true;
+      p.muted = false;
+      p.volume = 1.0;
+      // p.play(); — убрано: пользователь запускает сам
     });
-  } catch (error) {
-    // Fallback для Expo Go
-    player = null;
+  } catch {
+    player = null; // Expo Go: безопасный фолбэк
   }
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // Безопасное использование useEvent только если player существует
+  // Следим за состоянием воспроизведения (экспортируемое событие expo-video)
   if (player) {
     useEvent(player, "playingChange", (e) => setIsPlaying(!!e?.isPlaying));
   }
 
-  // --- state ---
+  // ---------------------- Состояния формы ----------------------
   const [lastMenstrualPeriod, setLastMenstrualPeriod] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [manualDateInput, setManualDateInput] = useState("");
@@ -55,7 +51,7 @@ const Date_pregnancy = () => {
   const [dueDate, setDueDate] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
 
-  // --- animations ---
+  // ---------------------- Анимации ----------------------
   const fadeCards = useRef(new Animated.Value(0)).current;
   const slideVideo = useRef(new Animated.Value(20)).current;
   const slideForm = useRef(new Animated.Value(20)).current;
@@ -83,22 +79,22 @@ const Date_pregnancy = () => {
     ]).start();
   }, []);
 
-  // --- calc week & due date ---
+  // ---------------------- Вычисления срока ----------------------
   useEffect(() => {
-    if (lastMenstrualPeriod) {
-      const today = new Date();
-      const daysSinceLMP = (today - lastMenstrualPeriod) / (1000 * 60 * 60 * 24);
-      const calculatedWeek = Math.floor(daysSinceLMP / 7);
-      setWeek(calculatedWeek);
-      const due = new Date(lastMenstrualPeriod.getTime() + 40 * 7 * 24 * 60 * 60 * 1000);
-      setDueDate(due);
-    } else {
+    if (!lastMenstrualPeriod) {
       setWeek(null);
       setDueDate(null);
+      return;
     }
+    const today = new Date();
+    const daysSinceLMP = (today.getTime() - lastMenstrualPeriod.getTime()) / (1000 * 60 * 60 * 24);
+    const calculatedWeek = Math.floor(daysSinceLMP / 7);
+    setWeek(calculatedWeek);
+    const due = new Date(lastMenstrualPeriod.getTime() + 40 * 7 * 24 * 60 * 60 * 1000);
+    setDueDate(due);
   }, [lastMenstrualPeriod]);
 
-  // --- helpers ---
+  // ---------------------- Хелперы ----------------------
   const formatRussianDate = (date) => {
     try {
       return new Intl.DateTimeFormat("ru-RU", {
@@ -125,12 +121,13 @@ const Date_pregnancy = () => {
   };
 
   const parseDDMMYYYY = (s) => {
-    const a = s.split(".").map(Number);
-    if (a.length !== 3) return null;
-    const d = new Date(a[2], a[1] - 1, a[0]);
+    const parts = s.split(".").map((n) => Number(n));
+    if (parts.length !== 3) return null;
+    const d = new Date(parts[2], parts[1] - 1, parts[0]);
     return isNaN(d.getTime()) ? null : d;
   };
 
+  // ---------------------- Обработчики ----------------------
   const handleManualDateChange = (text) => {
     const f = formatInputDate(text);
     setManualDateInput(f);
@@ -142,6 +139,7 @@ const Date_pregnancy = () => {
         return;
       }
       setLastMenstrualPeriod(selectedDate);
+      Keyboard.dismiss();
     }
   };
 
@@ -150,10 +148,7 @@ const Date_pregnancy = () => {
     if (selectedDate) {
       setLastMenstrualPeriod(selectedDate);
       setManualDateInput(
-        `${String(selectedDate.getDate()).padStart(2, "0")}.${String(selectedDate.getMonth() + 1).padStart(
-          2,
-          "0"
-        )}.${selectedDate.getFullYear()}`
+        `${String(selectedDate.getDate()).padStart(2, "0")}.${String(selectedDate.getMonth() + 1).padStart(2, "0")}.${selectedDate.getFullYear()}`
       );
     }
   };
@@ -164,105 +159,101 @@ const Date_pregnancy = () => {
     setIsTyping(false);
   };
 
-  const dismissKeyboard = () => Keyboard.dismiss();
-
   const titleToday = useMemo(() => {
     const d = new Date();
-    return new Intl.DateTimeFormat("ru-RU", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(d);
+    return new Intl.DateTimeFormat("ru-RU", { year: "numeric", month: "long", day: "numeric" }).format(d);
   }, []);
 
-  const enterFs = () => {
-    if (videoRef.current) {
-      videoRef.current.enterFullscreen();
-    }
-  };
+  const enterFs = () => videoRef.current?.enterFullscreen();
 
-  // --- render ---
+  // ---------------------- Рендер ----------------------
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard} accessible={false}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.root}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerBgOverlay} />
-            <Text style={styles.headerTitle}>Срок беременности</Text>
-            <Text style={styles.headerSubtitle}>{titleToday}</Text>
-          </View>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View style={styles.root}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerBgOverlay} />
+          <Text style={styles.headerTitle}>Срок беременности</Text>
+          <Text style={styles.headerSubtitle}>{titleToday}</Text>
+        </View>
 
-          <ScrollView contentContainerStyle={styles.containerScroll}>
-            {/* VIDEO CARD */}
-            <Animated.View style={[styles.card, { opacity: fadeCards, transform: [{ translateY: slideVideo }] }]}>
-              <View style={styles.cardHeader}>
-                <MaterialCommunityIcons name="video-outline" size={22} color="#FF6B9D" />
-                <Text style={styles.cardHeaderText}>
-                  Информационное видео о поэтапном развитии ребёнка в утробе матери
-                </Text>
-              </View>
+        <ScrollView
+          contentContainerStyle={styles.containerScroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* VIDEO CARD */}
+          <Animated.View style={[styles.card, { opacity: fadeCards, transform: [{ translateY: slideVideo }] }]}>
+            <View style={styles.cardHeader}>
+              <MaterialCommunityIcons name="video-outline" size={22} color="#FF6B9D" />
+              <Text style={styles.cardHeaderText}>
+                Информационное видео о поэтапном развитии ребёнка в утробе матери
+              </Text>
+            </View>
 
-              <View style={styles.videoWrap}>
-                {player ? (
-                  <VideoView
-                    ref={videoRef}
-                    style={styles.video}
-                    player={player}
-                    nativeControls
-                    contentFit="contain"
-                    allowsFullscreen
-                    allowsPictureInPicture
-                  />
-                ) : (
-                  <View style={[styles.video, styles.videoFallback]}>
-                    <Ionicons name="videocam-off" size={48} color="#64748B" />
-                    <Text style={styles.videoFallbackText}>
-                      Видео недоступно в Expo Go{'\n'}Работает в собранном приложении
-                    </Text>
-                  </View>
-                )}
-              </View>
+            <View style={styles.videoWrap}>
+              {player ? (
+                <VideoView
+                  ref={videoRef}
+                  style={styles.video}
+                  player={player}
+                  nativeControls
+                  allowsFullscreen
+                  allowsPictureInPicture
+                  contentFit="contain"
+                  collapsable={false} // важно для тачей на Android
+                />
+              ) : (
+                <View style={[styles.video, styles.videoFallback]}>
+                  <Ionicons name="videocam-off" size={48} color="#64748B" />
+                  <Text style={styles.videoFallbackText}>
+                    Видео недоступно в Expo Go{"\n"}Работает в собранном приложении
+                  </Text>
+                </View>
+              )}
+            </View>
 
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 10, justifyContent: "center" }}>
-                <Pressable
-                  style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
-                  onPress={() => {
-                    if (player) {
-                      isPlaying ? player.pause() : player.play();
-                    } else {
-                      // Fallback для Expo Go - показать сообщение
-                      Alert.alert("Видео недоступно", "Видео работает только в собранном приложении");
-                    }
-                  }}
-                >
-                  <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#0F172A" />
-                  <Text style={styles.controlBtnText}>{isPlaying ? "Пауза" : "Пуск"}</Text>
-                </Pressable>
+            {/* Кастомные кнопки управления (дублируют нативные) */}
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 10, justifyContent: "center" }}>
+              <Pressable
+                style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
+                onPress={() => {
+                  if (!player) {
+                    Alert.alert("Видео недоступно", "Плеер работает в собранном приложении (EAS Build).");
+                    return;
+                  }
+                  player.playing ? player.pause() : player.play();
+                }}
+              >
+                <Ionicons name={isPlaying ? "pause" : "play"} size={18} color="#0F172A" />
+                <Text style={styles.controlBtnText}>{isPlaying ? "Пауза" : "Пуск"}</Text>
+              </Pressable>
 
-                <Pressable
-                  style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
-                  onPress={() => {
-                    if (player) {
-                      enterFs();
-                    } else {
-                      Alert.alert("Полноэкранный режим недоступен", "Эта функция работает только в собранном приложении");
-                    }
-                  }}
-                >
-                  <Ionicons name="expand" size={18} color="#0F172A" />
-                  <Text style={styles.controlBtnText}>На весь экран</Text>
-                </Pressable>
-              </View>
-            </Animated.View>
+              <Pressable
+                style={({ pressed }) => [styles.controlBtn, pressed && styles.buttonPressed]}
+                onPress={() => {
+                  if (!player) {
+                    Alert.alert("Недоступно", "Полноэкранный режим работает в собранном приложении.");
+                    return;
+                  }
+                  enterFs();
+                }}
+              >
+                <Ionicons name="expand" size={18} color="#0F172A" />
+                <Text style={styles.controlBtnText}>На весь экран</Text>
+              </Pressable>
+            </View>
+          </Animated.View>
 
-            {/* INPUT CARD */}
-            <Animated.View style={[styles.card, { opacity: fadeCards, transform: [{ translateY: slideForm }] }]}>
-              {!lastMenstrualPeriod ? (
+          {/* INPUT CARD */}
+          <Animated.View style={[styles.card, { opacity: fadeCards, transform: [{ translateY: slideForm }] }]}>
+            {!lastMenstrualPeriod ? (
+              // Оборачиваем только форму, чтобы тапы снаружи НЕ перехватывали видео
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                 <View>
                   <Text style={styles.las_day_menstr}>{"Введите первый день  \nпоследней менструации"}</Text>
 
-                  {/* Поле ввода с НАДЁЖНЫМ кастомным плейсхолдером (оверлей) */}
+                  {/* Поле ввода с кастомным placeholder (оверлей) */}
                   <View style={{ position: "relative", marginTop: 8 }}>
                     <Ionicons
                       name="calendar-outline"
@@ -272,22 +263,20 @@ const Date_pregnancy = () => {
                     />
 
                     <TextInput
-                      // системный placeholder выключаем — рисуем свой
-                      placeholder=""
+                      placeholder="" // системный плейсхолдер скрыт — используем оверлей ниже
                       value={manualDateInput}
                       onChangeText={(t) => {
                         handleManualDateChange(t);
                         setIsTyping(!!t);
                       }}
-                      // можно оставить numeric — оверлей всё равно виден
                       keyboardType={Platform.OS === "ios" ? "decimal-pad" : "numeric"}
                       style={[styles.input, { paddingLeft: 38 }]}
                       onFocus={() => setIsTyping(true)}
                       onBlur={() => setIsTyping(false)}
                       accessibilityLabel="Поле ввода даты в формате дд.мм.гггг"
+                      returnKeyType="done"
                     />
 
-                    {/* Кастомный плейсхолдер: показывается, когда value пустое */}
                     {!manualDateInput && (
                       <View pointerEvents="none" style={styles.phWrap}>
                         <Text style={styles.phText}>Введите дату в формате дд.мм.гггг</Text>
@@ -320,36 +309,39 @@ const Date_pregnancy = () => {
                     </View>
                   )}
                 </View>
-              ) : (
-                <View>
-                  <Text style={styles.result_pregnancy}>Неделя беременности: {week}</Text>
-                  {dueDate && (
-                    <Text style={styles.result_pregnancy}>
-                      Предполагаемая дата родов: {formatRussianDate(dueDate)}
-                    </Text>
-                  )}
-                  <Pressable
-                    style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-                    onPress={handleRecalculate}
-                    android_ripple={{ color: "#e2e8f0" }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Повторный расчёт"
-                  >
-                    <Ionicons name="refresh" size={18} color="#0F172A" />
-                    <Text style={styles.las_day_menstr_1}>Повторный расчёт</Text>
-                  </Pressable>
-                </View>
-              )}
-            </Animated.View>
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+              </TouchableWithoutFeedback>
+            ) : (
+              <View>
+                <Text style={styles.result_pregnancy}>Неделя беременности: {week}</Text>
+                {dueDate && (
+                  <Text style={styles.result_pregnancy}>
+                    Предполагаемая дата родов: {formatRussianDate(dueDate)}
+                  </Text>
+                )}
+                <Pressable
+                  style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+                  onPress={handleRecalculate}
+                  android_ripple={{ color: "#e2e8f0" }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Повторный расчёт"
+                >
+                  <Ionicons name="refresh" size={18} color="#0F172A" />
+                  <Text style={styles.las_day_menstr_1}>Повторный расчёт</Text>
+                </Pressable>
+              </View>
+            )}
+          </Animated.View>
+
+          <View style={{ height: 24 }} />
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#F8FAFC" },
+
   header: {
     paddingTop: 18,
     paddingBottom: 22,
@@ -360,6 +352,7 @@ const styles = StyleSheet.create({
   headerBgOverlay: { position: "absolute", inset: 0, backgroundColor: "#7C3AED", opacity: 0.18 },
   headerTitle: { color: "#fff", fontSize: 20, fontWeight: "800" },
   headerSubtitle: { color: "rgba(255,255,255,0.9)", marginTop: 4 },
+
   containerScroll: { padding: 16 },
 
   card: {
@@ -412,10 +405,10 @@ const styles = StyleSheet.create({
     height: 48,
   },
 
-  // Кастомный placeholder-оверлей
+  // Кастомный placeholder как оверлей — стабильно в релизах Android
   phWrap: {
     position: "absolute",
-    left: 38, // отступ с учётом иконки
+    left: 38,
     right: 12,
     top: 0,
     bottom: 0,
