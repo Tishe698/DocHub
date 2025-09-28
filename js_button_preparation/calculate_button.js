@@ -59,7 +59,16 @@ const BottomSheet = ({ visible, onClose, children, isDark, selectedFormula, onBa
   const backdropOpacity = useSharedValue(0);
 
   const showSheet = () => {
-    translateY.value = withSpring(screenHeight * 0.05, { damping: 15 });
+    // Выезд снизу в основное положение
+    translateY.value = withTiming(screenHeight * 0.05, { duration: 300 }, () => {
+      // Первый прыжок чуть вверх
+      translateY.value = withTiming(screenHeight * 0.03, { duration: 150 }, () => {
+        // Второй прыжок вниз и стоп
+        translateY.value = withTiming(screenHeight * 0.05, { duration: 150 });
+      });
+    });
+  
+    // Фон затемняется параллельно
     backdropOpacity.value = withTiming(1, { duration: 300 });
   };
 

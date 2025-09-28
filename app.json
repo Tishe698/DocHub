@@ -11,14 +11,16 @@
       "backgroundColor": "#ffffff"
     },
     "android": {
-      "package": "com.pulsetech7812.dochub",
+      "versionCode": 5,
+      "package": "com.example.DocHub",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0f172a"
       }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pulsetech7812.dochub"
     },
     "plugins": [
       "expo-video"
