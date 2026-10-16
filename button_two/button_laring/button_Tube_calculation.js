@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Text, TextInput, View, Modal, Button, TouchableOpacity, Image,TouchableWithoutFeedback,Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView, View, Modal, Button, TouchableOpacity, Image, TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import { styles_tube_calculate } from '../../css/Tube calculation/Tube calculation_css';
 import calculateTubeLogic from './CalculateTube';
 

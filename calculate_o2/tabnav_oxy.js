@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, SafeAreaView, ScrollView, Text, StatusBar, View } from 'react-native';
+import { TouchableOpacity, SafeAreaView, ScrollView, StatusBar, View } from 'react-native';
+import { Text } from '../components/AppText';
 import styles from './style_oxy'
 
 const Tabnav_oxy = ({ navigation }) => {

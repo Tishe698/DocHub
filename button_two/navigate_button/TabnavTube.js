@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, SafeAreaView, Text, View, Image, ScrollView } from 'react-native';
+import { TouchableOpacity, SafeAreaView, View, Image, ScrollView } from 'react-native';
+import { Text } from '../../components/AppText';
 import { colors, spacing, borderRadius, typography, shadows } from '../../theme';
 import { ScaledText } from '../../components/FontScaling';
 

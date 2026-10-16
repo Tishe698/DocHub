@@ -2,15 +2,15 @@
 import React, { useState } from 'react';
 import {
     View,
-    Text,
-    TextInput,
     TouchableOpacity,
     SafeAreaView,
     ScrollView,
     Alert,
 } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import calculateTubeLogic from './CalculateTube';
 import { colors, spacing, borderRadius, typography, shadows } from '../../theme';
+import parseNum from '../../utils/parseNum';
 
 const LaryngealTubeCalculation = () => {
     const [weight, setWeight] = useState('');
@@ -18,8 +18,8 @@ const LaryngealTubeCalculation = () => {
     const [results, setResults] = useState(null);
 
     const handleCalculate = () => {
-        const weightNum = parseFloat(weight);
-        const heightNum = parseFloat(height);
+        const weightNum = parseNum(weight);
+        const heightNum = parseNum(height);
 
         if (!weightNum || weightNum <= 0) {
             Alert.alert('Ошибка', 'Пожалуйста, введите корректный вес');

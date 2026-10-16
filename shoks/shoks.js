@@ -2,13 +2,13 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Text } from '../components/AppText';
 
 // --- Модель шкалы ШОКС (варианты и баллы) ---
 const QUESTIONS = [

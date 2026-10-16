@@ -177,7 +177,8 @@ export const dimensions = {
 
 // Font scaling utilities
 export const fontScaling = {
-  // Глобально отключено по умолчанию
+  // Значение по умолчанию для ScaledText/ScaledTextInput (components/FontScaling.js).
+  // Глобальные Text/TextInput (components/AppText.js) масштабируются, но не больше maxScale.
   default: false,
 
   // Точечное включение
