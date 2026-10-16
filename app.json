@@ -12,15 +12,26 @@
     },
     "android": {
       "versionCode": 5,
-      "package": "com.example.DocHub",
+      "package": "com.pulsetech7812.dochub",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0f172a"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.pulsetech7812.dochub"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pulsetech7812.dochub",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "plugins": [
       "expo-video"
