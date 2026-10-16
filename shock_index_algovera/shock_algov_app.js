@@ -1,6 +1,7 @@
 // shock_algov_app.js
 import React, { useMemo, useState } from 'react';
-import { View, Text, TextInput, Switch, Pressable, ScrollView, Platform } from 'react-native';
+import { View, Switch, Pressable, ScrollView, Platform } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import calculateShockIndex from './calculateShockIndex';
 
 const theme = {

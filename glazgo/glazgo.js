@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Text } from '../components/AppText';
 
 const E_OPTIONS = [
   { id: 'E4', score: 4, label: 'Произвольное' },

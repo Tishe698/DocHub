@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
-  Text,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,6 +12,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
+import { Text, TextInput } from "../components/AppText";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -22,26 +21,19 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 const Date_pregnancy = () => {
   const videoRef = useRef(null);
 
-  // Инициализация плеера БЕЗ автозапуска
-  let player = null;
-  try {
-    player = useVideoPlayer(require("../g.mp4"), (p) => {
-      if (!p) return;
-      p.loop = true;
-      p.muted = false;
-      p.volume = 1.0;
-      // p.play(); — убрано: пользователь запускает сам
-    });
-  } catch {
-    player = null; // Expo Go: безопасный фолбэк
-  }
+  // Инициализация плеера БЕЗ автозапуска.
+  // Хуки вызываются безусловно (правила хуков React): без try/catch и без if.
+  const player = useVideoPlayer(require("../g.mp4"), (p) => {
+    if (!p) return;
+    p.loop = true;
+    p.muted = false;
+    p.volume = 1.0;
+    // p.play(); — убрано: пользователь запускает сам
+  });
 
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  // Следим за состоянием воспроизведения (экспортируемое событие expo-video)
-  if (player) {
-    useEvent(player, "playingChange", (e) => setIsPlaying(!!e?.isPlaying));
-  }
+  // Следим за состоянием воспроизведения (экспортируемое событие expo-video).
+  // Третий аргумент useEvent — начальное значение, а не колбэк.
+  const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
 
   // ---------------------- Состояния формы ----------------------
   const [lastMenstrualPeriod, setLastMenstrualPeriod] = useState(null);
@@ -86,11 +78,19 @@ const Date_pregnancy = () => {
       setDueDate(null);
       return;
     }
-    const today = new Date();
-    const daysSinceLMP = (today.getTime() - lastMenstrualPeriod.getTime()) / (1000 * 60 * 60 * 24);
+    // Считаем в календарных днях, а не в миллисекундах: при переходе на летнее/зимнее
+    // время в сутках 23 или 25 часов, и расчёт через мс сдвигал результат на день.
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lmp = new Date(
+      lastMenstrualPeriod.getFullYear(),
+      lastMenstrualPeriod.getMonth(),
+      lastMenstrualPeriod.getDate()
+    );
+    const daysSinceLMP = Math.round((today.getTime() - lmp.getTime()) / (1000 * 60 * 60 * 24));
     const calculatedWeek = Math.floor(daysSinceLMP / 7);
     setWeek(calculatedWeek);
-    const due = new Date(lastMenstrualPeriod.getTime() + 40 * 7 * 24 * 60 * 60 * 1000);
+    const due = new Date(lmp.getFullYear(), lmp.getMonth(), lmp.getDate() + 40 * 7);
     setDueDate(due);
   }, [lastMenstrualPeriod]);
 
@@ -123,8 +123,15 @@ const Date_pregnancy = () => {
   const parseDDMMYYYY = (s) => {
     const parts = s.split(".").map((n) => Number(n));
     if (parts.length !== 3) return null;
-    const d = new Date(parts[2], parts[1] - 1, parts[0]);
-    return isNaN(d.getTime()) ? null : d;
+    const [dd, mm, yyyy] = parts;
+    const d = new Date(yyyy, mm - 1, dd);
+    if (isNaN(d.getTime())) return null;
+    // new Date молча «переносит» несуществующие даты (31.02 → 03.03, 99.99 → через годы),
+    // а годы 0–99 превращает в 1900–1999 — такие даты отклоняем.
+    if (d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
+    // Дата последней менструации не может быть в будущем (как и в календаре: maximumDate)
+    if (d > new Date()) return null;
+    return d;
   };
 
   // ---------------------- Обработчики ----------------------
@@ -135,7 +142,7 @@ const Date_pregnancy = () => {
     if (f.length === 10) {
       const selectedDate = parseDDMMYYYY(f);
       if (!selectedDate) {
-        Alert.alert("Некорректная дата", "Проверьте формат: дд.мм.гггг");
+        Alert.alert("Некорректная дата", "Проверьте дату в формате дд.мм.гггг. Дата не может быть позже сегодняшней.");
         return;
       }
       setLastMenstrualPeriod(selectedDate);
@@ -143,8 +150,11 @@ const Date_pregnancy = () => {
     }
   };
 
-  const handleDateChange = (_, selectedDate) => {
+  const handleDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
+    // На Android «Отмена» тоже вызывает onChange (type: "dismissed") с исходной датой
+    // (сегодняшней) — её не применяем, иначе запускался расчёт от сегодняшнего дня.
+    if (event?.type !== "set") return;
     if (selectedDate) {
       setLastMenstrualPeriod(selectedDate);
       setManualDateInput(

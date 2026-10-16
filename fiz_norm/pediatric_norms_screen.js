@@ -2,14 +2,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 
 // --- ДАННЫЕ ИЗ ТАБЛИЦЫ ---
 const NORMS = [
