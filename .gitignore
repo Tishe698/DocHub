@@ -29,7 +29,18 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
+
+# Signing keys and store credentials (never commit)
+*.keystore
+credentials.json
+credentials/
+CREDENTIALS*.txt
+*service-account*.json
+google-services.json
+GoogleService-Info.plist
 
 # typescript
 *.tsbuildinfo
