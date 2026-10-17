@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
+import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { HeaderBackButton } from '@react-navigation/elements';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 // Масштабирование шрифтов задаётся в components/AppText.js: экраны импортируют
@@ -62,11 +64,27 @@ const ROUTES = [
   { name: 'ApgarScreen', component: ApgarScreen, title: 'Шкала Апгар' },
 ];
 
+// На вебе React Navigation подписывает кнопку «назад» для экранного диктора по-английски
+// («<экран>, back»), поэтому там рисуем ту же кнопку с русской подписью. На iOS и Android
+// остаётся системная кнопка: её озвучивает сама ОС на языке телефона.
+const webBackButton = (navigation) =>
+  function WebBackButton({ canGoBack, tintColor, label }) {
+    if (!canGoBack) return null;
+    return (
+      <HeaderBackButton
+        tintColor={tintColor}
+        displayMode="minimal"
+        accessibilityLabel={label ? `Назад: ${label}` : 'Назад'}
+        onPress={navigation.goBack}
+      />
+    );
+  };
+
 function AppNavigator() {
   const theme = useTheme();
   const { colors, isDark } = theme;
   const navigationTheme = useMemo(() => makeNavigationTheme(theme), [theme]);
-  const screenOptions = useMemo(
+  const baseOptions = useMemo(
     () => ({
       headerStyle: { backgroundColor: colors.surface },
       headerTintColor: colors.primary,
@@ -76,13 +94,25 @@ function AppNavigator() {
     }),
     [colors],
   );
+  const screenOptions = useCallback(
+    ({ navigation }) =>
+      Platform.OS === 'web'
+        ? { ...baseOptions, headerLeft: webBackButton(navigation) }
+        : baseOptions,
+    [baseOptions],
+  );
 
   return (
     <NavigationContainer theme={navigationTheme}>
       {/* Единственный StatusBar приложения: экраны свой не рисуют */}
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
-        <Stack.Screen name="Home" component={ButtonApp} options={{ headerShown: false }} />
+        {/* Заголовок «Главная» не виден (шапки нет), но им подписывается кнопка «назад» на следующих экранах */}
+        <Stack.Screen
+          name="Home"
+          component={ButtonApp}
+          options={{ title: 'Главная', headerShown: false }}
+        />
         {ROUTES.map(({ name, component, title }) => (
           <Stack.Screen key={name} name={name} component={component} options={{ title }} />
         ))}
