@@ -165,7 +165,7 @@ const PROPRANOLOL = {
   arrhythmia: { mg: 20, maxDay: 240, text: 'Стенокардия, тахиаритмии: 3 раза в сутки' },
 };
 const propranolol = {
-  name: 'Пропранолол',
+  name: 'Анаприлин (пропранолол)',
   description: 'Таблетки 10 мг',
   inputs: {
     ageYears: AGE,
@@ -240,7 +240,7 @@ const captopril = {
 // 18 лет данных нет. Формы выпуска Физиотенза в РФ — таблетки 0,2 и 0,4 мг (ГРЛС): начальная доза —
 // 1 таблетка 0,2 мг, поэтому обе дозировки названы в описании.
 const moxonidine = {
-  name: 'Моксонидин',
+  name: 'Физиотенз (моксонидин)',
   description: 'Таблетки 0.2 мг и 0.4 мг (Физиотенз). Начальная доза — таблетка 0.2 мг',
   inputs: { ageYears: AGE },
   formula: ({ ageYears }) => {
@@ -272,7 +272,7 @@ const moxonidine = {
 // Начальная доза — нижняя граница диапазона инструкции (консервативно).
 const CLONIDINE_MG_PER_ML = 0.1;
 const clonidine = {
-  name: 'Клонидин',
+  name: 'Клофелин (клонидин)',
   description: 'Раствор 0.1 мг/мл — 1 мл',
   inputs: { ageYears: AGE },
   formula: ({ ageYears }) => {
@@ -308,7 +308,7 @@ const clonidine = {
 // выше 4 мг/мл. До 18 лет противопоказан. Начальная доза — нижняя граница диапазона (консервативно).
 const URAPIDIL_MG_PER_ML = 5;
 const urapidil = {
-  name: 'Урапидил',
+  name: 'Эбрантил (урапидил)',
   description: 'Раствор 5 мг/мл — 5 мл',
   inputs: { ageYears: AGE },
   formula: ({ ageYears }) => {
@@ -352,7 +352,7 @@ const ENOX_MG_PER_ML = 100;
 const ENOX_ELDERLY_AGE = 75;
 const enoxStemiCap = (ageYears) => (toNum(ageYears) >= ENOX_ELDERLY_AGE ? 75 : 100);
 const enoxaparin = {
-  name: 'Эноксапарин натрия',
+  name: 'Клексан (эноксапарин натрия)',
   description: '10000 анти-Xa МЕ/мл (100 мг/мл) — шприцы 0,2–1,0 мл; 1 мг = 100 анти-Xa МЕ',
   inputs: {
     weight: WEIGHT,
@@ -696,7 +696,7 @@ const oxytocin = {
 const ISDN_SPRAY_MG = 1.25;
 const ISDN_INFUSION_MG_PER_ML = 0.1;
 const isosorbide = {
-  name: 'Изосорбида динитрат (раствор/спрей)',
+  name: 'Изокет (изосорбида динитрат, раствор/спрей)',
   description: '1 мг/мл — 10 мл / 1.25 мг/доза',
   inputs: { ageYears: AGE, route: routeInput(['buccal', 'iv'], 'buccal') },
   formula: ({ ageYears, route }) => {
@@ -744,7 +744,7 @@ const isosorbide = {
 // Взрослым (инструкция ГРЛС): в/в капельно 10 мл в 100–200 мл 5–10% глюкозы или 0,9% NaCl со
 // скоростью 3–4 мл/мин каждые 8–12 ч; при тяжёлом течении ОНМК и коме — 20 мл в 200 мл.
 const cytoflavin = {
-  name: 'Инозин + никотинамид + рибофлавин + янтарная кислота',
+  name: 'Цитофлавин (инозин + никотинамид + рибофлавин + янтарная кислота)',
   description:
     'Цитофлавин, раствор для в/в введения — амп. 10 мл; в 1 мл: янтарная кислота 100 мг, инозин 20 мг, никотинамид 10 мг, рибофлавин 2 мг',
   inputs: { ageYears: AGE },
@@ -823,7 +823,7 @@ const thiosulfate = {
 const MEX_MG_PER_ML = 50;
 const MEX_MAX_DAY_MG = 1200;
 const mexidol = {
-  name: 'Этилметилгидроксипиридина сукцинат',
+  name: 'Мексидол (этилметилгидроксипиридина сукцинат)',
   description: 'Раствор 50 мг/мл — 5 мл',
   inputs: { ageYears: AGE, route: routeInput(['iv', 'im'], 'iv') },
   formula: ({ ageYears, route }) => {
@@ -890,7 +890,7 @@ const group = [
   },
   // Формы РФ: капли глазные 20%, тюбик-капельницы 1 / 1.5 / 2 мл, флаконы 5–10 мл (карточки производителей: МЭЗ и др.)
   {
-    name: 'Сульфацетамид 20% (капли глазные)',
+    name: 'Альбуцид (сульфацетамид 20%, капли глазные)',
     description: 'Капли глазные 20% (200 мг/мл) — тюбик-капельница 1.5 мл / флакон',
     inputs: {},
     formula: () => ({}),

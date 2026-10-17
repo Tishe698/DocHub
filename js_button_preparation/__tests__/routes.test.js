@@ -24,8 +24,9 @@ describe('ROUTES', () => {
       inh: 'ингаляционно (небулайзер)',
       mdi: 'ингаляционно (ДАИ)',
       et: 'эндотрахеально',
+      local: 'местно (инфильтрация, блокада)',
     });
-    expect(ROUTE_CODES).toHaveLength(12);
+    expect(ROUTE_CODES).toHaveLength(13);
   });
 
   it('routeLabel возвращает подпись, неизвестный код — как есть', () => {

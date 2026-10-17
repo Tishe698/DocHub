@@ -24,6 +24,7 @@ export const ROUTES = Object.freeze({
   inh: 'ингаляционно (небулайзер)',
   mdi: 'ингаляционно (ДАИ)',
   et: 'эндотрахеально',
+  local: 'местно (инфильтрация, блокада)',
 });
 
 export const ROUTE_CODES = Object.freeze(Object.keys(ROUTES));
