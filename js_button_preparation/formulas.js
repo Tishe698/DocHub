@@ -12,6 +12,11 @@ import emergencyMisc2 from './formula_groups/emergency_misc_2';
 import adultOnly from './formula_groups/adult_only';
 import analgesicsSteroids from './formula_groups/analgesics_steroids';
 import cardioEndocrineMisc from './formula_groups/cardio_endocrine_misc';
+import thrombolyticsAntiplatelets from './formula_groups/thrombolytics_antiplatelets';
+import antiarrhythmicsVasopressors from './formula_groups/antiarrhythmics_vasopressors';
+import bronchodilatorsRsi from './formula_groups/bronchodilators_rsi';
+import electrolytesSolutions from './formula_groups/electrolytes_solutions';
+import antidotesLocalAnalgesia from './formula_groups/antidotes_local_analgesia';
 
 const formulas = [
   ...toxicology,
@@ -25,6 +30,11 @@ const formulas = [
   ...adultOnly,
   ...analgesicsSteroids,
   ...cardioEndocrineMisc,
+  ...thrombolyticsAntiplatelets,
+  ...antiarrhythmicsVasopressors,
+  ...bronchodilatorsRsi,
+  ...electrolytesSolutions,
+  ...antidotesLocalAnalgesia,
 ];
 
 export default formulas;
