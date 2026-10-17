@@ -1,311 +1,187 @@
-// LaryngealTubeCalculation.js - Подбор ларингеальной трубки VBM LT / LTS-D
-// Таблица и пределы — в CalculateTube.js (VBM LTS-D IFU G3082-06/04.2017, с. 11).
+// LaryngealTubeCalculation.js — подбор ларингеальной трубки VBM LT / LTS-D (интерфейс).
+// Таблица и пределы — в CalculateTube.js (VBM LTS-D IFU G3082-06/04.2017, с. 11),
+// связь с общим пациентом — laryngealFromPatient.js.
 import React, { useState } from 'react';
+import { View } from 'react-native';
+import { Text } from '../../components/AppText';
+import Screen from '../../components/Screen';
+import { ChoiceChips, NumberField, Note, ResultCard, Section, Card } from '../../components/ui';
+import PatientBar from '../../patient/PatientBar';
+import { usePatient, usePatientNumber } from '../../patient/PatientContext';
+import { useThemedStyles } from '../../theme/index';
+import { isHeightRequired, LT_MAX_CUFF_PRESSURE_CMH2O } from './CalculateTube';
 import {
-    View,
-    TouchableOpacity,
-    SafeAreaView,
-    ScrollView,
-    Alert,
-} from 'react-native';
-import { Text, TextInput } from '../../components/AppText';
-import calculateTubeLogic, {
-    isHeightRequired,
-    validateTubeInput,
-    LT_MAX_CUFF_PRESSURE_CMH2O,
-} from './CalculateTube';
-import { colors, spacing, borderRadius, typography, shadows } from '../../theme';
-import parseNum from '../../utils/parseNum';
+  CATEGORY_OPTIONS,
+  categoryFromAge,
+  computeLaryngeal,
+  fmtSize,
+  laryngealAnnouncement,
+} from './laryngealFromPatient';
 
-const inputStyle = {
-    backgroundColor: colors.light.surface,
-    borderRadius: borderRadius.lg,
-    height: 56,
-    paddingHorizontal: spacing.lg,
-    fontSize: 16,
-    color: colors.light.text.primary,
-    borderWidth: 1,
-    borderColor: colors.light.border,
-};
-
-const rowStyle = {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.light.surfaceVariant,
-    borderRadius: borderRadius.md,
-    gap: spacing.sm,
-};
-
-const ResultRow = ({ label, value }) => (
-    <View style={rowStyle}>
-        <Text style={[typography.body1, { color: colors.light.text.secondary, flexShrink: 1 }]}>
-            {label}
-        </Text>
-        <Text style={[typography.body1, {
-            color: colors.light.primary,
-            fontWeight: '600',
-            textAlign: 'right',
-            flexShrink: 1,
-        }]}>
-            {value}
-        </Text>
-    </View>
+const InfoRow = ({ label, value, styles }) => (
+  <View style={styles.infoRow} accessible accessibilityLabel={`${label}: ${value}`}>
+    <Text variant="body" color="textSecondary" style={styles.infoLabel}>
+      {label}
+    </Text>
+    <Text variant="bodyStrong" style={styles.infoValue}>
+      {value}
+    </Text>
+  </View>
 );
 
-const CATEGORIES = [
-    { key: 'child', label: 'Ребёнок' },
-    { key: 'adult', label: 'Взрослый' },
+// Формулировки — по VBM LTS-D IFU G3082-06/04.2017, с. 9–11.
+const INFO = [
+  'Таблица производителя VBM для ларингеальной трубки LT / LTS-D (инструкция 2017). К ларингеальной маске и i-gel не применять.',
+  'Цвет — маркировка 15-мм коннектора производителя VBM; у других устройств те же цвета означают другие размеры.',
+  'Дети: № 0 — масса меньше 5 кг, № 1 — 5–12 кг, № 2 — 12–25 кг; при массе больше 25 кг — по росту (№ 2,5 — 125–150 см).',
+  'Взрослые: № 3 — рост меньше 155 см, № 4 — 155–180 см, № 5 — больше 180 см.',
+  `Манжету раздуть рекомендуемым объёмом, затем снизить давление до минимального, при котором нет утечки; не выше ${LT_MAX_CUFF_PRESSURE_CMH2O} см вод. ст., контроль манометром. Перераздувание вызывает отёк языка.`,
+  'Сверяйте с инструкцией к вашей партии трубок.',
 ];
 
 const LaryngealTubeCalculation = () => {
-    const [category, setCategory] = useState(null);
-    const [weight, setWeight] = useState('');
-    const [height, setHeight] = useState('');
-    const [results, setResults] = useState(null);
+  const styles = useThemedStyles(makeStyles);
+  const { patient, derived, resetCount } = usePatient();
+  const weight = usePatientNumber('weightKg');
+  const height = usePatientNumber('heightCm');
 
-    const weightNum = parseNum(weight);
-    // Рост нужен взрослым всегда, детям — только при массе > 25 кг (VBM: #0–#2 по массе).
-    const heightNeeded = category ? isHeightRequired(category, weightNum) : false;
+  // Ручной выбор категории; при «Новый пациент» (resetCount) сбрасывается.
+  const [picked, setPicked] = useState({ category: null, resetCount });
+  const manualCategory = picked.resetCount === resetCount ? picked.category : null;
+  const ageCategory = categoryFromAge(patient.ageMonths);
+  const category = manualCategory || ageCategory;
 
-    const selectCategory = (key) => {
-        setCategory(key);
-        setResults(null);
-    };
+  const heightNeeded = category ? isHeightRequired(category, weight.value ?? undefined) : false;
+  const { prompt, result } = category ? computeLaryngeal(category, weight.value, height.value) : {};
+  const hasSize = !!(result && result.tubeSize);
 
-    const handleCalculate = () => {
-        const w = category === 'child' ? parseNum(weight) : undefined;
-        const h = parseNum(height);
+  return (
+    <Screen scroll>
+      <PatientBar />
 
-        const error = validateTubeInput(category, w, h);
-        if (error) {
-            Alert.alert('Ошибка', error);
-            return;
-        }
-        setResults(calculateTubeLogic(w, h, category));
-    };
+      <Section
+        title="Данные пациента"
+        description="VBM LT / LTS-D: дети — по массе (при массе больше 25 кг — по росту), взрослые — по росту."
+      >
+        <ChoiceChips
+          label="Категория пациента"
+          options={CATEGORY_OPTIONS}
+          value={category}
+          onChange={(c) => setPicked({ category: c, resetCount })}
+        />
+        {!manualCategory && ageCategory ? (
+          <Text variant="caption" color="textSecondary" style={styles.caption}>
+            Категория выбрана по возрасту пациента — при необходимости измените.
+          </Text>
+        ) : null}
 
-    const clearResults = () => {
-        setWeight('');
-        setHeight('');
-        setResults(null);
-    };
+        {category === 'child' ? (
+          <NumberField
+            label="Масса ребёнка"
+            unit="кг"
+            value={weight.text}
+            onChangeText={weight.onChangeText}
+            placeholder="например, 18"
+            badge={derived.weightIsEstimate ? 'оценка' : null}
+            badgeLevel="warning"
+          />
+        ) : null}
 
-    const hasSize = !!(results && results.tubeSize);
+        {category ? (
+          <NumberField
+            label={heightNeeded ? 'Рост' : 'Рост (не обязателен)'}
+            unit="см"
+            value={height.text}
+            onChangeText={height.onChangeText}
+            placeholder="например, 165"
+            hint={
+              category === 'child' && !heightNeeded
+                ? 'При массе до 25 кг размер выбирается по массе'
+                : 'Размер выбирается по росту'
+            }
+          />
+        ) : null}
+      </Section>
 
-    return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.light.background }}>
-            <ScrollView
-                style={{ flex: 1, padding: spacing.lg }}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-            >
-                {/* Header */}
-                <View style={{ alignItems: 'center', marginBottom: spacing.xl }}>
-                    <Text style={[typography.h2, { color: colors.light.primary, marginBottom: spacing.sm, textAlign: 'center' }]}>
-                        🫁 Подбор ларингеальной трубки
-                    </Text>
-                    <Text style={[typography.body1, { color: colors.light.text.secondary, textAlign: 'center' }]}>
-                        VBM LT / LTS-D. Дети — по массе (при массе &gt; 25 кг — по росту), взрослые — по росту
-                    </Text>
-                </View>
+      <Section title="Результат">
+        {!category ? (
+          <Note level="info" title="Нет данных для расчёта">
+            Выберите категорию пациента: ребёнок или взрослый (или укажите возраст в данных пациента).
+          </Note>
+        ) : null}
 
-                {/* Category */}
-                <View style={{ marginBottom: spacing.lg }}>
-                    <Text style={[typography.body1, { color: colors.light.text.primary, marginBottom: spacing.sm }]}>
-                        Категория пациента
-                    </Text>
-                    <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                        {CATEGORIES.map((c) => {
-                            const active = category === c.key;
-                            return (
-                                <TouchableOpacity
-                                    key={c.key}
-                                    onPress={() => selectCategory(c.key)}
-                                    style={{
-                                        flex: 1,
-                                        height: 48,
-                                        borderRadius: borderRadius.lg,
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        borderWidth: 1,
-                                        borderColor: active ? colors.light.primary : colors.light.border,
-                                        backgroundColor: active ? colors.light.primary : colors.light.surface,
-                                    }}
-                                    accessibilityRole="button"
-                                    accessibilityState={{ selected: active }}
-                                    accessibilityLabel={`Категория: ${c.label}`}
-                                >
-                                    <Text style={[typography.button, {
-                                        color: active ? colors.light.surface : colors.light.text.primary,
-                                    }]}>
-                                        {c.label}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-                </View>
+        {prompt ? (
+          <Note level="info" title="Нужны данные">
+            {prompt}
+          </Note>
+        ) : null}
 
-                {/* Weight Input — только для детей: у взрослых таблица VBM использует рост */}
-                {category === 'child' && (
-                    <View style={{ marginBottom: spacing.lg }}>
-                        <Text style={[typography.body1, { color: colors.light.text.primary, marginBottom: spacing.sm }]}>
-                            Масса ребёнка (кг)
-                        </Text>
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="Введите массу в кг"
-                            placeholderTextColor={colors.light.text.tertiary}
-                            value={weight}
-                            onChangeText={(t) => { setWeight(t); setResults(null); }}
-                            keyboardType="numeric"
-                            accessibilityLabel="Поле ввода массы ребёнка"
-                        />
-                    </View>
-                )}
+        {result && hasSize ? (
+          <ResultCard
+            title="Размер ларингеальной трубки"
+            value={`№ ${fmtSize(result.tubeSize)}`}
+            level={result.warning ? 'warning' : 'info'}
+            levelLabel={`Коннектор: ${result.tubeColor.toLowerCase()}`}
+            announceText={laryngealAnnouncement(result)}
+          >
+            <InfoRow label="Объём манжеты (рекоменд.)" value={result.cuffVolume} styles={styles} />
+            <InfoRow label="Макс. давление в манжете" value={result.maxCuffPressure} styles={styles} />
+            <InfoRow label="Желудочный зонд через дренаж (LTS-D)" value={`до ${result.drainFr}`} styles={styles} />
+            <InfoRow label="Группа по таблице" value={result.group} styles={styles} />
+            <Text variant="caption" color="textSecondary" style={styles.basis}>
+              {`Основание: ${result.basis}`}
+            </Text>
+          </ResultCard>
+        ) : null}
 
-                {/* Height Input */}
-                {category && (
-                    <View style={{ marginBottom: spacing.lg }}>
-                        <Text style={[typography.body1, { color: colors.light.text.primary, marginBottom: spacing.sm }]}>
-                            {heightNeeded ? 'Рост пациента (см)' : 'Рост пациента (см) — не обязателен'}
-                        </Text>
-                        <TextInput
-                            style={inputStyle}
-                            placeholder="Рост в сантиметрах, например 165"
-                            placeholderTextColor={colors.light.text.tertiary}
-                            value={height}
-                            onChangeText={(t) => { setHeight(t); setResults(null); }}
-                            keyboardType="numeric"
-                            accessibilityLabel="Поле ввода роста пациента в сантиметрах"
-                        />
-                        {category === 'child' && !heightNeeded && (
-                            <Text style={[typography.caption, { color: colors.light.text.secondary, marginTop: spacing.xs }]}>
-                                При массе до 25 кг размер выбирается по массе
-                            </Text>
-                        )}
-                    </View>
-                )}
+        {result && !hasSize ? (
+          <ResultCard
+            title="Размер не определён"
+            level="warning"
+            levelLabel="вне таблицы производителя"
+            announceText={laryngealAnnouncement(result)}
+          >
+            <Text variant="body">{result.warning}</Text>
+            {result.options && result.options.length ? (
+              <Text variant="bodyStrong" style={styles.basis}>
+                {`Рассмотрите: ${result.options.map((o) => `№ ${fmtSize(o)}`).join(' или ')}`}
+              </Text>
+            ) : null}
+          </ResultCard>
+        ) : null}
 
-                {/* Calculate Button */}
-                <TouchableOpacity
-                    onPress={handleCalculate}
-                    style={{
-                        backgroundColor: colors.light.primary,
-                        borderRadius: borderRadius.lg,
-                        height: 56,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        marginBottom: spacing.lg,
-                        ...shadows.md,
-                    }}
-                    accessibilityLabel="Рассчитать размер трубки"
-                    accessibilityRole="button"
-                >
-                    <Text style={[typography.button, { color: colors.light.surface }]}>
-                        🔢 Рассчитать
-                    </Text>
-                </TouchableOpacity>
+        {result && hasSize && result.warning ? (
+          <Note level="warning" title="Проверьте">
+            {result.warning}
+          </Note>
+        ) : null}
+      </Section>
 
-                {/* Results */}
-                {results && (
-                    <View style={{
-                        backgroundColor: colors.light.surface,
-                        borderRadius: borderRadius.xl,
-                        padding: spacing.lg,
-                        marginBottom: spacing.lg,
-                        borderWidth: 2,
-                        borderColor: hasSize ? colors.light.primary + '20' : colors.light.warning,
-                        ...shadows.md,
-                    }}>
-                        <Text style={[typography.h3, {
-                            color: hasSize ? colors.light.primary : colors.light.warning,
-                            marginBottom: spacing.md,
-                            textAlign: 'center'
-                        }]}>
-                            {hasSize ? '📊 Результаты расчета' : '⚠️ Размер не определён'}
-                        </Text>
-
-                        {hasSize && (
-                            <View style={{ gap: spacing.sm }}>
-                                <ResultRow label="Размер трубки" value={`#${results.tubeSize}`} />
-                                <ResultRow label="Цвет коннектора" value={results.tubeColor} />
-                                <ResultRow label="Объём манжеты (рекоменд.)" value={results.cuffVolume} />
-                                <ResultRow label="Макс. давление в манжете" value={results.maxCuffPressure} />
-                                <ResultRow label="Желудочный зонд через дренаж (LTS-D)" value={`до ${results.drainFr}`} />
-                                <Text style={[typography.caption, { color: colors.light.text.secondary }]}>
-                                    Основание: {results.basis}
-                                </Text>
-                            </View>
-                        )}
-
-                        {!!results.warning && (
-                            <View style={{
-                                marginTop: hasSize ? spacing.sm : 0,
-                                padding: spacing.md,
-                                borderRadius: borderRadius.md,
-                                backgroundColor: colors.light.warning + '15',
-                            }}>
-                                <Text style={[typography.body2, { color: colors.light.text.primary }]}>
-                                    {results.warning}
-                                </Text>
-                            </View>
-                        )}
-
-                        <TouchableOpacity
-                            onPress={clearResults}
-                            style={{
-                                marginTop: spacing.md,
-                                padding: spacing.sm,
-                                alignSelf: 'center',
-                                backgroundColor: colors.light.surfaceVariant,
-                                borderRadius: borderRadius.md,
-                            }}
-                            accessibilityLabel="Очистить результаты"
-                            accessibilityRole="button"
-                        >
-                            <Text style={[typography.caption, { color: colors.light.text.secondary }]}>
-                                🔄 Очистить
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {/* Info Section */}
-                <View style={{
-                    backgroundColor: colors.light.surface,
-                    borderRadius: borderRadius.xl,
-                    padding: spacing.lg,
-                    marginBottom: spacing.lg,
-                    borderWidth: 1,
-                    borderColor: colors.light.divider,
-                }}>
-                    <Text style={[typography.h4, {
-                        color: colors.light.primary,
-                        marginBottom: spacing.sm,
-                        textAlign: 'center'
-                    }]}>
-                        ℹ️ Важная информация
-                    </Text>
-                    {/* Формулировки — по VBM LTS-D IFU G3082-06/04.2017, с. 9–11 */}
-                    <Text style={[typography.caption, {
-                        color: colors.light.text.secondary,
-                        lineHeight: 18
-                    }]}>
-                        • Таблица производителя VBM для ларингеальной трубки LT/LTS-D (инструкция 2017). К ларингеальной маске и i-gel не применять{'\n'}
-                        • Цвет — маркировка 15-мм коннектора производителя VBM; у других устройств те же цвета означают другие размеры{'\n'}
-                        • Дети: #0 — &lt; 5 кг, #1 — 5–12 кг, #2 — 12–25 кг; при массе &gt; 25 кг — по росту (#2.5 — 125–150 см){'\n'}
-                        • Взрослые: #3 — рост &lt; 155 см, #4 — 155–180 см, #5 — &gt; 180 см{'\n'}
-                        • Манжету раздуть рекомендуемым объёмом, затем снизить давление до минимального, при котором нет утечки; не выше {LT_MAX_CUFF_PRESSURE_CMH2O} см вод. ст., контроль манометром. Перераздувание вызывает отёк языка{'\n'}
-                        • Сверяйте с инструкцией к вашей партии трубок
-                    </Text>
-                </View>
-            </ScrollView>
-        </SafeAreaView>
-    );
+      <Section title="Важная информация">
+        <Card>
+          {INFO.map((t, i) => (
+            <Text key={i} variant="caption" color="textSecondary" style={styles.para}>
+              {`• ${t}`}
+            </Text>
+          ))}
+        </Card>
+      </Section>
+    </Screen>
+  );
 };
+
+const makeStyles = ({ spacing }) => ({
+  caption: { marginTop: -spacing.sm, marginBottom: spacing.md },
+  infoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  infoLabel: { flexShrink: 1, marginRight: spacing.sm },
+  infoValue: { flexShrink: 1, textAlign: 'right' },
+  basis: { marginTop: spacing.sm },
+  para: { marginBottom: spacing.xs },
+});
 
 export default LaryngealTubeCalculation;

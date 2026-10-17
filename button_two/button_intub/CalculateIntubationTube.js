@@ -219,6 +219,7 @@ function calculateByZone(zone, { cuffed, route, method }) {
     route,
     extra: {
       broselowZone: zone.name,
+      broselowZoneKey: zone.key,
       zoneRange: `${fmt(zone.minCm)}–${fmt(zone.maxCm)} см`,
       approxWeightKg: zone.w,
       warnings,
@@ -666,6 +667,137 @@ export const calculateIntubationTubeLogic = (params) => {
     throw new Error('Рост меньше 46,8 см (начало ленты Broselow): укажите массу новорождённого.');
   }
   throw new Error('Укажите рост (длину тела), массу или возраст.');
+};
+
+// ----- Прямой расчёт по зоне, выбранной на ленте (patient/BroselowPicker) -----
+//
+// Ключи зон пациента (patient/estimates.js, лента 2017): grey, pink, red, … green.
+// Цвет зоны на ленте определяется длиной ребёнка, поэтому расчёт — тот же, что по росту
+// внутри этой зоны (calculateByZone, значения таблицы BROSELOW_ZONES выше не меняются);
+// масса середины зоны, которую пишет BroselowPicker, для выбора трубки не используется.
+// Серая зона на ленте одна (3–5 кг), а в таблице ЭТТ — три подзоны 3, 4 и 5 кг с разной
+// глубиной (8,5 / 9,0 / 10,5 см) и допустимостью трубки с манжетой (только >3,5 кг, MSD Manual).
+// Поэтому подзону серой зоны выбирают явно; без неё расчёт не выдаётся (консервативно):
+// подставлять «середину» значило бы выдать глубину и манжету, верные только для 4 кг.
+export const PATIENT_ZONE_KEYS = ['grey', 'pink', 'red', 'purple', 'yellow', 'white', 'blue', 'orange', 'green'];
+export const GREY_SUBZONES = [
+  { value: 'grey3', label: '3 кг' },
+  { value: 'grey4', label: '4 кг' },
+  { value: 'grey5', label: '5 кг' },
+];
+
+// Ключ зоны таблицы ЭТТ → ключ зоны пациента (grey3/grey4/grey5 → grey).
+export const patientZoneKeyOf = (tubeZoneKey) =>
+  typeof tubeZoneKey === 'string' && tubeZoneKey.startsWith('grey') ? 'grey' : tubeZoneKey || null;
+
+/**
+ * Расчёт по зоне ленты Broselow, выбранной вручную.
+ * @param {object} params
+ * @param {string} params.zoneKey ключ зоны пациента ('grey' … 'green') или подзоны ('grey3' | 'grey4' | 'grey5')
+ * @param {string} [params.greySubzone] подзона серой зоны: 'grey3' | 'grey4' | 'grey5'
+ * @param {number} [params.ageYears] годы (для сверки с расчётом по возрасту; до 1 года — сверка зоны с возрастом)
+ * @param {number} [params.ageMonths] месяцы
+ * @param {boolean} [params.cuffed=false]
+ * @param {"oral"|"nasal"|"both"} [params.route="both"]
+ */
+export const calculateIntubationTubeByZone = (params) => {
+  const { zoneKey, greySubzone, ageYears, ageMonths, cuffed = false, route = 'both' } = params || {};
+  let key = zoneKey;
+  if (key === 'grey') {
+    if (!GREY_SUBZONES.some((s) => s.value === greySubzone)) {
+      throw new Error(
+        'Серая зона разделена на 3, 4 и 5 кг: выберите подзону — от неё зависят глубина и возможность трубки с манжетой.'
+      );
+    }
+    key = greySubzone;
+  }
+  const zone = zoneByKey(key);
+  if (!zone) throw new Error('Выберите зону ленты Broselow.');
+
+  const y = isNum(ageYears) ? ageYears : undefined;
+  const m = isNum(ageMonths) ? ageMonths : undefined;
+  validate({ ageYears: y, ageMonths: m });
+  const age = y === undefined && m === undefined ? undefined : (y || 0) + (m || 0) / 12;
+
+  // Сверка зоны с возрастом до 1 года — как в основном расчёте (ветки 1, 5 и проверка роста >100 см):
+  // ожидаемая зона = зона по массе, оценённой по возрасту (APLS 2011: 0,5 × мес + 4).
+  // Зону выбирают одним касанием в сетке плиток, промах на соседнюю строку вероятен; без сверки
+  // новорождённому с зелёной зоной выдавалось 6,5 мм / 17 см без предупреждения.
+  // ERC 2021: до 1 года — 3,5–4,0 мм без манжеты / 3,0–3,5 мм с манжетой; NRP / Kempley 2008:
+  // новорождённый 2,5–4,2 кг — 8,5–9 см у губ.
+  //  - зона, вся длина которой больше 100 см (синяя, оранжевая, зелёная), — отказ, как
+  //    «Рост больше 100 см у ребёнка до года»;
+  //  - новорождённый (<1 мес) и зона на 2 и больше выше серой — отказ: зона по возрасту — серая,
+  //    но подзону (3 / 4 / 5 кг: глубина 8,5 / 9 / 10,5 см) по возрасту не определить;
+  //    на 1 зону выше (розовая) — предупреждение;
+  //  - младенец 1–12 мес, зона на 2 и больше выше ожидаемой — предупреждение и расчёт по зоне
+  //    возраста (меньшая трубка), как ветка 5 при массе, слишком большой для возраста;
+  //    на 2 и больше ниже — предупреждение, расчёт по выбранной зоне (меньшая трубка).
+  let calcZone = zone;
+  let method = 'broselowZone';
+  let ageZoneNote = null;
+  const extraWarnings = [];
+  const ignored = ['масса (размер трубки выбирается по зоне ленты, т. е. по длине тела)'];
+  const used = [`зона ленты Broselow: ${zone.name}`];
+  if (age !== undefined && age < 1) {
+    const months = Math.round(age * 12 * 10) / 10;
+    const ageText = age < 1 / 12 ? 'новорождённого' : `${fmt(months)} мес`;
+    const estW = Math.round(aplsInfantWeight(months) * 10) / 10;
+    const ez = zoneByWeight(estW);
+    const diff = zoneRank(zone) - zoneRank(ez);
+    if (zone.minCm > 100) {
+      throw new Error(
+        `Зона ленты «${zone.name}» (${fmt(zone.minCm)}–${fmt(zone.maxCm)} см) не бывает у ребёнка до года — проверьте зону и возраст.`
+      );
+    }
+    if (age < 1 / 12) {
+      if (diff >= 2) {
+        throw new Error(
+          `Зона ленты «${zone.name}» не соответствует возрасту новорождённого (ожидается серая зона). Проверьте зону и возраст; если ребёнок в серой зоне — выберите её и подзону, либо укажите массу или рост.`
+        );
+      }
+      if (diff === 1) {
+        extraWarnings.push(
+          `Для новорождённого ожидается серая зона ленты, выбрана «${zone.name}» — проверьте зону.`
+        );
+      }
+    } else if (diff >= 2) {
+      extraWarnings.push(
+        `Зона ленты «${zone.name}» слишком велика для возраста ${ageText} (ожидаемо ≈ ${fmt(estW)} кг по APLS, зона ${ez.name}) — проверьте зону и возраст. Показан размер по возрасту (зона ${ez.name}), он меньше.`
+      );
+      ignored.push('выбранная зона ленты (не соответствует возрасту)');
+      calcZone = ez;
+      method = 'infantAge';
+      ageZoneNote = `Масса оценена по возрасту (APLS: 0,5 × мес + 4) ≈ ${fmt(estW)} кг.`;
+    } else if (diff <= -2) {
+      extraWarnings.push(
+        `Зона ленты «${zone.name}» меньше ожидаемой для возраста ${ageText} (зона ${ez.name} по APLS) — проверьте зону и возраст. Расчёт по выбранной зоне (меньшая трубка).`
+      );
+    }
+  }
+
+  const res = calculateByZone(calcZone, { cuffed, route, method });
+  if (ageZoneNote) res.notes.unshift(ageZoneNote);
+  if (age !== undefined) {
+    if (age < 1) used.push(age < 1 / 12 ? 'возраст: новорождённый' : `возраст ${fmt(Math.round(age * 12 * 10) / 10)} мес`);
+    if (age >= 1 && age < 13) {
+      const byAge = calculateByAge({ ageYears: age, cuffed, route });
+      if (Math.abs(byAge.tubeIDmm - res.tubeIDmm) > 0.5) {
+        extraWarnings.push(
+          `По возрасту — ${fmtMm(byAge.tubeIDmm)} мм: расхождение с зоной ленты больше 0,5 мм, проверьте зону и возраст.`
+        );
+      }
+    }
+    // Как в расчёте по росту: лента рассчитана на детей до ≈12 лет (до 36 кг).
+    if (age >= 13) extraWarnings.push('Возраст ≥13 лет при выбранной зоне ленты: размер по длине тела.');
+    // До 1 года возраст участвует в сверке зоны (см. выше) и указан в «Учтено».
+    if (age >= 1) ignored.push('возраст (размер выбирается по зоне ленты)');
+  }
+  res.used = used;
+  res.ignored = ignored;
+  res.warnings = [...extraWarnings, ...(res.warnings || [])];
+  res.inputs = { zoneKey: key, ageYears: age, cuffed, route };
+  return res;
 };
 
 export default calculateIntubationTubeLogic;

@@ -151,7 +151,9 @@ const age = usePatientAge(); // возраст «лет + мес»
 ```
 
 Поля записей калькулятора препаратов: `weight` ↔ `usePatientNumber('weightKg')`,
-`ageYears` ↔ `usePatientAge().years`, `ageMonths` (часть «мес») ↔ `usePatientAge().months`,
+`ageYears` и `ageMonths` — из возраста пациента: если у записи есть оба поля, в formula идут
+полные годы и месяцы сверх лет (0–11); если только `ageYears` — полные годы, а до 1 года доля
+по месяцам (6 мес → 0,5); если только `ageMonths` — полный возраст в месяцах;
 `heightCm` ↔ `usePatientNumber('heightCm')`, `sex` ↔ `patient.sex` + `setPatient({ sex })`.
 
 `patient/estimates.js` (чистые функции):
