@@ -108,7 +108,7 @@ iOS — `padding`, смещение считается по фактическо
 | `ChoiceChips` | `label, options [{ value, label, accessibilityLabel?, disabled? }], value, onChange(value), disabled, hint, style, testID` |
 | `NumberField` | `label, unit, value (строка), onChangeText(text), onChangeNumber(num|undefined), error, hint, badge, badgeLevel, placeholder, editable, returnKeyType, onSubmitEditing, onFocus, onBlur, style, inputStyle, testID`; поддерживает `ref` |
 | `SwitchRow` | `label, description, value, onValueChange(bool), disabled, accessibilityHint, style, testID` |
-| `Card` | `children, onPress?, accent (цвет полоски), padded, accessibilityLabel, accessibilityHint, disabled, style, testID` |
+| `Card` | `children, onPress?, padded, accessibilityLabel, accessibilityHint, disabled, style, testID` |
 | `Section` | `title (role header), description, right, children, style, testID` |
 | `ResultCard` | `title, value, unit, level, levelLabel, children, announceText, announceEnabled, style, testID` |
 | `Badge` | `level ('success'|'warning'|'danger'|'info'|'neutral'), label | children, icon, accessibilityLabel, style` |

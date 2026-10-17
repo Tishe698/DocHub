@@ -19,7 +19,6 @@ export default function MenuCard({ card, image, onPress, style, testID }) {
   return (
     <Card
       onPress={onPress}
-      accent={accent}
       accessibilityLabel={cardA11yLabel(card)}
       accessibilityHint="Открыть раздел"
       style={[styles.card, style]}
