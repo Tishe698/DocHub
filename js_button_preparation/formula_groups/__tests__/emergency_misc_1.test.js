@@ -18,12 +18,12 @@ describe('группа «прочее неотложное, часть 1»: ст
   it('содержит все записи в прежнем порядке', () => {
     expect(group.map((g) => g.name)).toEqual([
       'Кальция глюконат',
-      'Магния сульфат',
+      'Магнезия (магния сульфат)',
       'Кетамин',
-      'Метамизол натрия',
-      'Метоклопрамид',
+      'Анальгин (метамизол натрия)',
+      'Церукал (метоклопрамид)',
       'Дроперидол',
-      'Хлорпромазин',
+      'Аминазин (хлорпромазин)',
       'Галоперидол',
     ]);
   });
@@ -53,10 +53,10 @@ describe('группа «прочее неотложное, часть 1»: ст
     });
     const routes = {
       Кетамин: [['iv', 'im'], 'iv'],
-      'Метамизол натрия': [['im', 'iv'], 'im'],
-      Метоклопрамид: [['iv', 'im'], 'iv'],
+      'Анальгин (метамизол натрия)': [['im', 'iv'], 'im'],
+      'Церукал (метоклопрамид)': [['iv', 'im'], 'iv'],
       Дроперидол: [['iv', 'im'], 'iv'],
-      Хлорпромазин: [['im', 'iv'], 'im'],
+      'Аминазин (хлорпромазин)': [['im', 'iv'], 'im'],
     };
     Object.entries(routes).forEach(([name, [codes, def]]) => {
       const r = byName(name).inputs.route;
@@ -65,7 +65,7 @@ describe('группа «прочее неотложное, часть 1»: ст
       r.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
       expect(r.default).toBe(def);
     });
-    const mg = byName('Магния сульфат').inputs.indication;
+    const mg = byName('Магнезия (магния сульфат)').inputs.indication;
     expect(mg.label).toBe('Показание');
     expect(mg.choices.map((c) => c.value)).toEqual(['asthma', 'torsades', 'eclampsia']);
     expect(mg.default).toBe('asthma');
@@ -73,7 +73,7 @@ describe('группа «прочее неотложное, часть 1»: ст
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
     expect(byName('Кальция глюконат').labels.result1).toMatch(/в\/в/);
-    expect(byName('Магния сульфат').labels.result1).toMatch(/в\/в/);
+    expect(byName('Магнезия (магния сульфат)').labels.result1).toMatch(/в\/в/);
     expect(byName('Галоперидол').labels.result1).toMatch(/в\/м/);
     expect(byName('Кальция глюконат').inputs.route).toBeUndefined();
     expect(byName('Галоперидол').inputs.route).toBeUndefined();
@@ -113,8 +113,8 @@ describe('Кальция глюконат', () => {
   });
 });
 
-describe('Магния сульфат', () => {
-  const f = byName('Магния сульфат');
+describe('Магнезия (магния сульфат)', () => {
+  const f = byName('Магнезия (магния сульфат)');
 
   it('астма, ребёнок 20 кг: 50 мг/кг = 1 г = 4 мл, за 20 мин', () => {
     const r = f.formula({ weight: 20, indication: 'asthma' });
@@ -228,8 +228,8 @@ describe('Кетамин', () => {
   });
 });
 
-describe('Метамизол натрия', () => {
-  const f = byName('Метамизол натрия');
+describe('Анальгин (метамизол натрия)', () => {
+  const f = byName('Анальгин (метамизол натрия)');
 
   it('в/м, ребёнок 5 лет 20 кг: 10 мг/кг = 200 мг = 0.4 мл', () => {
     const r = f.formula({ weight: 20, ageYears: 5, ageMonths: 0, route: 'im' });
@@ -291,8 +291,8 @@ describe('Метамизол натрия', () => {
   });
 });
 
-describe('Метоклопрамид', () => {
-  const f = byName('Метоклопрамид');
+describe('Церукал (метоклопрамид)', () => {
+  const f = byName('Церукал (метоклопрамид)');
 
   it('в/в, ребёнок 5 лет 20 кг: 0.1 мг/кг = 2 мг = 0.4 мл, суточно ≤10 мг', () => {
     const r = f.formula({ weight: 20, ageYears: 5, route: 'iv' });
@@ -405,8 +405,8 @@ describe('Дроперидол', () => {
   });
 });
 
-describe('Хлорпромазин', () => {
-  const f = byName('Хлорпромазин');
+describe('Аминазин (хлорпромазин)', () => {
+  const f = byName('Аминазин (хлорпромазин)');
 
   it('в/м, ребёнок 4 года 16 кг: 0.55 мг/кг = 8.8 мг, суточно ≤40 мг', () => {
     const r = f.formula({ weight: 16, ageYears: 4, route: 'im' });

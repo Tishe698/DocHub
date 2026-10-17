@@ -16,10 +16,10 @@ const statuses = (f, clean) =>
 describe('группа респираторной терапии и анальгезии: структура', () => {
   it('содержит все записи в прежнем порядке', () => {
     expect(group.map((g) => g.name)).toEqual([
-      'Будесонид (небула)',
-      'Ипратропия бромид + фенотерол',
+      'Пульмикорт (будесонид, небула)',
+      'Беродуал (ипратропия бромид + фенотерол)',
       'Сальбутамол',
-      'Кеторолак',
+      'Кеторол (кеторолак)',
       'Трамадол',
       'Морфин',
       'Фентанил',
@@ -54,7 +54,7 @@ describe('группа респираторной терапии и анальг
         .forEach((c) => expect(c.choices.some((x) => x.value === c.default)).toBe(true));
     });
     const routes = {
-      Кеторолак: [['im', 'iv'], 'im'],
+      'Кеторол (кеторолак)': [['im', 'iv'], 'im'],
       Трамадол: [['iv', 'im', 'sc'], 'iv'],
       Морфин: [['iv', 'im', 'sc'], 'iv'],
       Фентанил: [['iv', 'im'], 'iv'],
@@ -66,7 +66,7 @@ describe('группа респираторной терапии и анальг
       r.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
       expect(r.default).toBe(def);
     });
-    const bud = byName('Будесонид (небула)').inputs.indication;
+    const bud = byName('Пульмикорт (будесонид, небула)').inputs.indication;
     expect(bud.choices.map((c) => c.value)).toEqual(['croup', 'asthma']);
     expect(bud.default).toBe('croup');
     const prop = byName('Пропофол').inputs.indication;
@@ -75,8 +75,10 @@ describe('группа респираторной терапии и анальг
   });
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
-    expect(byName('Будесонид (небула)').labels.result1).toMatch(/ингаляционно, небулайзер/);
-    expect(byName('Ипратропия бромид + фенотерол').labels.result1).toMatch(
+    expect(byName('Пульмикорт (будесонид, небула)').labels.result1).toMatch(
+      /ингаляционно, небулайзер/,
+    );
+    expect(byName('Беродуал (ипратропия бромид + фенотерол)').labels.result1).toMatch(
       /ингаляционно, небулайзер/,
     );
     expect(byName('Сальбутамол').labels.result1).toMatch(/ингаляционно, небулайзер/);
@@ -96,20 +98,20 @@ describe('группа респираторной терапии и анальг
       { key: 'route', label: 'Путь введения', value: 'sc', valueLabel: 'п/к' },
     ]);
     const def = computeResult(
-      byName('Кеторолак'),
+      byName('Кеторол (кеторолак)'),
       { weight: '70' },
       { age: { years: '30', months: '0' } },
     );
     expect(def.choices[0].valueLabel).toBe('в/м');
     const bud = computeResult(
-      byName('Будесонид (небула)'),
+      byName('Пульмикорт (будесонид, небула)'),
       {},
       { age: { years: '0', months: '6' } },
     );
     expect(bud.success).toBe(true);
     expect(bud.choices[0].valueLabel).toMatch(/Круп/);
     const young = computeResult(
-      byName('Будесонид (небула)'),
+      byName('Пульмикорт (будесонид, небула)'),
       {},
       { age: { years: '0', months: '5' } },
     );
@@ -117,8 +119,8 @@ describe('группа респираторной терапии и анальг
   });
 });
 
-describe('Будесонид (небула)', () => {
-  const f = byName('Будесонид (небула)');
+describe('Пульмикорт (будесонид, небула)', () => {
+  const f = byName('Пульмикорт (будесонид, небула)');
 
   it('круп: 2 мг = 4 мл, на пределе', () => {
     const r = f.formula({ ageYears: 3, indication: 'croup' });
@@ -155,7 +157,7 @@ describe('Будесонид (небула)', () => {
 });
 
 describe('Ипратропия бромид + фенотерол (небулайзер)', () => {
-  const f = byName('Ипратропия бромид + фенотерол');
+  const f = byName('Беродуал (ипратропия бромид + фенотерол)');
 
   it('ребёнок 2 лет 12 кг: 2 кап/кг, предел 10 кап (0.5 мл)', () => {
     const r = f.formula({ weight: 12, ageYears: 2 });
@@ -206,8 +208,8 @@ describe('Сальбутамол (небулайзер)', () => {
   });
 });
 
-describe('Кеторолак', () => {
-  const f = byName('Кеторолак');
+describe('Кеторол (кеторолак)', () => {
+  const f = byName('Кеторол (кеторолак)');
 
   it('до 16 лет — противопоказан', () => {
     expect(f.formula({ weight: 50, ageYears: 15, route: 'im' })).toEqual({});

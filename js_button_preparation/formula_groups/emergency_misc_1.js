@@ -145,7 +145,7 @@ const group = [
   },
 
   {
-    name: 'Магния сульфат',
+    name: 'Магнезия (магния сульфат)',
     description:
       'Раствор 25% (250 мг/мл), ампулы 5 и 10 мл; в/в. Тяжёлое обострение астмы, torsades de pointes, эклампсия',
     inputs: { weight: WEIGHT, indication: MAGNESIUM_INDICATION },
@@ -243,7 +243,7 @@ const group = [
   },
 
   {
-    name: 'Метамизол натрия',
+    name: 'Анальгин (метамизол натрия)',
     description: 'Раствор 50% (500 мг/мл), ампулы 1 и 2 мл; в/м или в/в медленно',
     inputs: { weight: WEIGHT, ageYears: AGE_YEARS, ageMonths: AGE_MONTHS, route: METAMIZOLE_ROUTE },
     formula: ({ weight, ageYears, ageMonths, route }) => {
@@ -287,7 +287,7 @@ const group = [
   },
 
   {
-    name: 'Метоклопрамид',
+    name: 'Церукал (метоклопрамид)',
     description: 'Раствор 5 мг/мл, ампулы 2 мл (10 мг); в/в медленно или в/м',
     inputs: { weight: WEIGHT, ageYears: AGE_YEARS, route: METOCLOPRAMIDE_ROUTE },
     formula: ({ weight, ageYears, route }) => {
@@ -406,7 +406,7 @@ const group = [
   },
 
   {
-    name: 'Хлорпромазин',
+    name: 'Аминазин (хлорпромазин)',
     description:
       'Раствор 2.5% (25 мг/мл), ампулы 1, 2, 5 мл; в/м глубоко или в/в медленно (Аминазин)',
     inputs: { weight: WEIGHT, ageYears: AGE_YEARS, route: CHLORPROMAZINE_ROUTE },

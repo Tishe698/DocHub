@@ -15,10 +15,10 @@ describe('группа антибиотиков и противоаллерги�
   it('содержит все записи в прежнем порядке', () => {
     expect(group.map((g) => g.name)).toEqual([
       'Цефтриаксон',
-      'Хлорамфеникол',
+      'Левомицетин (хлорамфеникол)',
       'Стрептомицин',
-      'Хлоропирамин',
-      'Дифенгидрамин',
+      'Супрастин (хлоропирамин)',
+      'Димедрол (дифенгидрамин)',
     ]);
   });
 
@@ -54,10 +54,19 @@ describe('группа антибиотиков и противоаллерги�
     expect(cef.route.default).toBe('iv');
     expect(cef.indication.choices.map((c) => c.value)).toEqual(['general', 'meningitis']);
     expect(cef.indication.default).toBe('general');
-    expect(byName('Хлорамфеникол').inputs.route.choices.map((c) => c.value)).toEqual(['iv', 'im']);
-    expect(byName('Хлоропирамин').inputs.route.choices.map((c) => c.value)).toEqual(['im', 'iv']);
-    expect(byName('Хлоропирамин').inputs.route.default).toBe('im');
-    expect(byName('Дифенгидрамин').inputs.route.choices.map((c) => c.value)).toEqual(['im', 'iv']);
+    expect(byName('Левомицетин (хлорамфеникол)').inputs.route.choices.map((c) => c.value)).toEqual([
+      'iv',
+      'im',
+    ]);
+    expect(byName('Супрастин (хлоропирамин)').inputs.route.choices.map((c) => c.value)).toEqual([
+      'im',
+      'iv',
+    ]);
+    expect(byName('Супрастин (хлоропирамин)').inputs.route.default).toBe('im');
+    expect(byName('Димедрол (дифенгидрамин)').inputs.route.choices.map((c) => c.value)).toEqual([
+      'im',
+      'iv',
+    ]);
   });
 
   it('у препарата с одним путём путь указан в подписи результата', () => {
@@ -204,8 +213,8 @@ describe('Цефтриаксон', () => {
   });
 });
 
-describe('Хлорамфеникол', () => {
-  const f = byName('Хлорамфеникол');
+describe('Левомицетин (хлорамфеникол)', () => {
+  const f = byName('Левомицетин (хлорамфеникол)');
 
   it('ребёнок 5 лет 20 кг, в/в: 500 мг каждые 12 ч, 1000 мг/сут', () => {
     const r = f.formula({ weight: 20, ageYears: 5, route: 'iv' });
@@ -300,8 +309,8 @@ describe('Стрептомицин', () => {
   });
 });
 
-describe('Хлоропирамин', () => {
-  const f = byName('Хлоропирамин');
+describe('Супрастин (хлоропирамин)', () => {
+  const f = byName('Супрастин (хлоропирамин)');
   const run = (inp) => f.formula({ ageMonths: 0, ...inp });
 
   it('ребёнок 5 лет 20 кг, в/м: 10 мг = 0,5 мл', () => {
@@ -345,8 +354,8 @@ describe('Хлоропирамин', () => {
   });
 });
 
-describe('Дифенгидрамин', () => {
-  const f = byName('Дифенгидрамин');
+describe('Димедрол (дифенгидрамин)', () => {
+  const f = byName('Димедрол (дифенгидрамин)');
   const run = (inp) => f.formula({ ageMonths: 0, ...inp });
 
   it('без веса: в записи нет поля веса', () => {
