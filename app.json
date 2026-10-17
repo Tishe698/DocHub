@@ -23,7 +23,9 @@
       "bundleIdentifier": "com.pulsetech7812.dochub"
     },
     "plugins": [
-      "expo-video"
+      "expo-video",
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "extra": {
       "eas": {
