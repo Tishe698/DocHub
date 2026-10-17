@@ -83,7 +83,7 @@ export default function App() {
         <Stack.Screen
           name="Button_Tube_Calculation"
           component={LaryngealTubeCalculation}
-          options={{ title: '👄 Расчет размера ларингеальной маски' }}
+          options={{ title: '🫁 Подбор ларингеальной трубки' }}
         />
         <Stack.Screen
           name="MKBScreen"
