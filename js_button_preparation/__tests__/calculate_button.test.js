@@ -40,6 +40,14 @@ jest.mock('../formulas', () => {
         }),
       },
       { name: 'Справочная запись', description: 'Только текст', inputs: {}, formula: () => ({}) },
+      {
+        name: 'Препарат с примечанием',
+        description: 'Раствор 1 мг/мл',
+        inputs: { weight: 'Вес (кг)' },
+        units: { result1: 'мг' },
+        labels: { result1: 'Доза' },
+        formula: ({ weight }) => ({ result1: weight * 0.1, result2: 'Контроль ЭКГ' }),
+      },
     ],
   };
 });
@@ -98,9 +106,9 @@ describe('экран калькулятора препаратов', () => {
   it('список, поиск и переход в карточку', () => {
     const tree = renderScreen();
     const root = tree.root;
-    expect(textOf(root)).toContain('Препаратов в справочнике: 2, с расчётом дозы: 1');
+    expect(textOf(root)).toContain('Препаратов в справочнике: 3, с расчётом дозы: 2');
     act(() => input(root, 'Поиск препарата').props.onChangeText('справ'));
-    expect(textOf(root)).toContain('Найдено: 1 из 2');
+    expect(textOf(root)).toContain('Найдено: 1 из 3');
     expect(textOf(root)).not.toContain('Тестовый препарат');
     expect(() => pressable(root, 'Тестовый препарат, есть предупреждения')).toThrow();
     act(() => input(root, 'Поиск препарата').props.onChangeText(''));
@@ -116,8 +124,8 @@ describe('экран калькулятора препаратов', () => {
 
     // поля показывают пациента, масса помечена как оценка
     expect(input(root, 'Вес, кг, оценка: Broselow').props.value).toBe('20');
-    expect(input(root, 'Возраст, полных лет, лет').props.value).toBe('5');
-    expect(input(root, 'и месяцев, мес').props.value).toBe('3');
+    expect(input(root, 'Возраст, лет').props.value).toBe('5');
+    expect(input(root, 'Месяцы, мес').props.value).toBe('3');
 
     press(root, 'в/м');
     press(root, 'Анафилаксия');
@@ -201,5 +209,33 @@ describe('экран калькулятора препаратов', () => {
     expect(() => pressable(root, 'Рассчитать')).toThrow();
     press(root, 'К списку препаратов');
     expect(textOf(root)).toContain('Препаратов в справочнике');
+  });
+
+  it('расшифровка сокращений: свёрнута, раскрывается и показывает только сокращения записи', () => {
+    const tree = renderScreen();
+    const root = tree.root;
+    press(root, 'Тестовый препарат, есть предупреждения');
+    // В записи есть «СЛР» (вариант показания) — одно сокращение
+    expect(textOf(root)).not.toContain('сердечно-лёгочная реанимация');
+    press(root, 'Расшифровка сокращений (1)');
+    expect(textOf(root)).toContain(' — сердечно-лёгочная реанимация');
+    press(root, 'Скрыть расшифровку сокращений');
+    expect(textOf(root)).not.toContain('сердечно-лёгочная реанимация');
+    // У справочной записи без сокращений блока нет
+    press(root, 'К списку препаратов');
+    press(root, 'Справочная запись, справочная запись');
+    expect(textOf(root)).not.toContain('Расшифровка сокращений');
+  });
+
+  it('расшифровка сокращений дополняется сокращениями из результата расчёта', () => {
+    const tree = renderScreen();
+    const root = tree.root;
+    press(root, 'Препарат с примечанием');
+    expect(textOf(root)).not.toContain('Расшифровка сокращений');
+    act(() => input(root, 'Вес, кг').props.onChangeText('10'));
+    press(root, 'Рассчитать');
+    expect(textOf(root)).toContain('Контроль ЭКГ');
+    press(root, 'Расшифровка сокращений (1)');
+    expect(textOf(root)).toContain(' — электрокардиограмма');
   });
 });
