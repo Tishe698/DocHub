@@ -3,6 +3,7 @@
 // Режимы: взрослые; дети 1–16 лет (SIPA); дети < 1 года (SI не интерпретируется);
 // беременность / послеродовой период (КР МЗ РФ «Послеродовое кровотечение», 2021).
 // NOTE: Clinical decision support only — always correlate clinically.
+import parseNum from '../utils/parseNum';
 
 // Правдоподобные диапазоны ввода (общая практика медицинских калькуляторов, аудит M5-11).
 const HR_RANGE = [20, 300];
@@ -49,14 +50,16 @@ export function calcSI(hr, sbp) {
 
   /**
    * Get classic adult categorization
-   * Returns {label, color, level} where level 0..4
+   * Returns {label, tone, level} where level 0..4.
+   * tone — уровень для Badge/Note темы ('success' | 'warning' | 'danger' | 'neutral'),
+   * цвет берётся из темы на экране (литералов цвета в модуле нет).
    */
   function adultCategory(si) {
-    if (si < 0.5) return { label: 'ниже нормы (перепроверьте данные)', color: '#6B7280', level: 0 };
-    if (si < 0.7) return { label: 'норма', color: '#10B981', level: 1 };
-    if (si < 0.9) return { label: 'пограничный', color: '#F59E0B', level: 2 };
-    if (si < 1.3) return { label: 'высокий риск шока', color: '#EF4444', level: 3 };
-    return { label: 'тяжёлый, вероятен шок', color: '#B91C1C', level: 4 };
+    if (si < 0.5) return { label: 'ниже нормы (перепроверьте данные)', tone: 'neutral', level: 0 };
+    if (si < 0.7) return { label: 'норма', tone: 'success', level: 1 };
+    if (si < 0.9) return { label: 'пограничный', tone: 'warning', level: 2 };
+    if (si < 1.3) return { label: 'высокий риск шока', tone: 'danger', level: 3 };
+    return { label: 'тяжёлый, вероятен шок', tone: 'danger', level: 4 };
   }
 
   /**
@@ -68,11 +71,11 @@ export function calcSI(hr, sbp) {
    * ≥ 1,7 — экстренная ситуация (Nathan H.L. et al., BJOG 2015;122:268–275).
    */
   function pregnancyCategory(si) {
-    if (si < 0.5) return { label: 'ниже нормы (перепроверьте данные)', color: '#6B7280', level: 0 };
-    if (si < 0.9) return { label: 'норма для беременной / родильницы', color: '#10B981', level: 1 };
-    if (si < 1.0) return { label: 'настороженность: верхняя граница нормы', color: '#F59E0B', level: 2 };
-    if (si < 1.7) return { label: 'вероятна значимая кровопотеря', color: '#EF4444', level: 3 };
-    return { label: 'экстренно: высокий риск неблагоприятного исхода', color: '#B91C1C', level: 4 };
+    if (si < 0.5) return { label: 'ниже нормы (перепроверьте данные)', tone: 'neutral', level: 0 };
+    if (si < 0.9) return { label: 'норма для беременной / родильницы', tone: 'success', level: 1 };
+    if (si < 1.0) return { label: 'настороженность: верхняя граница нормы', tone: 'warning', level: 2 };
+    if (si < 1.7) return { label: 'вероятна значимая кровопотеря', tone: 'danger', level: 3 };
+    return { label: 'экстренно: высокий риск неблагоприятного исхода', tone: 'danger', level: 4 };
   }
 
   /**
@@ -148,7 +151,7 @@ export function calcSI(hr, sbp) {
     if (mode === 'infant') {
       // Аудит M5-1 / M14-10 / M15-4: у детей < 1 года ни SIPA, ни взрослые пороги не применимы —
       // нормальный SI младенца ≈ 1,0–2,6 (по возрастным нормам ЧСС/САД PALS 2020). Категорию и кровопотерю не выводим.
-      category = { label: 'не интерпретируется у детей до 1 года', color: '#6B7280', level: null };
+      category = { label: 'не интерпретируется у детей до 1 года', tone: 'neutral', level: null };
       interpretation = `Возраст ${ageText(ageYears)}: SI и SIPA у детей до 1 года не валидированы. ` +
         'Оценивайте ЧСС и САД по возрастным нормам (раздел «Физиологические нормы в педиатрии») и клинику: ' +
         'перфузия, время наполнения капилляров, сознание, диурез.';
@@ -158,8 +161,8 @@ export function calcSI(hr, sbp) {
       const ok = si <= cutoff;
       sipaState = { cutoff };
       category = ok
-        ? { label: 'SIPA не превышен', color: '#10B981', level: 1 }
-        : { label: 'SIPA превышен', color: '#EF4444', level: 3 };
+        ? { label: 'SIPA не превышен', tone: 'success', level: 1 }
+        : { label: 'SIPA превышен', tone: 'danger', level: 3 };
       interpretation = ok
         ? `Возраст ${ageText(ageYears)}: порог SIPA ${fmt(cutoff)}; SI ≤ ${fmt(cutoff)} — ниже порога.`
         : `Возраст ${ageText(ageYears)}: SI > ${fmt(cutoff)} — подозрение на гиповолемию/шок` +
@@ -267,3 +270,83 @@ export function calcSI(hr, sbp) {
   };
 
   export default calculateShockIndex;
+
+// ----- Разбор ввода экрана (чистые функции, без React) -----
+
+const isBlank = (t) => t === null || t === undefined || String(t).trim() === '';
+
+/**
+ * Проверка полей возраста «лет + мес» (строки). Месяцев 0–11, если указаны годы
+ * (аудит M5-11: «6 мес» не должно читаться как 6 лет и наоборот).
+ * @returns {{ years: string|null, months: string|null }} — текст ошибки поля или null
+ */
+export function ageFieldErrors(yearsText, monthsText) {
+  const out = { years: null, months: null };
+  const hasY = !isBlank(yearsText);
+  const hasM = !isBlank(monthsText);
+  const y = hasY ? parseNum(yearsText) : null;
+  const m = hasM ? parseNum(monthsText) : null;
+  if (hasY && (y === undefined || y < 0)) out.years = 'Недопустимый возраст (лет).';
+  else if (hasY && y > AGE_MAX_YEARS) out.years = `Возраст больше ${AGE_MAX_YEARS} лет — проверьте ввод.`;
+  if (hasM && (m === undefined || m < 0)) out.months = 'Недопустимый возраст (мес).';
+  else if (hasY && hasM && m >= 12) out.months = 'Месяцев должно быть 0–11, если указаны годы.';
+  return out;
+}
+
+/**
+ * Состояние расчёта для экрана: из строк полей ЧСС/САД и возраста пациента (мес).
+ * @param {object} p
+ * @param {string} p.hrText — пульс (строка поля)
+ * @param {string} p.sbpText — САД (строка поля)
+ * @param {number|null} [p.ageMonths] — полный возраст в месяцах (общий пациент), null — не указан
+ * @param {boolean} [p.ageInvalid] — поле возраста содержит ошибку (расчёт не выполняется)
+ * @param {boolean} [p.pregnant]
+ * @param {boolean} [p.trauma]
+ * @returns {{ status: 'empty'|'error'|'ok', fieldErrors: {hr, sbp}, error: string|null, result: object|null }}
+ */
+export function evaluateShockIndex({ hrText, sbpText, ageMonths = null, ageInvalid = false, pregnant = false, trauma = false } = {}) {
+  const fieldErrors = { hr: null, sbp: null };
+  const hrBlank = isBlank(hrText);
+  const sbpBlank = isBlank(sbpText);
+  const hr = hrBlank ? undefined : parseNum(hrText);
+  const sbp = sbpBlank ? undefined : parseNum(sbpText);
+  if (!hrBlank && (hr === undefined || hr <= 0)) fieldErrors.hr = 'Введите пульс числом.';
+  else if (hr !== undefined && (hr < HR_RANGE[0] || hr > HR_RANGE[1])) {
+    fieldErrors.hr = `Вне диапазона ${HR_RANGE[0]}–${HR_RANGE[1]} уд/мин — проверьте ввод.`;
+  }
+  if (!sbpBlank && (sbp === undefined || sbp <= 0)) fieldErrors.sbp = 'Введите САД числом.';
+  else if (sbp !== undefined && (sbp < SBP_RANGE[0] || sbp > SBP_RANGE[1])) {
+    fieldErrors.sbp = `Вне диапазона ${SBP_RANGE[0]}–${SBP_RANGE[1]} мм рт. ст. — проверьте ввод.`;
+  }
+  if (fieldErrors.hr || fieldErrors.sbp) {
+    return { status: 'error', fieldErrors, error: fieldErrors.hr || fieldErrors.sbp, result: null };
+  }
+  if (hrBlank || sbpBlank) return { status: 'empty', fieldErrors, error: null, result: null };
+  if (ageInvalid) {
+    return { status: 'error', fieldErrors, error: 'Исправьте возраст — от него зависят пороги.', result: null };
+  }
+  const hasAge = typeof ageMonths === 'number' && Number.isFinite(ageMonths);
+  try {
+    const result = calculateShockIndex({
+      hr,
+      sbp,
+      ageYears: hasAge ? ageMonths / 12 : undefined,
+      pregnant: !!pregnant,
+      trauma: !!trauma,
+    });
+    return { status: 'ok', fieldErrors, error: null, result };
+  } catch (e) {
+    return { status: 'error', fieldErrors, error: (e && e.message) || 'Ошибка расчёта', result: null };
+  }
+}
+
+/** Итог одной строкой — для озвучки и копирования. */
+export function shockIndexSummary(result) {
+  if (!result) return '';
+  const parts = [`Шоковый индекс ${fmt(result.si, 2)}`, result.category.label];
+  if (result.flags.hypotension) parts.push('гипотензия для возраста');
+  if (result.flags.traumaHighRisk && result.traumaLabel) parts.push(result.traumaLabel);
+  if (result.flags.pregnancyConcern) parts.push('беременность: индекс 1,0 и выше');
+  if (result.bloodLossHint) parts.push(`кровопотеря: ${result.bloodLossHint}`);
+  return parts.join(', ');
+}

@@ -1,247 +1,316 @@
-# 🗺️ Карта приложения DocHub
+# Карта приложения DocHub
 
-Описание соответствует коду ветки на момент обновления. Расчёты справочные и требуют клинической
-проверки перед применением; источники значений указаны комментариями в коде (см. также
-[README](README.md#-клинические-источники)).
+Карта описывает код ветки на момент обновления документации: экраны, маршруты, модули расчёта
+и данные. Устройство общей инфраструктуры (тема, компоненты, доступность, общий пациент, пути
+введения) описано в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Расчёты справочные и требуют
+клинической проверки. Источник каждого значения указан комментарием в коде, сводная таблица
+источников — в [README](README.md#клинические-источники).
 
-## 📱 Навигационная структура
-
-### Главный экран (`Home` → ButtonApp)
-```
-🏠 main_screen/button_app.js
-├── Шапка: «Медицинские расчёты»
-├── 12 карточек-модулей (FlatList)
-└── Сетка: 1 колонка при ширине ≤ 450 или крупном системном шрифте, иначе 2
-```
-Статистики использования и настроек нет.
-
-### 1. 💊 Расчёт лекарств (`Расчет лекарств` → WelcomeScreen)
-```
-📋 js_button_preparation/calculate_button.js
-├── Шапка: число записей и число расчётов (считаются из formulas.js)
-├── Поиск по МНН, синонимам (анальгин, адреналин…) и описанию
-├── Окно препарата: форма выпуска, поля ввода, «Рассчитать»
-├── Проверка ввода: пределы правдоподобия, сверка массы с возрастом (APLS)
-├── Результат: доза/объём с единицами, отметка о пределе (limits), предупреждения
-└── «📋 Копировать» — результат в буфер обмена (expo-clipboard)
-```
-Справочные записи (без полей и расчёта) показываются без кнопки «Рассчитать».
-Результат не сохраняется: окно закрыто — данные сброшены.
-
-### 2. 🫁 Трубки (`Tabnav` → TabnavTube)
-```
-🫁 button_two/navigate_button/TabnavTube.js
-├── Эндотрахеальная (`IntubationTubeCalculation`)
-│   ├── button_intub/IntubationTubeCalculation.js — экран
-│   └── button_intub/CalculateIntubationTube.js — расчёт
-│       ├── новорождённый < 1 мес с массой → таблица по массе (NRP)
-│       ├── рост 46,8–143,3 см → зона Broselow
-│       ├── 1–12 лет → формулы по возрасту (PALS/ERC/APLS)
-│       ├── до 1 года → зона Broselow по массе
-│       ├── 13–15 лет или рост > 143,3 см без возраста → по возрасту и росту, не больше взрослых (пол)
-│       └── ≥ 16 лет → взрослые размеры по полу
-│       Вывод: метод, ID (мм), альтернативы ±0,5 мм, глубина оральная/назальная
-└── Ларингеальная (`Button_Tube_Calculation` → LaryngealTubeCalculation)
-    ├── button_laring/LaryngealTubeCalculation.js — экран
-    └── button_laring/CalculateTube.js — таблица VBM LT / LTS-D (IFU 2017)
-        Ребёнок — по массе (> 25 кг — по росту), взрослый — по росту.
-        Вывод: размер, цвет коннектора, объём манжеты, макс. давление 60 см вод. ст., дренаж LTS-D
-```
-Таблиц размеров и иллюстраций на экранах трубок нет. Таблица ларингеальной трубки к ларингеальной
-маске и i-gel не относится.
-
-### 3. ❤️ Шоковый индекс (`CalcShockIndexScreen`)
-```
-💓 shock_index_algovera/shock_algov_app.js — экран
-💓 shock_index_algovera/calculateShockIndex.js — расчёт
-├── Ввод: пульс, САД, возраст (лет + мес), «Беременность / после родов», «Травма»
-├── SI = пульс / САД
-├── Режимы: взрослые; дети 1–16 лет (SIPA); дети < 1 года (не интерпретируется);
-│   беременность / послеродовой период (КР МЗ РФ 2021)
-├── Гипотензия для возраста у детей (PALS 2020)
-└── Ориентировочная кровопотеря (взрослые — % ОЦК, беременные — качественно)
-```
-
-### 4. 🤰 Беременность (`Date_pregnancy`)
-```
-👶 pregnancy/pregnancy.js
-├── Ввод ДПМ: дд.мм.гггг или календарь
-├── Срок (нед + дн), ПДР = ДПМ + 280 дней
-├── Отметка: 22⁰–36⁶ преждевременные роды, 37⁰–41⁶ доношенный, ≥ 42⁰ переношенная
-└── Информационное видео (g.mp4, expo-video)
-```
-Параметров плода, графиков и рекомендаций нет.
-
-### 5. 🫁 Кислород (`Tabnav_oxy`)
-```
-🫁 calculate_o2/tabnav_oxy.js
-├── ⏱️ Время работы баллона (`Calc_max_time_o2` → calc_max_time_o2.js)
-│   ├── Ввод: объём (л), давление (атм или МПа), поток (л/мин), резерв (атм, по умолчанию 14)
-│   └── Вывод: время до резерва = V × (P − Pрез) / Q и максимум до нуля = V × P / Q
-├── 📊 Формула Дарбиняна (`Calc_dorbinyn` → calc_dorbinyn.js)
-│   ├── Ввод: только масса тела (кг)
-│   └── МОД = масса / 10 + 1 л/мин; < 5 кг — не применяется; маска у взрослых +2–3 л/мин
-└── 🏥 Аппаратная ИВЛ (`Calc_aparat_IVL` → calc_aparat_IVl.js)
-    ├── Аппарат: MEDUMAT Standard², MEDUMAT Standard, А-ИВЛ/ВВЛ/ВЧп-4/40
-    ├── Сценарий: СЛР / без остановки или ROSC; трубка/НВУ или маска; взрослый/ребёнок
-    ├── Масса: идеальная по росту и полу (ARDSNet) или по возрасту (APLS)
-    └── Вывод: ДО, минутная вентиляция, время вдоха/выдоха, проверка пределов аппарата
-```
-
-## 🔧 Шкалы и справочники
-
-### 📋 МКБ-10 (`MKBScreen` → ICDSearchScreen)
-```
-📋 mkb10/mkbscreen.js + mkb10/mkb_data.json (≈ 11 800 записей)
-├── Поиск по коду (в т.ч. на русской раскладке) и по названию, подсветка совпадений
-├── Просмотр списка с подгрузкой страницами
-└── Примечания к части кодов; коды вне МКБ-10 — только при точном вводе, помечены
-```
-
-### 👶 Физиологические нормы (`PediatricNormsScreen`)
-```
-👶 fiz_norm/pediatric_norms_screen.js
-├── Возраст: новорождённые, 3 и 6 мес, 1–6 лет, 8, 10, 12, 14 лет
-└── Масса и рост (средние), ЧДД, ЧСС, АД — средние и границы нормы (PALS), порог гипотензии
-```
-
-### 🩸 Группа крови (`BloodGroupScreen`)
-```
-🩸 blood_group/blood_group_screen.js
-├── Реакции «− / ± / +»: анти-A, анти-B, анти-AB, контроль 0,9% NaCl, анти-D
-├── Результат: группа AB0 и резус (D), предупреждения
-└── Справка: первичное определение, подтверждение в лаборатории (приказ МЗ РФ № 1134н, № 363)
-```
-Таблицы совместимости и правил переливания нет.
-
-### 🧠 Шкала комы Глазго (`GCScreen`)
-```
-🧠 glazgo/glazgo.js
-├── Режим: взрослые и дети ≥ 4 лет / дети < 4 лет
-├── E (1–4), V (1–5), M (1–6), варианты «не оценивается» (сумма тогда не считается)
-├── Сумма 3–15, уровень сознания, тяжесть ЧМТ (13–15 / 9–12 / 3–8)
-└── ШКГ-З (зрачки) — только во взрослом режиме
-```
-
-### 🫁 Шкала ТЭЛА (`GenevaScoreScreen`)
-```
-🫁 Tela/tela.js — пересмотренная Женевская шкала (Le Gal 2006)
-├── 8 критериев, ЧСС — обязательный выбор (< 75 / 75–94 / ≥ 95)
-├── Трёхуровневая оценка: 0–3 / 4–10 / ≥ 11
-├── Двухуровневая (ESC 2019): 0–5 / ≥ 6
-└── Следующий шаг обследования (Д-димер или КТ-ангиопульмонография)
-```
-
-### ❤️ ШОКС (`SHOKSScreen`)
-```
-❤️ shoks/shoks.js — шкала оценки клинического состояния при ХСН (Мареев В.Ю.)
-├── 10 пунктов (КР МЗ РФ «ХСН» 2024, приложение Г1)
-├── Сумма 0–20 баллов
-└── ФК ХСН: 0 — нет признаков; ≤ 3 — I; 4–6 — II; 7–9 — III; > 9 — IV
-```
-Это не qSOFA и не шкала сепсиса.
-
-### 💉 Норадреналин (`NorepinephrineScreen`)
-```
-💉 Norepinephrine/NorepinephrineScreen.js
-├── Ввод: масса, доза (мкг/кг/мин по основанию)
-├── Шприцевой насос: мг основания + итоговый объём → концентрация, мл/ч, приготовление, запас
-├── Капельница: мг основания + растворитель, 20 или 60 кап/мл → кап/мин
-├── Максимум дозы: дети (< 40 кг) 2, взрослые 2,5 мкг/кг/мин основания
-└── Предупреждения: неразведённый концентрат, скорость насоса, точность капельницы
-```
-
-## 🎨 Стили
+## Корень приложения (`App.js`)
 
 ```
-🎨 theme.js — цвета, отступы, типографика, пределы масштаба шрифта (fontScaling)
-📁 css/
-├── calculate_preparation/ (calculates_css.js, WelcomeScreenStyles.js)
-├── main_screen/styles.js
-├── Intubation calculation/
-├── Tube calculation/
-└── tabnavtube/
-calculate_o2/style_oxy.js — стили кислородных экранов
+SafeAreaProvider
+└── ThemeProvider                тема «Авто / Светлая / Тёмная», режим хранится в AsyncStorage
+    └── PatientProvider          общий пациент, только в памяти
+        └── NavigationContainer  тема навигации из makeNavigationTheme(theme)
+            ├── StatusBar        один на приложение; экраны свой не рисуют и не прячут
+            └── native-stack     Home без шапки + маршруты из массива ROUTES
 ```
-Интерфейс светлый, тёмной темы нет.
 
-## 🔧 Техническая архитектура
+Шапка экранов: фон `surface`, кнопки `primary`, подпись «Назад» скрыта. Заголовки короткие,
+без эмодзи.
 
-### Навигация (React Navigation Stack, `App.js`)
-| Маршрут | Компонент | Файл |
+## Маршруты
+
+| Маршрут | Заголовок | Компонент | Файл |
+|---|---|---|---|
+| `Home` | — (без шапки) | ButtonApp | main_screen/button_app.js |
+| `Расчет лекарств` | Расчёт препаратов | WelcomeScreen | js_button_preparation/calculate_button.js |
+| `NorepinephrineScreen` | Норадреналин | NorepinephrineScreen | Norepinephrine/NorepinephrineScreen.js |
+| `Tabnav` | Интубация | Tabnav | button_two/navigate_button/TabnavTube.js |
+| `IntubationTubeCalculation` | Эндотрахеальная трубка | IntubationTubeCalculation | button_two/button_intub/IntubationTubeCalculation.js |
+| `Button_Tube_Calculation` | Ларингеальная трубка | LaryngealTubeCalculation | button_two/button_laring/LaryngealTubeCalculation.js |
+| `Tabnav_oxy` | Кислород | Tabnav_oxy | calculate_o2/tabnav_oxy.js |
+| `Calc_max_time_o2` | Время работы баллона | Calc_max_time_o2 | calculate_o2/calc_max_time_o2.js |
+| `Calc_dorbinyn` | Минутный объём дыхания | Calc_dorbinyn | calculate_o2/calc_dorbinyn.js |
+| `Calc_aparat_IVL` | Настройка ИВЛ | Calc_aparat_IVL | calculate_o2/calc_aparat_IVl.js |
+| `NewsScreen` | NEWS2 | NewsScreen | news/NewsScreen.js |
+| `GCScreen` | Шкала Глазго | GCScreen | glazgo/glazgo.js |
+| `CalcShockIndexScreen` | Шоковый индекс | CalcShockIndexScreen | shock_index_algovera/shock_algov_app.js |
+| `GenevaScoreScreen` | Вероятность ТЭЛА | GenevaScoreScreen | Tela/tela.js |
+| `SHOKSScreen` | Шкала ШОКС | SHOKSScreen | shoks/shoks.js |
+| `PediatricNormsScreen` | Нормы в педиатрии | PediatricNormsScreen | fiz_norm/pediatric_norms_screen.js |
+| `ApgarScreen` | Шкала Апгар | ApgarScreen | apgar/ApgarScreen.js |
+| `MKBScreen` | МКБ-10 | ICDSearchScreen | mkb10/mkbscreen.js |
+| `BloodGroupScreen` | Группа крови | BloodGroupScreen | blood_group/blood_group_screen.js |
+| `Date_pregnancy` | Срок беременности | Date_pregnancy | pregnancy/pregnancy.js |
+
+Имена маршрутов не меняются: на них ссылаются `navigation.navigate` и `menuConfig.js`.
+
+## Главный экран (`Home`)
+
+```
+main_screen/button_app.js
+├── Заголовок DocHub и подпись
+├── PatientBar — сводка пациента, «Изменить» / «Указать», «Новый пациент»
+├── Разделы (данные — main_screen/menuConfig.js → MENU_SECTIONS, карточка — MenuCard.js)
+│   ├── Препараты .................. Расчёт препаратов, Норадреналин
+│   ├── Дыхательные пути и кислород  Интубация, Кислород и ИВЛ
+│   ├── Шкалы и индексы ............ NEWS2, Шкала Глазго, Шоковый индекс, Шкала ТЭЛА, Шкала ШОКС
+│   ├── Педиатрия и неонатология ... Нормы в педиатрии, Шкала Апгар
+│   └── Справочники ................ МКБ-10, Группа крови, Срок беременности
+├── Оформление — ChoiceChips «Тема»: Авто / Светлая / Тёмная (THEME_MODE_OPTIONS)
+└── Напоминание: расчёты справочные
+```
+
+- Сетка: 2 столбца только при ширине от 600 и масштабе шрифта меньше 1,3, иначе 1 столбец
+  (`gridColumns(width, fontScale)`).
+- Подменю «Интубация» и «Кислород» описаны в том же файле: `TUBE_MENU`, `OXYGEN_MENU`.
+- Чтобы добавить экран в меню, добавьте запись в `menuConfig.js`: `route` из `ROUTES` в
+  `App.js`, `section` — ключ `theme.colors.section`, `icon` — имя Ionicons.
+  `main_screen/__tests__/menuConfig.test.js` проверяет, что у каждого маршрута `App.js` есть
+  карточка на главном экране или в подменю.
+
+## Общий пациент (`patient/`)
+
+```
+PatientContext.js  — PatientProvider, usePatient, usePatientNumber, usePatientAge
+                     patient: weightKg, weightSource (entered | broselow | age), ageMonths, sex,
+                              heightCm, broselowZone
+                     derived: ageYears, isNeonate, isChild, estimatedWeightKg, zone, weightIsEstimate
+                     resetCount — растёт при «Новый пациент», экраны по нему сбрасывают свои поля
+estimates.js       — оценка массы по APLS, зоны Broselow-Luten 2017 по росту / массе / возрасту,
+                     сверка массы с возрастом
+PatientBar.js      — полоса пациента и patientSummary() для копируемого текста
+PatientEditor.js   — окно: масса и возраст, «Новорождённый (до 1 мес)», пол и рост, лента Broselow
+BroselowPicker.js  — выбор зоны ленты (цвета зон одинаковы в обеих темах, рядом подпись)
+```
+
+Пациент хранится только в памяти: после перезапуска приложения данных нет.
+
+| Экран | Что берёт из пациента |
+|---|---|
+| Расчёт препаратов | масса, возраст (лет + мес), рост, пол — и пишет их обратно |
+| Норадреналин | масса (в обе стороны), возраст — для детского предела |
+| Эндотрахеальная трубка | рост, зона Broselow, возраст, масса, пол |
+| Ларингеальная трубка | масса, рост; категория по возрасту (младше 18 лет — ребёнок) |
+| Формула Дарбиняна, Аппаратная ИВЛ | масса, рост, пол, возраст |
+| NEWS2 | возраст — для предупреждения «младше 16 лет» |
+| Шкала Глазго | возраст — детская шкала при возрасте меньше 48 мес |
+| Шоковый индекс | возраст; переключатель беременности скрыт у мужчин |
+| Шкала ТЭЛА | возраст — пункт «старше 65 лет» с 65 лет 1 мес, предупреждение до 18 лет |
+| Нормы в педиатрии | возраст — выбор строки |
+| Время работы баллона, ШОКС, Апгар, МКБ-10, Группа крови, Срок беременности | не используют (ШОКС только сбрасывается по «Новый пациент») |
+
+## Препараты
+
+### Экран «Расчёт препаратов» (`Расчет лекарств`)
+
+```
+js_button_preparation/calculate_button.js — только интерфейс
+├── PatientBar
+├── Поиск по МНН, синонимам и описанию (searchFormulas, подсветка highlightParts)
+├── Список: «Найдено: N из 91», отметки «Справочно» и «Есть предупреждения»
+└── Карточка препарата (на том же экране; Android «Назад» возвращает к списку)
+    ├── «К списку препаратов», название, форма выпуска, предупреждения «Внимание»
+    ├── Поля: масса, возраст (лет + мес), рост, пол — из общего пациента;
+    │   «Новорождённый (до 1 мес)»; путь введения и показание — кнопки ChoiceChips
+    ├── «Рассчитать» и «Очистить поля препарата» (пациента не трогает)
+    └── Результат (ResultCard): строки с единицами и отметками о пределах, примечания,
+        «Копировать», «Сбросить»
+```
+
+```
+js_button_preparation/engine.js — чистые функции
+├── computeResult(formula, rawInputs, { age, weightNote, now })
+│     → { error, type, message, errors } | { info, message } |
+│       { success, items, choices, inputsText, notes, warnings, timestamp }
+├── validateField — пределы правдоподобия (масса, возраст, рост 20–250 см и др.)
+├── resolveAge — возраст «лет + мес» в нужную запись: полные годы, доля года до 1 года, месяцы
+├── buildCopyText, resultSpoken, itemSpoken, resultLevel
+├── searchFormulas, highlightParts
+└── isReferenceOnly — запись без полей, формула ничего не возвращает
+js_button_preparation/routes.js — routeInput, choiceInput, ROUTES, routeLabel, choiceLabel
+js_button_preparation/formulas.js — сборка списка из formula_groups/
+```
+
+Копируемый текст без эмодзи: «Препарат: …», «Путь введения: …», «Показание: …», «Данные: …»,
+строки результата, «Внимание: …», «Рассчитано: ЧЧ:ММ».
+
+### Группы препаратов (`js_button_preparation/formula_groups/`)
+
+| Файл | Записей | Состав |
 |---|---|---|
-| `Home` | ButtonApp | main_screen/button_app.js |
-| `Расчет лекарств` | WelcomeScreen | js_button_preparation/calculate_button.js |
-| `Tabnav` | Tabnav | button_two/navigate_button/TabnavTube.js |
-| `IntubationTubeCalculation` | IntubationTubeCalculation | button_two/button_intub/IntubationTubeCalculation.js |
-| `Button_Tube_Calculation` | LaryngealTubeCalculation | button_two/button_laring/LaryngealTubeCalculation.js |
-| `CalcShockIndexScreen` | CalcShockIndexScreen | shock_index_algovera/shock_algov_app.js |
-| `Date_pregnancy` | Date_pregnancy | pregnancy/pregnancy.js |
-| `Tabnav_oxy` | Tabnav_oxy | calculate_o2/tabnav_oxy.js |
-| `Calc_max_time_o2` | Calc_max_time_o2 | calculate_o2/calc_max_time_o2.js |
-| `Calc_dorbinyn` | Calc_dorbinyn | calculate_o2/calc_dorbinyn.js |
-| `Calc_aparat_IVL` | Calc_aparat_IVL | calculate_o2/calc_aparat_IVl.js |
-| `MKBScreen` | ICDSearchScreen | mkb10/mkbscreen.js |
-| `PediatricNormsScreen` | PediatricNormsScreen | fiz_norm/pediatric_norms_screen.js |
-| `BloodGroupScreen` | BloodGroupScreen | blood_group/blood_group_screen.js |
-| `GCScreen` | GCScreen | glazgo/glazgo.js |
-| `GenevaScoreScreen` | GenevaScoreScreen | Tela/tela.js |
-| `SHOKSScreen` | SHOKSScreen | shoks/shoks.js |
-| `NorepinephrineScreen` | NorepinephrineScreen | Norepinephrine/NorepinephrineScreen.js |
+| toxicology.js | 5 | активированный уголь, ацетилцистеин, диазепам, мидазолам, флумазенил |
+| resuscitation.js | 8 | эпинефрин — СЛР; эпинефрин — анафилаксия в/м; атропин; амиодарон; верапамил; норэпинефрин; добутамин; допамин |
+| infusion.js | 8 | ГЭК 6%, декстран 40, NaCl 0,9%, глюкоза 10%, глюкоза 40%, вода для инъекций, ацесоль, раствор Рингера |
+| respiratory_analgesia.js | 9 | будесонид, ипратропия бромид + фенотерол, сальбутамол, кеторолак, трамадол, морфин, фентанил, пропофол, тиопентал натрия |
+| nmb_hematology.js | 5 | суксаметоний, пипекурония бромид, гепарин натрия, этамзилат, транексамовая кислота |
+| antibiotics_antiallergic.js | 5 | цефтриаксон, хлорамфеникол, стрептомицин, хлоропирамин, дифенгидрамин |
+| emergency_misc_1.js | 8 | кальция глюконат, магния сульфат, кетамин, метамизол натрия, метоклопрамид, дроперидол, хлорпромазин, галоперидол |
+| emergency_misc_2.js | 10 | дротаверин, платифиллин, налоксон, вальпроевая кислота, пиридоксин, тиамин, фильтрум, меглюмина натрия сукцинат, парафин жидкий, унитиол |
+| adult_only.js | 21 | препараты для взрослых: гипотензивные, антиангинальные, антиагреганты и антикоагулянты, окситоцин, натрия тиосульфат, натрия гидрокарбонат 5%, антисептики и др. |
+| analgesics_steroids.js | 5 | парацетамол, ибупрофен, преднизолон, дексаметазон, гидрокортизон |
+| cardio_endocrine_misc.js | 7 | лидокаин, АТФ, ацетилсалициловая кислота — ОКС, фуросемид, инсулин короткого действия — ДКА, глюкагон, ондансетрон |
 
-### Компоненты и утилиты
-```
-components/AppText.js      — Text и TextInput с общими пределами масштаба шрифта
-components/FontScaling.js  — ScaledText, AdaptiveText, ScaledTextInput, хуки масштабирования
-utils/parseNum.js          — разбор числа из поля (запятая или точка, некорректный ввод → undefined)
-```
+Всего 91 запись: у 87 есть расчёт, 4 справочные (глюкоза 40% у взрослых, парафин жидкий,
+хлоргексидин 0,05%, сульфацетамид 20%). Полный список с путями введения и показаниями —
+в [USER_GUIDE.md](USER_GUIDE.md#список-препаратов).
 
-### Состояние
-```
-📊 Только локальное состояние экранов (useState / useMemo)
-├── Поля ввода
-└── Результаты расчётов
-```
-Постоянного хранения (AsyncStorage, файлы) нет: истории и сохранения результатов нет.
+Поля записи: `name`, `description` (форма выпуска), `synonyms` (необязательно), `inputs`,
+`formula(inputs)` → `{ result1 … resultN }`, `labels`, `units`, `limits` (объект или функция
+от введённых данных), `warnings`. Путь введения — `routeInput([...], default)`, показание
+и другие выборы — `choiceInput(label, options, default)`. Если у записи несколько путей или
+показаний, у каждого варианта свой диапазон ключей результата, и подпись строки называет путь.
+В `adult_only.js` расчёт идёт только с 18 лет. Младше 18 лет формула возвращает `{}`, и экран
+показывает предупреждения препарата.
 
-## 📊 Данные
+Тесты групп — `formula_groups/__tests__/<группа>.test.js`, движка и экрана —
+`js_button_preparation/__tests__/`.
 
-### Препараты
-```
-📋 js_button_preparation/formulas.js — собирает список из formula_groups/:
-toxicology, resuscitation, infusion, respiratory_analgesia, nmb_hematology,
-antibiotics_antiallergic, emergency_misc_1, emergency_misc_2, adult_only
-```
-Каждая запись: `name`, `description` (форма выпуска), `inputs` (поля), `formula` (расчёт,
-возвращает `result1…resultN`; примечания о пределах — строками в тех же полях), `units`, `limits` (пределы доз для отметки на экране).
-На момент обновления: 81 запись, 59 с расчётом, 22 справочные.
+### Норадреналин (`NorepinephrineScreen`)
 
-### Справочные данные внутри экранов
 ```
-mkb10/mkb_data.json                — МКБ-10 ({ meta, items: [{ code, name, note?, ext?, src? }] })
-fiz_norm/pediatric_norms_screen.js — таблица педиатрических норм
-button_two/button_laring/CalculateTube.js — таблица VBM LT / LTS-D
-```
-Картинки `shock_index_algovera/image2.png`, `button_intub/intub_img.png`,
-`button_laring/ларинг_изображ.png`, `main_screen/logo.png`, `main_screen/title.png` в коде
-не используются.
-
-## 🔄 Рабочие процессы
-
-### Добавление модуля
-```
-1. Папка модуля и компонент экрана
-2. Stack.Screen в App.js
-3. Карточка в main_screen/button_app.js
-4. Комментарий с источником у каждого клинического значения
-5. Проверка на типичных и граничных значениях
-6. Обновление README, USER_GUIDE и этой карты
+Norepinephrine/NorepinephrineScreen.js — экран, PatientBar
+Norepinephrine/norepinephrineCalc.js   — calcNorepinephrine({ weight, dose, drugMg, syrVol,
+                                          bagMg, bagDiluent, dropFactor, ageMonths })
+                                          → { ok, errors, fieldErrors, dose, syringe, bag }
+├── Шприцевой насос: концентрация, мл/ч, приготовление, на сколько хватит шприца
+├── Капельница 20 или 60 кап/мл: кап/мин
+└── Предел дозы: 2 мкг/кг/мин основания при массе меньше 40 кг или возрасте до 18 лет, иначе 2,5
 ```
 
-### Процесс расчёта
+## Дыхательные пути и кислород
+
+### Интубация (`Tabnav` → подменю `TUBE_MENU`)
+
 ```
-1. Ввод параметров
-2. Проверка ввода (пределы правдоподобия)
-3. Расчёт и ограничение установленными максимумами
-4. Вывод с единицами, пределами и предупреждениями
+Эндотрахеальная трубка (IntubationTubeCalculation)
+├── IntubationTubeCalculation.js — экран: пациент, зона Broselow (серая зона — подзона 3, 4 или 5 кг),
+│   манжета, путь (рот, нос, оба); расчёт сразу при вводе, итог через ResultCard
+├── intubationFromPatient.js — сборка ввода из пациента, подписи методов, текст для озвучивания
+└── CalculateIntubationTube.js — логика:
+    рост → выбранная зона Broselow → возраст, масса, пол;
+    calculateIntubationTubeByZone({ zoneKey, greySubzone, ageYears, ageMonths, cuffed, route });
+    если зона расходится с ростом — расчёт по росту и предупреждение
+    Вывод: метод, внутренний диаметр, альтернативы ±0,5 мм, глубина через рот и через нос
+
+Ларингеальная трубка (Button_Tube_Calculation)
+├── LaryngealTubeCalculation.js — экран: категория по возрасту (можно сменить), масса, рост
+├── laryngealFromPatient.js
+└── CalculateTube.js — таблица VBM LT / LTS-D (IFU 2017): ребёнок по массе (больше 25 кг — по
+    росту), взрослый по росту; размер, цвет коннектора, объём манжеты, давление 60 см вод. ст.,
+    зонд для дренажного канала LTS-D
+```
+
+### Кислород и ИВЛ (`Tabnav_oxy` → подменю `OXYGEN_MENU`)
+
+```
+calculate_o2/
+├── calc_max_time_o2.js → oxygenCalc.js      Время работы баллона: объём, давление (атм или МПа),
+│                                             поток, резерв (по умолчанию 14 атм)
+├── calc_dorbinyn.js    → darbinyanCalc.js   МОД = масса / 10 + 1 по фактической или должной массе;
+│                                             меньше 5 кг — не применяется; PatientBar
+├── calc_aparat_IVl.js  → ventilatorCalc.js  Аппарат, сценарий, дыхательные пути, взрослый / ребёнок;
+│                                             PBW (должная масса), пресеты и пределы аппаратов,
+│                                             computeIvl, CHILD_OVERWEIGHT_RATIO = 1.2; PatientBar
+├── tabnav_oxy.js                             подменю
+└── style_oxy.js                              makeOxyStyles, useOxyStyles (без экспорта по умолчанию)
+```
+
+Все три экрана считают сразу при вводе, без кнопки «Рассчитать».
+
+## Шкалы и индексы
+
+| Экран | Файлы | Что считает |
+|---|---|---|
+| NEWS2 | news/NewsScreen.js, news/newsScore.js | `computeNews2(input)` → баллы по 7 параметрам, сумма, «3 балла по одному параметру», уровень риска (`RISK`: none / low / lowMedium / medium / high), частота наблюдения и реакция; `ageWarning`, `summaryText` |
+| Шкала Глазго | glazgo/glazgo.js, glazgo/gcsScore.js | E, V, M, сумма 3–15, тяжесть ЧМТ, ШКГ-З; детская шкала при возрасте меньше 4 лет |
+| Шоковый индекс | shock_index_algovera/shock_algov_app.js, calculateShockIndex.js | SI = пульс / САД; взрослые, SIPA у детей 1–16 лет, беременность и роды; гипотензия для возраста; кровопотеря |
+| Шкала ТЭЛА | Tela/tela.js, Tela/genevaScore.js | пересмотренная Женевская шкала; три и два уровня вероятности, следующий шаг |
+| Шкала ШОКС | shoks/shoks.js, shoks/shoksScore.js | 10 пунктов, 0–20 баллов, ФК ХСН I–IV |
+
+Итог на экранах шкал стоит после полей ввода, чтобы фокус диктора шёл сверху вниз.
+
+## Педиатрия и неонатология
+
+```
+fiz_norm/pediatric_norms_screen.js + normsData.js
+├── Строки: новорождённые, 3 и 6 мес, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14 лет
+├── normForAge: ближайшая младшая строка в той же полосе PALS; 1–2 мес → «3 мес»;
+│   15–17 лет → «14 лет» (ориентировочно); с 18 лет — не применяется
+└── Ручной выбор сбрасывается при смене возраста пациента и «Новый пациент»
+
+apgar/ApgarScreen.js + apgarScore.js
+├── Секундомер от рождения: «Ребёнок родился — запустить», сдвиг ±1 мин, «Сбросить»
+├── Оценка: минута, пять признаков по 0–2 балла, «На фоне реанимационных мероприятий»
+├── Обязательные минуты 1 и 5; 10-я — если реанимация продолжается после 5-й минуты;
+│   10, 15, 20-я — если на 5-й минуте меньше 7 баллов (оба правила применяются вместе)
+├── Интерпретация (МКБ-10 P21): 8–10 удовлетворительное, 4–7 умеренная асфиксия, 0–3 тяжёлая
+└── «Скопировать», «Новая оценка»; данные только в состоянии экрана
+```
+
+## Справочники
+
+```
+mkb10/mkbscreen.js + icdSearch.js + mkb_data.json (11 841 запись)
+├── mkb_data.json загружается при первом открытии (с индикатором), индекс кэшируется до перезапуска
+├── Поиск по коду (в т. ч. на русской раскладке: «Ш21.0» → I21.0) и по названию, подсветка
+├── Без запроса: «Всего N кодов. Список прокручивается.»
+└── Примечания к части кодов; коды вне МКБ-10 — только при точном вводе, с пометкой
+
+blood_group/blood_group_screen.js + bloodGroupLogic.js
+├── Реакции «− / ± / +»: анти-A, анти-B, анти-AB, контроль 0,9% NaCl, анти-D
+└── Группа AB0, резус (D) или «Не определён», предупреждения
+
+pregnancy/pregnancy.js + pregnancyCalc.js
+├── ДПМ: дд.мм.гггг или календарь; ошибки под полем, озвучиваются
+├── Срок (нед + дн), ПДР = ДПМ + 280 дней, отметка о сроке; дни — по календарной дате (Date.UTC)
+└── Видео g.mp4 (expo-video) ниже расчёта: свои кнопки Пуск / Пауза, Звук, На весь экран
+```
+
+## Общие модули
+
+```
+theme/        palette.js (светлая и тёмная палитры), tokens.js, broselow.js, ThemeProvider.js, index.js
+components/   Screen.js, AppText.js, a11y.js, ui/ (Button, ChoiceChips, NumberField, SwitchRow, Card,
+              Section, ResultCard, Badge, Note)
+utils/        parseNum.js — разбор числа (запятая или точка; некорректный ввод → undefined)
+```
+
+Старые `theme.js`, `components/FontScaling.js` и папка `css/` экранами не используются.
+
+## Состояние и хранение
+
+| Что | Где | Срок жизни |
+|---|---|---|
+| Режим темы | AsyncStorage, ключ `dochub.themeMode` | сохраняется между запусками |
+| Пациент | PatientProvider (память) | до закрытия приложения или «Новый пациент» |
+| Поля и результаты экранов | локальное состояние экрана | до ухода с экрана |
+| Индекс МКБ-10 | кэш модуля | до перезапуска приложения |
+
+Истории расчётов и передачи данных нет.
+
+## Тесты
+
+Jest с пресетом `jest-expo`, тесты лежат в `__tests__/` рядом с кодом:
+
+- чистые модули: `engine`, `routes`, все группы `formula_groups`, `CalculateIntubationTube`,
+  `intubationFromPatient`, `CalculateTube`, `oxygenCalc`, `darbinyanCalc`, `ventilatorCalc`,
+  `norepinephrineCalc`, `newsScore`, `gcsScore`, `calculateShockIndex`, `genevaScore`,
+  `shoksScore`, `normsData`, `apgarScore`, `icdSearch`, `bloodGroupLogic`, `pregnancyCalc`
+  (и отдельный тест часовых поясов `pregnancyTz.test.js`), `estimates`, `parseNum`, `menuConfig`;
+- контраст цветов обеих тем и ленты Broselow: `theme/__tests__/contrast.test.js`;
+- рендер экранов: главный экран и подменю, препараты, трубки, кислород, NEWS2, Глазго, шоковый
+  индекс, ТЭЛА, ШОКС, нормы, Апгар, МКБ-10, группа крови, беременность, норадреналин.
+
+Команды и CI — в [README](README.md#разработка-тесты-линтер-форматирование-ci).
+
+## Процесс расчёта
+
+```
+1. Ввод (поля экрана и общий пациент)
+2. Проверка ввода: пределы правдоподобия, ошибка под полем и для диктора
+3. Расчёт в чистом модуле, ограничение максимумами
+4. Вывод: единицы, отметки о пределах, предупреждения; озвучивание через ResultCard или announce
 ```

@@ -61,7 +61,11 @@ export default function ChoiceChips({
               ) : null}
               <Text
                 variant={selected ? 'bodyStrong' : 'body'}
-                style={{ color: selected ? colors.onPrimary : isDisabled ? colors.textMuted : colors.text }}
+                // flexShrink: длинная подпись переносится, а не вылезает за чип рядом с галочкой
+                style={{
+                  flexShrink: 1,
+                  color: selected ? colors.onPrimary : isDisabled ? colors.textMuted : colors.text,
+                }}
               >
                 {opt.label}
               </Text>

@@ -23,6 +23,8 @@ export default function ResultCard({
   levelLabel,
   children,
   announceText,
+  // Как диктор читает значение, если сокращения в value плохо звучат («24 нед 1 дн»)
+  valueAccessibilityLabel,
   announceEnabled = true,
   style,
   testID,
@@ -52,7 +54,11 @@ export default function ResultCard({
         </Text>
       ) : null}
       {hasValue ? (
-        <View style={styles.valueRow} accessible accessibilityLabel={a11yLabel(value, unit)}>
+        <View
+          style={styles.valueRow}
+          accessible
+          accessibilityLabel={valueAccessibilityLabel || a11yLabel(value, unit)}
+        >
           <Text variant="number" style={styles.value}>
             {value}
           </Text>
