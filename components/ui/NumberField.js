@@ -138,6 +138,9 @@ const makeStyles = ({ colors, spacing, radius, typography }) => ({
   input: {
     ...typography.body,
     flex: 1,
+    // На web у <input> своя ширина по умолчанию: без minWidth поле в узкой колонке
+    // не сжимается и выталкивает единицу за край экрана
+    minWidth: 0,
     color: colors.text,
     paddingVertical: spacing.sm,
     minHeight: MIN_TOUCH - 4,

@@ -124,8 +124,8 @@ describe('экран калькулятора препаратов', () => {
 
     // поля показывают пациента, масса помечена как оценка
     expect(input(root, 'Вес, кг, оценка: Broselow').props.value).toBe('20');
-    expect(input(root, 'Возраст, полных лет, лет').props.value).toBe('5');
-    expect(input(root, 'и месяцев, мес').props.value).toBe('3');
+    expect(input(root, 'Возраст, лет').props.value).toBe('5');
+    expect(input(root, 'Месяцы, мес').props.value).toBe('3');
 
     press(root, 'в/м');
     press(root, 'Анафилаксия');
