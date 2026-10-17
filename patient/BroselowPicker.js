@@ -1,17 +1,50 @@
 // BroselowPicker.js — выбор зоны ленты Broselow-Luten (2017): цвет ленты, масса, длина,
 // ориентировочный возраст. Выбор зоны записывает в пациента broselowZone, массу
-// (середина диапазона зоны) и weightSource: 'broselow'.
+// (середина диапазона зоны) и weightSource: 'broselow'. Кнопка «?» у заголовка — краткая справка,
+// зачем нужна лента (BroselowHelp).
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '../components/AppText';
 import { hideFromA11y, announce } from '../components/a11y';
-import { Note } from '../components/ui';
+import { HelpButton, Note } from '../components/ui';
 import { usePatient } from './PatientContext';
-import { BROSELOW_ZONES, BROSELOW_VERSION, zoneByHeight } from './estimates';
+import {
+  BROSELOW_MAX_LENGTH_CM,
+  BROSELOW_MIN_LENGTH_CM,
+  BROSELOW_VERSION,
+  BROSELOW_ZONES,
+  zoneByHeight,
+} from './estimates';
 import { useTheme, useThemedStyles, MIN_TOUCH } from '../theme/index';
 
 const fmt = (n) => String(n).replace('.', ',');
+
+// Текст справки «?»: что за лента и зачем она в приложении. Границы — из таблицы зон
+export const BROSELOW_HELP = [
+  `Цветная мерная лента для детей ростом ${fmt(BROSELOW_MIN_LENGTH_CM)}–${fmt(BROSELOW_MAX_LENGTH_CM)} см (масса примерно ${BROSELOW_ZONES[0].weightMinKg}–${BROSELOW_ZONES[BROSELOW_ZONES.length - 1].weightMaxKg} кг). Ребёнка кладут на спину вдоль ленты: красный край — у макушки, цвет у пяток — его зона.`,
+  'Зачем: почти все детские дозы считаются на килограмм, а точный вес в экстренной ситуации часто неизвестен. Масса по длине тела точнее, чем по возрасту, — особенно у полных и худых детей.',
+  'В приложении зона подставляет массу во все калькуляторы и подсказывает размер эндотрахеальной трубки.',
+  'Ленты нет — введите рост: зона определится сама. Вес известен — введите фактический, он точнее.',
+  `Версия ${BROSELOW_VERSION} года: зоны пересчитаны под современных детей.`,
+];
+
+export function BroselowHelp({ testID = 'broselow-help' }) {
+  const styles = useThemedStyles(makeStyles);
+  return (
+    <HelpButton
+      title="Лента Broselow"
+      accessibilityLabel="Что такое лента Broselow"
+      testID={testID}
+    >
+      {BROSELOW_HELP.map((p) => (
+        <Text key={p} variant="body" style={styles.helpText}>
+          {p}
+        </Text>
+      ))}
+    </HelpButton>
+  );
+}
 
 export default function BroselowPicker({ onSelect, style }) {
   const { broselow } = useTheme();
@@ -28,9 +61,12 @@ export default function BroselowPicker({ onSelect, style }) {
 
   return (
     <View style={style}>
-      <Text variant="heading" accessibilityRole="header" style={styles.title}>
-        Лента Broselow ({BROSELOW_VERSION})
-      </Text>
+      <View style={styles.titleRow}>
+        <Text variant="heading" accessibilityRole="header" style={styles.titleText}>
+          Лента Broselow ({BROSELOW_VERSION})
+        </Text>
+        <BroselowHelp />
+      </View>
       <Text variant="caption" color="textSecondary" style={styles.caption}>
         Измерьте длину ребёнка лентой и выберите зону. Масса оценена по ленте Broselow: середина
         диапазона зоны.
@@ -97,7 +133,9 @@ export default function BroselowPicker({ onSelect, style }) {
 }
 
 const makeStyles = ({ colors, spacing, radius }) => ({
-  title: { marginBottom: spacing.xs },
+  titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs },
+  titleText: { flexShrink: 1 },
+  helpText: { marginBottom: spacing.sm },
   caption: { marginBottom: spacing.sm },
   grid: {
     flexDirection: 'row',
