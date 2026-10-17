@@ -8,3 +8,4 @@ export { default as Section } from './Section';
 export { default as ResultCard, ANNOUNCE_DELAY } from './ResultCard';
 export { default as Badge, levelColors, LEVEL_ICONS } from './Badge';
 export { default as Note } from './Note';
+export { default as HelpButton } from './HelpButton';
