@@ -4,7 +4,12 @@
 import { useContext, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
-import ThemeProvider, { ThemeContext, THEME_MODES, THEME_MODE_KEY, buildTheme } from './ThemeProvider';
+import ThemeProvider, {
+  ThemeContext,
+  THEME_MODES,
+  THEME_MODE_KEY,
+  buildTheme,
+} from './ThemeProvider';
 import palette from './palette';
 import broselowColors from './broselow';
 import { spacing, radius, typography, fontScaling, MIN_TOUCH } from './tokens';

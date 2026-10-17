@@ -8,7 +8,16 @@ import * as Clipboard from 'expo-clipboard';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { announce, a11yLabel } from '../components/a11y';
-import { Badge, Button, Card, ChoiceChips, Note, ResultCard, Section, SwitchRow } from '../components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  ChoiceChips,
+  Note,
+  ResultCard,
+  Section,
+  SwitchRow,
+} from '../components/ui';
 import { useThemedStyles } from '../theme/index';
 import {
   APGAR_SIGNS,
@@ -41,13 +50,15 @@ const TICK_MS = 1000;
 const MINUTE_MS = 60000;
 
 // В react-native-web Alert.alert ничего не делает: там — системные window.confirm/alert
-const browserWindow = () => (Platform.OS === 'web' && typeof window !== 'undefined' ? window : null);
+const browserWindow = () =>
+  Platform.OS === 'web' && typeof window !== 'undefined' ? window : null;
 
 // Подтверждение действий, которые стирают данные (защита от случайного касания)
 function confirmAction(title, message, actionLabel, onConfirm) {
   const w = browserWindow();
   if (w) {
-    if (typeof w.confirm !== 'function' || w.confirm(message ? `${title}\n${message}` : title)) onConfirm();
+    if (typeof w.confirm !== 'function' || w.confirm(message ? `${title}\n${message}` : title))
+      onConfirm();
     return;
   }
   Alert.alert(title, message, [
@@ -156,7 +167,11 @@ function BirthStopwatch({ birthAt, onStart, onShift, onReset, assessments, minut
                 <Text variant="body" style={styles.markName}>
                   {minuteShort(m)}
                 </Text>
-                <Badge level={level} label={label} accessibilityLabel={`${minuteLabel(m)}: ${label}`} />
+                <Badge
+                  level={level}
+                  label={label}
+                  accessibilityLabel={`${minuteLabel(m)}: ${label}`}
+                />
               </View>
             );
           })}
@@ -219,7 +234,7 @@ export default function ApgarScreen() {
       setSelectedMinute(m);
       announce(`Прошла ${minuteLabel(m)} — оцените по шкале Апгар`);
     },
-    [minutes]
+    [minutes],
   );
 
   const startTimer = () => {
@@ -247,12 +262,17 @@ export default function ApgarScreen() {
       announce(`Оценка ${minuteLabelOn(minute)} очищена`);
     });
   const resetAll = () =>
-    confirmAction('Начать новую оценку?', 'Все оценки и секундомер будут очищены.', 'Очистить всё', () => {
-      setAssessments({});
-      setSelectedMinute(1);
-      setBirthAt(null);
-      announce('Данные очищены');
-    });
+    confirmAction(
+      'Начать новую оценку?',
+      'Все оценки и секундомер будут очищены.',
+      'Очистить всё',
+      () => {
+        setAssessments({});
+        setSelectedMinute(1);
+        setBirthAt(null);
+        announce('Данные очищены');
+      },
+    );
   const copy = async () => {
     try {
       await Clipboard.setStringAsync(summaryText(assessments, birthAt));
@@ -271,15 +291,19 @@ export default function ApgarScreen() {
     };
   });
 
-  const missingLabels = APGAR_SIGNS.filter((s) => progress.missing.includes(s.key)).map((s) => s.label);
+  const missingLabels = APGAR_SIGNS.filter((s) => progress.missing.includes(s.key)).map(
+    (s) => s.label,
+  );
 
   let nextStep = null;
   if (total !== null) {
     if (minute === 1) nextStep = 'Следующая оценка — на 5-й минуте.';
     else if (minute === 5 && total < 7)
-      nextStep = 'На 5-й минуте меньше 7 баллов: повторяйте оценку каждые 5 минут — на 10-й, 15-й и 20-й минуте.';
+      nextStep =
+        'На 5-й минуте меньше 7 баллов: повторяйте оценку каждые 5 минут — на 10-й, 15-й и 20-й минуте.';
     else if (minute === 5 && resusAfterFive)
-      nextStep = 'Реанимационные мероприятия продолжаются после 5-й минуты: оцените на 10-й минуте.';
+      nextStep =
+        'Реанимационные мероприятия продолжаются после 5-й минуты: оцените на 10-й минуте.';
     else if (minute === 5)
       nextStep =
         'На 5-й минуте 7 баллов и более: дополнительные оценки не обязательны. Если реанимационные мероприятия продолжаются, включите «На фоне реанимационных мероприятий» — понадобится оценка на 10-й минуте.';
@@ -291,8 +315,8 @@ export default function ApgarScreen() {
   return (
     <Screen scroll>
       <Note level="warning" title="Оценка по Апгар не используется для решения о начале реанимации">
-        Реанимационные мероприятия начинают сразу — по дыханию, ЧСС и мышечному тонусу, не дожидаясь оценки
-        на 1-й минуте. Шкала Апгар описывает состояние и ответ на помощь.
+        Реанимационные мероприятия начинают сразу — по дыханию, ЧСС и мышечному тонусу, не дожидаясь
+        оценки на 1-й минуте. Шкала Апгар описывает состояние и ответ на помощь.
       </Note>
 
       <BirthStopwatch
@@ -305,7 +329,10 @@ export default function ApgarScreen() {
         onMark={onMark}
       />
 
-      <Section title="Оценка" description="Отметьте по одному варианту у каждого из пяти признаков.">
+      <Section
+        title="Оценка"
+        description="Отметьте по одному варианту у каждого из пяти признаков."
+      >
         <ChoiceChips
           label="Минута оценки"
           options={minuteOptions}
@@ -332,8 +359,8 @@ export default function ApgarScreen() {
                 усилий ребёнка — вдохи аппарата/мешка не считаются «хорошим» дыханием. */}
             {sign.key === 'respiration' && current.duringResuscitation ? (
               <Note level="info" title="Дыхание на фоне ИВЛ" style={styles.signNote}>
-                Оценивайте только собственные дыхательные усилия ребёнка. Вдохи аппарата или мешка не
-                учитываются: нет своих вдохов — 0 баллов.
+                Оценивайте только собственные дыхательные усилия ребёнка. Вдохи аппарата или мешка
+                не учитываются: нет своих вдохов — 0 баллов.
               </Note>
             ) : null}
           </React.Fragment>
@@ -362,7 +389,7 @@ export default function ApgarScreen() {
             announceText={a11yLabel(
               `Апгар ${minuteLabelOn(minute)}: ${formatPoints(total)}`,
               band ? band.label : null,
-              nextStep
+              nextStep,
             )}
             testID="apgar-result"
           >
@@ -412,8 +439,8 @@ export default function ApgarScreen() {
 
         {repeat ? (
           <Note level="warning" title="На 5-й минуте меньше 7 баллов" style={styles.repeatNote}>
-            Оценивайте каждые 5 минут до 20-й минуты: на 10-й, 15-й и 20-й. Продолжайте помощь по алгоритму
-            реанимации новорождённого.
+            Оценивайте каждые 5 минут до 20-й минуты: на 10-й, 15-й и 20-й. Продолжайте помощь по
+            алгоритму реанимации новорождённого.
           </Note>
         ) : null}
 
@@ -448,24 +475,25 @@ export default function ApgarScreen() {
 
       <Section title="Как оценивать">
         <Note level="info" title="Время оценки">
-          На 1-й и 5-й минуте жизни. Если реанимационные мероприятия продолжаются после 5-й минуты — ещё
-          на 10-й минуте (методические письма Минздрава России). Если на 5-й минуте меньше 7 баллов —
-          каждые 5 минут до 20-й минуты (AAP/ACOG). Приложение учитывает оба правила.
+          На 1-й и 5-й минуте жизни. Если реанимационные мероприятия продолжаются после 5-й минуты —
+          ещё на 10-й минуте (методические письма Минздрава России). Если на 5-й минуте меньше 7
+          баллов — каждые 5 минут до 20-й минуты (AAP/ACOG). Приложение учитывает оба правила.
         </Note>
         <Note level="info" title="Интерпретация">
-          8–10 баллов — удовлетворительное состояние; 4–7 — умеренная асфиксия; 0–3 — тяжёлая асфиксия. По
-          МКБ-10 (P21.0, P21.1) степень асфиксии относят к оценке на 1-й минуте. Низкая оценка — клиническая
-          находка, а не диагноз: асфиксию не диагностируют по одной шкале Апгар.
+          8–10 баллов — удовлетворительное состояние; 4–7 — умеренная асфиксия; 0–3 — тяжёлая
+          асфиксия. По МКБ-10 (P21.0, P21.1) степень асфиксии относят к оценке на 1-й минуте. Низкая
+          оценка — клиническая находка, а не диагноз: асфиксию не диагностируют по одной шкале
+          Апгар.
         </Note>
         <Note level="info" title="Недоношенные дети">
-          Мышечный тонус, рефлексы и окраска кожи зависят от срока гестации: оценка может быть ниже без
-          асфиксии.
+          Мышечный тонус, рефлексы и окраска кожи зависят от срока гестации: оценка может быть ниже
+          без асфиксии.
         </Note>
         <Text variant="caption" color="textSecondary" style={styles.sources}>
-          Источники: методическое письмо Минздрава России «Реанимация и стабилизация состояния новорождённых
-          детей в родильном зале» (2020); методическое письмо Минздравсоцразвития России «Первичная и
-          реанимационная помощь новорождённым детям» (21.04.2010 № 15-4/10/2-3204); МКБ-10, рубрика P21; AAP/ACOG «The Apgar Score» (Pediatrics,
-          2015).
+          Источники: методическое письмо Минздрава России «Реанимация и стабилизация состояния
+          новорождённых детей в родильном зале» (2020); методическое письмо Минздравсоцразвития
+          России «Первичная и реанимационная помощь новорождённым детям» (21.04.2010 №
+          15-4/10/2-3204); МКБ-10, рубрика P21; AAP/ACOG «The Apgar Score» (Pediatrics, 2015).
         </Text>
       </Section>
     </Screen>

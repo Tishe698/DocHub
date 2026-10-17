@@ -8,7 +8,14 @@ import { announce } from '../components/a11y';
 import { Button, Card, ChoiceChips, ResultCard } from '../components/ui';
 import { usePatient } from '../patient/PatientContext';
 import { useThemedStyles } from '../theme/index';
-import { MAX_SCORE, QUESTIONS, computeShoks, emptyAnswers, ptsWord, shoksSummary } from './shoksScore';
+import {
+  MAX_SCORE,
+  QUESTIONS,
+  computeShoks,
+  emptyAnswers,
+  ptsWord,
+  shoksSummary,
+} from './shoksScore';
 
 // Варианты ChoiceChips для каждого пункта: балл виден в подписи и звучит для диктора
 const CHOICES = Object.fromEntries(
@@ -19,7 +26,7 @@ const CHOICES = Object.fromEntries(
       label: `${o.label} (+${o.pts})`,
       accessibilityLabel: `${o.label}, ${o.pts} ${ptsWord(o.pts)}`,
     })),
-  ])
+  ]),
 );
 
 export default function SHOKSScreen() {
@@ -88,7 +95,13 @@ export default function SHOKSScreen() {
         )}
       </ResultCard>
 
-      <Button title="Сбросить" variant="secondary" icon="refresh" onPress={onReset} testID="shoks-reset" />
+      <Button
+        title="Сбросить"
+        variant="secondary"
+        icon="refresh"
+        onPress={onReset}
+        testID="shoks-reset"
+      />
 
       <Card style={styles.note}>
         <Text variant="heading" accessibilityRole="header">

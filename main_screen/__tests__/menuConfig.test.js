@@ -14,13 +14,16 @@ import { THEME_MODES } from '../../theme/ThemeProvider';
 import { stripEmoji } from '../../components/a11y';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
 // Маршруты, зарегистрированные в App.js (имена из массива ROUTES)
 function appRoutes() {
   const src = fs.readFileSync(path.join(__dirname, '../../App.js'), 'utf8');
-  const block = src.slice(src.indexOf('const ROUTES'), src.indexOf('];', src.indexOf('const ROUTES')));
+  const block = src.slice(
+    src.indexOf('const ROUTES'),
+    src.indexOf('];', src.indexOf('const ROUTES')),
+  );
   return [...block.matchAll(/name:\s*'([^']+)'/g)].map((m) => m[1]);
 }
 

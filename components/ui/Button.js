@@ -70,7 +70,9 @@ export default function Button({
       accessibilityLabel={accessibilityLabel || title}
       accessibilityHint={accessibilityHint}
       accessibilityState={
-        selected === undefined ? { disabled: !!disabled } : { disabled: !!disabled, selected: !!selected }
+        selected === undefined
+          ? { disabled: !!disabled }
+          : { disabled: !!disabled, selected: !!selected }
       }
       testID={testID}
       style={({ pressed }) => {

@@ -9,7 +9,13 @@ import {
   validateO2Fields,
 } from '../oxygenCalc';
 
-const base = { volume: 10, pressure: 150, unit: UNITS.ATM, flow: 10, reserveAtm: DEFAULT_RESERVE_ATM };
+const base = {
+  volume: 10,
+  pressure: 150,
+  unit: UNITS.ATM,
+  flow: 10,
+  reserveAtm: DEFAULT_RESERVE_ATM,
+};
 
 describe('computeO2Time — запас с остаточным давлением', () => {
   test('10 л, 150 атм, 10 л/мин, резерв 14 атм → 136 мин; до нуля 150 мин', () => {
@@ -63,7 +69,13 @@ describe('МПа и атм', () => {
   });
 
   test('баллон 2 л, 19,6 МПа, 4 л/мин: 2 × (196 − 14) / 4 = 91 мин', () => {
-    const r = computeO2Time({ volume: 2, pressure: 19.6, unit: UNITS.MPA, flow: 4, reserveAtm: 14 });
+    const r = computeO2Time({
+      volume: 2,
+      pressure: 19.6,
+      unit: UNITS.MPA,
+      flow: 4,
+      reserveAtm: 14,
+    });
     expect(r.minutes).toBe(91);
     expect(r.maxMinutes).toBe(98);
   });
@@ -107,7 +119,13 @@ describe('пределы ввода', () => {
 
   test('validateO2Fields: пустые поля без ошибок, ошибки по каждому полю', () => {
     expect(validateO2Fields({ unit: UNITS.ATM })).toEqual({});
-    const e = validateO2Fields({ volume: 100, pressure: 40, unit: UNITS.MPA, flow: 100, reserveAtm: -2 });
+    const e = validateO2Fields({
+      volume: 100,
+      pressure: 40,
+      unit: UNITS.MPA,
+      flow: 100,
+      reserveAtm: -2,
+    });
     expect(Object.keys(e).sort()).toEqual(['flow', 'pressure', 'reserve', 'volume']);
     expect(validateO2Fields(base)).toEqual({});
   });

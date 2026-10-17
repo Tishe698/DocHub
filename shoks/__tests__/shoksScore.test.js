@@ -1,4 +1,12 @@
-import { MAX_SCORE, QUESTIONS, computeShoks, emptyAnswers, interpret, ptsWord, shoksSummary } from '../shoksScore';
+import {
+  MAX_SCORE,
+  QUESTIONS,
+  computeShoks,
+  emptyAnswers,
+  interpret,
+  ptsWord,
+  shoksSummary,
+} from '../shoksScore';
 
 // Ответы, у которых каждый пункт получает заданный балл (или максимум пункта, если он меньше)
 const answersWith = (pick) =>
@@ -6,7 +14,7 @@ const answersWith = (pick) =>
     QUESTIONS.map((q) => {
       const opt = pick(q);
       return [q.key, opt ? opt.id : null];
-    })
+    }),
   );
 const allZero = () => answersWith((q) => q.options.find((o) => o.pts === 0));
 const allMax = () => answersWith((q) => q.options.reduce((a, b) => (b.pts > a.pts ? b : a)));
@@ -18,7 +26,9 @@ describe('пункты ШОКС (КР «ХСН» 2024, прил. Г1)', () => {
   });
 
   it('максимальные баллы пунктов', () => {
-    const max = Object.fromEntries(QUESTIONS.map((q) => [q.key, Math.max(...q.options.map((o) => o.pts))]));
+    const max = Object.fromEntries(
+      QUESTIONS.map((q) => [q.key, Math.max(...q.options.map((o) => o.pts))]),
+    );
     expect(max).toEqual({
       dyspnea: 2,
       weight: 1,
@@ -63,7 +73,13 @@ describe('interpret — все пороги', () => {
 describe('computeShoks', () => {
   it('пустой ввод — нет итога', () => {
     const r = computeShoks(emptyAnswers());
-    expect(r).toMatchObject({ total: 0, answered: 0, count: 10, complete: false, interpretation: null });
+    expect(r).toMatchObject({
+      total: 0,
+      answered: 0,
+      count: 10,
+      complete: false,
+      interpretation: null,
+    });
     expect(r.missing).toHaveLength(10);
     expect(shoksSummary(r)).toBe('');
     expect(computeShoks()).toMatchObject({ answered: 0, complete: false });
@@ -97,7 +113,14 @@ describe('computeShoks', () => {
   });
 
   it('типичный случай: 7 баллов — III ФК', () => {
-    const r = computeShoks({ ...allZero(), dyspnea: '1', position: '2', rales: '1', edema: '2', sbp: '1' });
+    const r = computeShoks({
+      ...allZero(),
+      dyspnea: '1',
+      position: '2',
+      rales: '1',
+      edema: '2',
+      sbp: '1',
+    });
     expect(r.total).toBe(7);
     expect(r.interpretation.fc).toBe(3);
     expect(shoksSummary(r)).toBe('ШОКС: 7 баллов. III функциональный класс');

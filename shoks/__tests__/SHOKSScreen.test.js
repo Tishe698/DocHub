@@ -5,7 +5,7 @@ import SHOKSScreen from '../shoks';
 import { QUESTIONS } from '../shoksScore';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -13,7 +13,8 @@ jest.mock('react-native-safe-area-context', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
-const byTestID = (root, id) => root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
+const byTestID = (root, id) =>
+  root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
 
 describe('SHOKSScreen', () => {
   beforeEach(() => jest.useFakeTimers());

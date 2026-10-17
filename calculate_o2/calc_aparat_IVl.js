@@ -46,7 +46,11 @@ const SCENARIO_OPTIONS = [
   { value: 'nonArrest', label: PRESETS.nonArrest.seg },
 ];
 const AIRWAY_OPTIONS = [
-  { value: 'tube', label: 'Трубка / НВУ', accessibilityLabel: 'Трубка или надгортанное устройство' },
+  {
+    value: 'tube',
+    label: 'Трубка / НВУ',
+    accessibilityLabel: 'Трубка или надгортанное устройство',
+  },
   { value: 'mask', label: 'Маска' },
 ];
 const GROUP_OPTIONS = [
@@ -117,14 +121,19 @@ export default function Calc_aparat_IVL() {
 
   // Группа — по возрасту пациента (до 18 лет — ребёнок; без возраста: масса по Broselow — ребёнок,
   // иначе взрослый); можно переключить вручную до следующей смены возраста.
-  const autoGroup = groupForAge(patient.ageMonths) || (patient.weightSource === 'broselow' ? 'child' : 'adult');
+  const autoGroup =
+    groupForAge(patient.ageMonths) || (patient.weightSource === 'broselow' ? 'child' : 'adult');
   const [group, setGroup] = usePresetText(autoGroup, `${patient.ageMonths}|${resetCount}`);
 
   // Ошибка в полях возраста ребёнка (мес ≥ 12 при годах, нечисловой ввод) — возраст не берём:
   // ЧДД и масса по возрасту не подставляются, ошибка показана под полем
-  const ageErrors = group === 'child' ? childAgeFieldErrors(age.years.text, age.months.text) : { years: null, months: null };
+  const ageErrors =
+    group === 'child'
+      ? childAgeFieldErrors(age.years.text, age.months.text)
+      : { years: null, months: null };
   const ageInvalid = !!(ageErrors.years || ageErrors.months);
-  const months = group === 'child' && patient.ageMonths !== null && !ageInvalid ? patient.ageMonths : undefined;
+  const months =
+    group === 'child' && patient.ageMonths !== null && !ageInvalid ? patient.ageMonths : undefined;
   const rrPreset = rrPresetFor(scenario, group, months);
   const pmaxPreset = pmaxPresetFor(scenario, airway, effectiveCaps(device, group, months));
 
@@ -136,7 +145,10 @@ export default function Calc_aparat_IVL() {
   const [fio2, setFio2] = usePresetText(String(p.fio2), `${sKey}|${device}`);
   const [ie, setIe] = usePresetText(p.ie, `${sKey}|${device}`);
   // ЧДД — по сценарию и возрасту; не введён возраст ребёнка — поле пустое (просьба ввести возраст)
-  const [rr, setRr] = usePresetText(rrPreset === null ? '' : String(rrPreset), `${sKey}|${group}|${rrPreset}`);
+  const [rr, setRr] = usePresetText(
+    rrPreset === null ? '' : String(rrPreset),
+    `${sKey}|${group}|${rrPreset}`,
+  );
   // Pmax — по дыхательным путям и пределам аппарата
   const [pmax, setPmax] = usePresetText(String(pmaxPreset), `${sKey}|${pmaxPreset}`);
 
@@ -176,13 +188,21 @@ export default function Calc_aparat_IVL() {
       fio2,
       o2Mode,
       ie,
-    ]
+    ],
   );
   const caps = r.caps;
-  const ieOptions = useMemo(() => ieOptionsFor(device).map((v) => ({ value: v, label: v })), [device]);
+  const ieOptions = useMemo(
+    () => ieOptionsFor(device).map((v) => ({ value: v, label: v })),
+    [device],
+  );
   const fio2Options = useMemo(
-    () => fio2OptionsFor(device).map((v) => ({ value: v, label: `${v} %`, accessibilityLabel: `${v} процентов` })),
-    [device]
+    () =>
+      fio2OptionsFor(device).map((v) => ({
+        value: v,
+        label: `${v} %`,
+        accessibilityLabel: `${v} процентов`,
+      })),
+    [device],
   );
 
   const massText = r.mass === null ? '—' : `${fmt(r.mass)} кг`;
@@ -195,15 +215,15 @@ export default function Calc_aparat_IVL() {
           `ДО ${r.vt} миллилитров`,
           r.ve === null ? null : `МОД ${fmt(r.ve)} литра в минуту`,
           r.rrN === undefined ? null : `ЧДД ${fmt(r.rrN)} в минуту`,
-          anyBad ? 'есть значения вне пределов' : null
+          anyBad ? 'есть значения вне пределов' : null,
         );
 
   return (
     <Screen scroll>
       <PatientBar />
       <Text variant="body" color="textSecondary" style={styles.intro}>
-        Стартовые параметры для СМП: MEDUMAT и А-ИВЛ/ВВЛ/ВЧп-4/40. Выберите аппарат, сценарий и пациента — значения
-        подставятся автоматически, их можно менять вручную.
+        Стартовые параметры для СМП: MEDUMAT и А-ИВЛ/ВВЛ/ВЧп-4/40. Выберите аппарат, сценарий и
+        пациента — значения подставятся автоматически, их можно менять вручную.
       </Text>
 
       <Section title="Аппарат и сценарий">
@@ -211,8 +231,18 @@ export default function Calc_aparat_IVL() {
         <Text variant="caption" color="textSecondary" style={styles.intro}>
           {deviceHint(device)}
         </Text>
-        <ChoiceChips label="Сценарий" options={SCENARIO_OPTIONS} value={scenario} onChange={setScenario} />
-        <ChoiceChips label="Дыхательные пути" options={AIRWAY_OPTIONS} value={airway} onChange={setAirway} />
+        <ChoiceChips
+          label="Сценарий"
+          options={SCENARIO_OPTIONS}
+          value={scenario}
+          onChange={setScenario}
+        />
+        <ChoiceChips
+          label="Дыхательные пути"
+          options={AIRWAY_OPTIONS}
+          value={airway}
+          onChange={setAirway}
+        />
       </Section>
 
       <Section title="Пациент">
@@ -245,8 +275,8 @@ export default function Calc_aparat_IVL() {
               />
             </View>
             <Text variant="caption" color="textSecondary">
-              ДО считается на должную (идеальную) массу по росту и полу (ARDSNet). Фактическая масса — только если рост
-              не введён.
+              ДО считается на должную (идеальную) массу по росту и полу (ARDSNet). Фактическая масса
+              — только если рост не введён.
             </Text>
           </>
         ) : (
@@ -298,9 +328,10 @@ export default function Calc_aparat_IVL() {
               onChange={(sex) => setPatient({ sex })}
             />
             <Text variant="caption" color="textSecondary">
-              Пустая масса — оценка по возрасту (APLS). При росте от 130 см ДО считается на меньшую из фактической и
-              должной массы по росту и полу (PALICC-2, PEMVECC) — у подростков введите рост. ЧДД при СЛР — по возрасту
-              (ERC 2021); вне остановки — нижняя граница возрастной нормы, далее по EtCO₂/SpO₂.
+              Пустая масса — оценка по возрасту (APLS). При росте от 130 см ДО считается на меньшую
+              из фактической и должной массы по росту и полу (PALICC-2, PEMVECC) — у подростков
+              введите рост. ЧДД при СЛР — по возрасту (ERC 2021); вне остановки — нижняя граница
+              возрастной нормы, далее по EtCO₂/SpO₂.
             </Text>
           </>
         )}
@@ -316,7 +347,14 @@ export default function Calc_aparat_IVL() {
             style={styles.col}
             testID="ivl-vt"
           />
-          <NumberField label="ЧДД" unit="/мин" value={rr} onChangeText={setRr} style={styles.col} testID="ivl-rr" />
+          <NumberField
+            label="ЧДД"
+            unit="/мин"
+            value={rr}
+            onChangeText={setRr}
+            style={styles.col}
+            testID="ivl-rr"
+          />
         </View>
         {caps.o2Switch ? (
           <ChoiceChips label="FiO₂" options={O2_OPTIONS} value={o2Mode} onChange={setO2Mode} />
@@ -346,7 +384,12 @@ export default function Calc_aparat_IVL() {
             {`I:E на этом аппарате фиксировано ${ratioText(caps.ieFixed)}.`}
           </Text>
         ) : (
-          <ChoiceChips label="Соотношение вдох : выдох (I:E)" options={ieOptions} value={ie} onChange={setIe} />
+          <ChoiceChips
+            label="Соотношение вдох : выдох (I:E)"
+            options={ieOptions}
+            value={ie}
+            onChange={setIe}
+          />
         )}
         <Text variant="caption" color="textSecondary">
           {airway === 'mask'
@@ -374,7 +417,12 @@ export default function Calc_aparat_IVL() {
         <View style={styles.statGrid}>
           <Stat styles={styles} label="Масса для расчёта" value={massText} />
           <Stat styles={styles} label="Основа" value={basisText} bad={r.tones.mass === 'bad'} />
-          <Stat styles={styles} label="ДО (VT)" value={r.vt === null ? '—' : `${r.vt} мл`} bad={r.tones.vt === 'bad'} />
+          <Stat
+            styles={styles}
+            label="ДО (VT)"
+            value={r.vt === null ? '—' : `${r.vt} мл`}
+            bad={r.tones.vt === 'bad'}
+          />
           <Stat
             styles={styles}
             label="Минутная вентиляция (V̇E)"
@@ -431,8 +479,9 @@ export default function Calc_aparat_IVL() {
       ) : null}
 
       <Note level="info" title="Советы">
-        ДО 6–8 мл/кг идеальной массы, Pplat ≤ 30, ПДКВ ≈ 5 см вод. ст.; при СЛР — FiO₂ 100 %, ЧДД 10/мин у взрослых, у
-        детей по возрасту. После ROSC — SpO₂ 94–98 %, PaCO₂ 35–45 мм рт. ст. (ERC-ESICM 2021).
+        ДО 6–8 мл/кг идеальной массы, Pplat ≤ 30, ПДКВ ≈ 5 см вод. ст.; при СЛР — FiO₂ 100 %, ЧДД
+        10/мин у взрослых, у детей по возрасту. После ROSC — SpO₂ 94–98 %, PaCO₂ 35–45 мм рт. ст.
+        (ERC-ESICM 2021).
       </Note>
 
       <Section title="Памятки">

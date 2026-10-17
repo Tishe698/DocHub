@@ -46,7 +46,11 @@ const weightNoteOf = (patient, derived) =>
     : null;
 
 const weightBadgeOf = (patient, derived) =>
-  derived.weightIsEstimate ? (patient.weightSource === 'broselow' ? 'оценка: Broselow' : 'оценка: по возрасту') : null;
+  derived.weightIsEstimate
+    ? patient.weightSource === 'broselow'
+      ? 'оценка: Broselow'
+      : 'оценка: по возрасту'
+    : null;
 
 /** ------------------------------ Подсветка найденного ------------------------------ **/
 function Highlighted({ text, term, variant, color, style }) {
@@ -61,7 +65,7 @@ function Highlighted({ text, term, variant, color, style }) {
           </Text>
         ) : (
           p.text
-        )
+        ),
       )}
     </Text>
   );
@@ -84,7 +88,10 @@ function TextField({ label, value, onChangeText, error }) {
         autoCapitalize="none"
         accessibilityLabel={label}
         accessibilityHint={error}
-        style={[styles.textInput, error ? { borderColor: colors.inputBorderError, borderWidth: 2 } : null]}
+        style={[
+          styles.textInput,
+          error ? { borderColor: colors.inputBorderError, borderWidth: 2 } : null,
+        ]}
       />
       {error ? (
         <Text variant="caption" color="danger" style={styles.fieldMsg} {...hideFromA11y}>
@@ -108,7 +115,11 @@ function ResultRow({ item }) {
 
   if (item.status === 'info') {
     return (
-      <View style={[styles.row, { borderColor, backgroundColor }]} accessible accessibilityLabel={a11yLabel(item.name, item.text)}>
+      <View
+        style={[styles.row, { borderColor, backgroundColor }]}
+        accessible
+        accessibilityLabel={a11yLabel(item.name, item.text)}
+      >
         <Text variant="caption" color="textSecondary" style={styles.rowNoteName}>
           {item.name}
         </Text>
@@ -130,7 +141,9 @@ function ResultRow({ item }) {
           {item.text}
         </Text>
       </View>
-      {item.badge ? <Badge level={level || 'neutral'} label={item.badge} style={styles.rowBadge} /> : null}
+      {item.badge ? (
+        <Badge level={level || 'neutral'} label={item.badge} style={styles.rowBadge} />
+      ) : null}
     </View>
   );
 }
@@ -331,13 +344,25 @@ const WelcomeScreen = () => {
     const check = isBlank(raw) ? {} : validateField(key, input, raw, selected);
 
     if (type === 'text') {
-      return <TextField key={key} label={label} value={raw} onChangeText={(t) => setInput(key, t)} error={check.error} />;
+      return (
+        <TextField
+          key={key}
+          label={label}
+          value={raw}
+          onChangeText={(t) => setInput(key, t)}
+          error={check.error}
+        />
+      );
     }
 
     const isWeight = key === 'weight';
     const isHeight = key === 'heightCm';
     const unit = unitFromLabel(label) || (isWeight ? 'кг' : isHeight ? 'см' : undefined);
-    const onChangeText = isWeight ? weight.onChangeText : isHeight ? height.onChangeText : (t) => setInput(key, t);
+    const onChangeText = isWeight
+      ? weight.onChangeText
+      : isHeight
+        ? height.onChangeText
+        : (t) => setInput(key, t);
     return (
       <View key={key}>
         <NumberField
@@ -377,7 +402,10 @@ const WelcomeScreen = () => {
     if (r.error) {
       return (
         <View onLayout={onResultLayout}>
-          <Note level="danger" title={r.type === 'validation' ? 'Проверьте введённые данные' : 'Ошибка расчёта'}>
+          <Note
+            level="danger"
+            title={r.type === 'validation' ? 'Проверьте введённые данные' : 'Ошибка расчёта'}
+          >
             {(r.errors || [r.message]).map((m, i) => (
               <Text key={i} variant="body" style={styles.listLine}>
                 {m}
@@ -458,7 +486,8 @@ const WelcomeScreen = () => {
 
   /** ------------------------------ Карточка препарата ------------------------------ **/
   const renderDetail = () => {
-    const hasLocal = Object.keys(inputs).some((k) => !isBlank(inputs[k])) || Object.keys(choices).length > 0;
+    const hasLocal =
+      Object.keys(inputs).some((k) => !isBlank(inputs[k])) || Object.keys(choices).length > 0;
     return (
       <View onLayout={onDetailLayout}>
         <Button
@@ -547,7 +576,10 @@ const WelcomeScreen = () => {
             onPress={() => setSearchTerm('')}
             accessibilityRole="button"
             accessibilityLabel="Очистить поиск"
-            style={({ pressed }) => [styles.clearSearch, pressed ? { backgroundColor: colors.surfaceAlt } : null]}
+            style={({ pressed }) => [
+              styles.clearSearch,
+              pressed ? { backgroundColor: colors.surfaceAlt } : null,
+            ]}
           >
             <View {...hideFromA11y}>
               <Ionicons name="close-circle" size={22} color={colors.textSecondary} />
@@ -557,7 +589,12 @@ const WelcomeScreen = () => {
       </View>
 
       {searchTerm.trim() !== '' ? (
-        <Text variant="caption" color="textSecondary" style={styles.found} accessibilityLiveRegion="polite">
+        <Text
+          variant="caption"
+          color="textSecondary"
+          style={styles.found}
+          accessibilityLiveRegion="polite"
+        >
           {`Найдено: ${filtered.length} из ${totalDrugs}`}
         </Text>
       ) : null}
@@ -579,7 +616,7 @@ const WelcomeScreen = () => {
               formula.name,
               synonym ? `найдено по названию ${synonym}` : null,
               reference ? 'справочная запись' : null,
-              hasWarnings ? 'есть предупреждения' : null
+              hasWarnings ? 'есть предупреждения' : null,
             )}
             accessibilityHint="Открыть расчёт препарата"
             style={styles.card}
@@ -595,14 +632,22 @@ const WelcomeScreen = () => {
               />
             ) : null}
             {synonym ? (
-              <Text variant="caption" color="textSecondary" style={[styles.cardDesc, styles.synonym]}>
+              <Text
+                variant="caption"
+                color="textSecondary"
+                style={[styles.cardDesc, styles.synonym]}
+              >
                 {`Найдено по названию: ${synonym}`}
               </Text>
             ) : null}
             {hasWarnings || reference ? (
               <View style={styles.badges}>
-                {reference ? <Badge level="neutral" label="Справочно" style={styles.badge} /> : null}
-                {hasWarnings ? <Badge level="warning" label="Есть предупреждения" style={styles.badge} /> : null}
+                {reference ? (
+                  <Badge level="neutral" label="Справочно" style={styles.badge} />
+                ) : null}
+                {hasWarnings ? (
+                  <Badge level="warning" label="Есть предупреждения" style={styles.badge} />
+                ) : null}
               </View>
             ) : null}
           </Card>
@@ -610,7 +655,8 @@ const WelcomeScreen = () => {
       })}
 
       <Note level="info" title="Расчёт справочный" style={styles.safety}>
-        Сверяйте дозу с инструкцией к препарату и клиническими рекомендациями. Решение о назначении принимает врач.
+        Сверяйте дозу с инструкцией к препарату и клиническими рекомендациями. Решение о назначении
+        принимает врач.
       </Note>
     </View>
   );
@@ -703,11 +749,26 @@ const makeStyles = ({ colors, spacing, radius, typography }) => ({
     padding: spacing.md,
     marginTop: spacing.sm,
   },
-  rowLine: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between' },
+  rowLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+  },
   rowName: { flexShrink: 1, marginRight: spacing.sm },
-  rowValue: { fontVariant: ['tabular-nums'], textAlign: 'right', flexShrink: 1, marginLeft: 'auto' },
+  rowValue: {
+    fontVariant: ['tabular-nums'],
+    textAlign: 'right',
+    flexShrink: 1,
+    marginLeft: 'auto',
+  },
   rowNoteName: { marginBottom: spacing.xs },
   rowBadge: { marginTop: spacing.sm },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.md, marginHorizontal: -spacing.xs },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: spacing.md,
+    marginHorizontal: -spacing.xs,
+  },
   action: { flexGrow: 1, marginHorizontal: spacing.xs, marginTop: spacing.xs },
 });

@@ -79,7 +79,7 @@ describe('структура палитр', () => {
   it('у светлой и тёмной темы одинаковые ключи', () => {
     expect(Object.keys(palette.dark).sort()).toEqual(Object.keys(palette.light).sort());
     expect(Object.keys(palette.dark.section).sort()).toEqual(
-      Object.keys(palette.light.section).sort()
+      Object.keys(palette.light.section).sort(),
     );
   });
 
@@ -114,7 +114,7 @@ describe('лента Broselow', () => {
 
   it('белая зона отличима от белой поверхности по границе', () => {
     expect(contrast(broselowColors.white.border, palette.light.surface)).toBeGreaterThanOrEqual(
-      LARGE
+      LARGE,
     );
   });
 });

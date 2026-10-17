@@ -76,12 +76,18 @@ describe('чтение данных', () => {
   });
 
   it('индекс: рубрика, родитель, звёздочка', () => {
-    const idx = buildIndex(loadItems([
-      { code: 'D63*', name: 'Анемия при хронических болезнях' },
-      { code: 'D63.0*', name: 'Анемия при новообразованиях' },
-    ]));
+    const idx = buildIndex(
+      loadItems([
+        { code: 'D63*', name: 'Анемия при хронических болезнях' },
+        { code: 'D63.0*', name: 'Анемия при новообразованиях' },
+      ]),
+    );
     expect(idx[0]).toMatchObject({ isRubric: true, star: true, codeNorm: 'D63' });
-    expect(idx[1]).toMatchObject({ isRubric: false, parentCode: 'D63', parentName: 'Анемия при хронических болезнях' });
+    expect(idx[1]).toMatchObject({
+      isRubric: false,
+      parentCode: 'D63',
+      parentName: 'Анемия при хронических болезнях',
+    });
   });
 });
 
@@ -169,7 +175,7 @@ describe('тексты', () => {
     expect(formatDate('2026-10-17')).toBe('17.10.2026');
     expect(formatDate('bad')).toBe('');
     expect(editionText({ edition: 'МКБ-10', updated: '2026-10-17' })).toBe(
-      'МКБ-10. Данные от 17.10.2026. Сверка с НСИ МЗ РФ не проводилась.'
+      'МКБ-10. Данные от 17.10.2026. Сверка с НСИ МЗ РФ не проводилась.',
     );
     expect(editionText(null)).toBe('Редакция справочника не указана.');
   });
@@ -179,27 +185,49 @@ describe('тексты', () => {
       text: 'Всего 5 кодов. Список прокручивается.',
       warn: false,
     });
-    expect(helperText({ q: makeQuery(''), typed: 'ин', found: 0, fallback: '', total: 5 }).warn).toBe(true);
-    expect(helperText({ q: makeQuery('инфаркт'), typed: 'инфаркт', found: 2, fallback: '', total: 21 }).text).toBe(
-      'Найдено: 2 записи (в справочнике 21 код).'
-    );
-    const fb = helperText({ q: makeQuery('V43.5'), typed: 'V43.5', found: 1, fallback: 'V43', total: 9 });
-    expect(fb).toEqual({ text: 'Кода V43.5 в справочнике нет — показана рубрика V43.', warn: true });
+    expect(
+      helperText({ q: makeQuery(''), typed: 'ин', found: 0, fallback: '', total: 5 }).warn,
+    ).toBe(true);
+    expect(
+      helperText({ q: makeQuery('инфаркт'), typed: 'инфаркт', found: 2, fallback: '', total: 21 })
+        .text,
+    ).toBe('Найдено: 2 записи (в справочнике 21 код).');
+    const fb = helperText({
+      q: makeQuery('V43.5'),
+      typed: 'V43.5',
+      found: 1,
+      fallback: 'V43',
+      total: 9,
+    });
+    expect(fb).toEqual({
+      text: 'Кода V43.5 в справочнике нет — показана рубрика V43.',
+      warn: true,
+    });
   });
 
   it('searchAnnouncement', () => {
     expect(searchAnnouncement({ q: makeQuery('ин'), found: 0, fallback: '' })).toBe('');
-    expect(searchAnnouncement({ q: makeQuery('инфаркт'), found: 0, fallback: '' })).toBe('Ничего не найдено');
-    expect(searchAnnouncement({ q: makeQuery('инфаркт'), found: 5, fallback: '' })).toBe('Найдено 5 записей');
-    expect(searchAnnouncement({ q: makeQuery('V43.5'), found: 1, fallback: 'V43' })).toMatch(/рубрика V43/);
+    expect(searchAnnouncement({ q: makeQuery('инфаркт'), found: 0, fallback: '' })).toBe(
+      'Ничего не найдено',
+    );
+    expect(searchAnnouncement({ q: makeQuery('инфаркт'), found: 5, fallback: '' })).toBe(
+      'Найдено 5 записей',
+    );
+    expect(searchAnnouncement({ q: makeQuery('V43.5'), found: 1, fallback: 'V43' })).toMatch(
+      /рубрика V43/,
+    );
   });
 
   it('пометки и подпись для диктора', () => {
     const [star] = buildIndex(loadItems([{ code: 'D63*', name: 'Анемия' }]));
     expect(itemBadges(star).map((b) => b.label)).toEqual(['доп. код *']);
     expect(itemA11yLabel(star)).toMatch(/^Код D63 со звёздочкой\. Анемия\./);
-    const [ext] = buildIndex(loadItems([{ code: 'I20.00', name: 'X', note: 'Используйте I20.0', ext: 1, src: 'S' }]));
+    const [ext] = buildIndex(
+      loadItems([{ code: 'I20.00', name: 'X', note: 'Используйте I20.0', ext: 1, src: 'S' }]),
+    );
     expect(itemBadges(ext).map((b) => b.label)).toEqual(['нет в МКБ-10', 'обновление']);
-    expect(itemA11yLabel(ext)).toBe('Код I20.00. нет в МКБ-10. обновление. X. Используйте I20.0. Источник: S');
+    expect(itemA11yLabel(ext)).toBe(
+      'Код I20.00. нет в МКБ-10. обновление. X. Используйте I20.0. Источник: S',
+    );
   });
 });

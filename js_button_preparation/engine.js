@@ -25,7 +25,8 @@ export const SEX_CHOICES = Object.freeze([
 // Поле записи как поле-выбор: объект из routes.js или sex со стандартными вариантами
 export const asChoiceInput = (key, input) => {
   if (isChoiceInput(input)) return input;
-  if (key === 'sex') return { label: inputLabel(input) || 'Пол', choices: SEX_CHOICES, default: undefined };
+  if (key === 'sex')
+    return { label: inputLabel(input) || 'Пол', choices: SEX_CHOICES, default: undefined };
   return null;
 };
 
@@ -113,8 +114,10 @@ const checkNumber = (label, raw, rule) => {
       : Number.isFinite(rule.max)
         ? `допустимо не более ${ru(rule.max)}${u}`
         : `допустимо не менее ${ru(rule.min)}${u}`;
-  if (Number.isFinite(rule.min) && n < rule.min) return { error: `${label}: ${rangeText} — проверьте ввод` };
-  if (Number.isFinite(rule.max) && n > rule.max) return { error: `${label}: ${rangeText} — проверьте ввод` };
+  if (Number.isFinite(rule.min) && n < rule.min)
+    return { error: `${label}: ${rangeText} — проверьте ввод` };
+  if (Number.isFinite(rule.max) && n > rule.max)
+    return { error: `${label}: ${rangeText} — проверьте ввод` };
   let warning;
   if (Number.isFinite(rule.warnMax) && n > rule.warnMax)
     warning = `${labelBase(label)} ${ru(n)}${u} — выше обычного предела ${ru(rule.warnMax)}${u}. Проверьте ввод.`;
@@ -129,8 +132,10 @@ export const validateField = (key, input, raw, formula) => {
   const choice = asChoiceInput(key, input);
   if (choice) {
     const v = choiceValue(choice, raw);
-    if (v === undefined || v === null || v === '') return { error: `${choice.label}: выберите вариант` };
-    if (!choice.choices.some((c) => c.value === v)) return { error: `${choice.label}: выберите вариант из списка` };
+    if (v === undefined || v === null || v === '')
+      return { error: `${choice.label}: выберите вариант` };
+    if (!choice.choices.some((c) => c.value === v))
+      return { error: `${choice.label}: выберите вариант из списка` };
     return { value: v };
   }
   const label = inputLabel(input) || key;
@@ -172,7 +177,8 @@ export const resolveAge = (inputsMap, age, formula) => {
     m = r.value;
   }
   // Месяцы сверх полных лет — 0–11; иначе поля противоречат друг другу
-  if (y > 0 && m >= 12) return { error: 'Возраст: месяцы указываются сверх полных лет — от 0 до 11' };
+  if (y > 0 && m >= 12)
+    return { error: 'Возраст: месяцы указываются сверх полных лет — от 0 до 11' };
   const total = composeAgeMonths(y, m);
   if (total === null) return { error: 'Возраст: введите число' };
   if (total > FIELD_RULES.ageMonths.max) {
@@ -231,7 +237,8 @@ export const ageWeightWarning = (clean, inputsMap, ageMonths) => {
   if (!exp) return null;
   const ratio = clean.weight / exp;
   if (ratio <= 2 && (months < 12 || ratio >= 0.4)) return null;
-  const ageText = months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : `${Math.floor(months / 12)} лет`;
+  const ageText =
+    months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : `${Math.floor(months / 12)} лет`;
   return `Вес ${ru(clean.weight)} кг необычен для возраста ${ageText} (ожидаемо около ${ru(Math.round(exp))} кг по APLS). Проверьте ввод — нет ли ошибки в разряде.`;
 };
 
@@ -266,7 +273,13 @@ export const validateAll = (formula, rawInputs, options = {}) => {
       clean[key] = r.value;
       if (r.warning) notes.push(r.warning);
       const choice = asChoiceInput(key, input);
-      if (choice) choices.push({ key, label: choice.label, value: r.value, valueLabel: choiceLabel(choice, r.value) });
+      if (choice)
+        choices.push({
+          key,
+          label: choice.label,
+          value: r.value,
+          valueLabel: choiceLabel(choice, r.value),
+        });
     }
   });
   if (!agePair) ageMonths = ageMonthsFromClean(clean, map);
@@ -287,7 +300,18 @@ const fixedNZ = (v, d) => {
   return Number(s) === 0 && v !== 0 ? String(Number(v.toPrecision(2))) : s;
 };
 
-export const RATE_UNITS = ['мкг/мин', 'мкг/ч', 'мг/ч', 'мл/ч', 'МЕ/ч', 'ЕД/ч', 'мкг/мл', 'мг/мл', 'мкг/кг/мин', 'мг/кг/ч'];
+export const RATE_UNITS = [
+  'мкг/мин',
+  'мкг/ч',
+  'мг/ч',
+  'мл/ч',
+  'МЕ/ч',
+  'ЕД/ч',
+  'мкг/мл',
+  'мг/мл',
+  'мкг/кг/мин',
+  'мг/кг/ч',
+];
 
 // Округление на экране (контракт движка):
 // мг/мкг/ЕД/МЕ: < 10 — 2 знака; 10–100 — 1 знак (чтобы доза совпадала с объёмом: 12.5 мг ↔ 0.25 мл);
@@ -315,7 +339,8 @@ export const fmtValue = (v, unit) => {
     return `${fmtValue(v * 1000, 'мкг')} (${String(Number(v.toPrecision(2)))} мг)`;
   }
   if (unit === 'мкг' || unit === 'мг' || unit === 'ЕД' || unit === 'МЕ') {
-    if (v < 0.1) return `${unit === 'мг' ? trimZeros(fixedNZ(v, 3)) : String(Number(v.toPrecision(2)))} ${unit}`;
+    if (v < 0.1)
+      return `${unit === 'мг' ? trimZeros(fixedNZ(v, 3)) : String(Number(v.toPrecision(2)))} ${unit}`;
     if (v < 10) return `${v.toFixed(2)} ${unit}`;
     if (v < 100) return `${trimZeros(v.toFixed(1))} ${unit}`;
     return `${v.toFixed(0)} ${unit}`;
@@ -324,7 +349,11 @@ export const fmtValue = (v, unit) => {
   // меньше 0,1 — 2 значащие цифры (0.005 мкг/мин, а не «0.01»)
   if (unit === 'г' || RATE_UNITS.includes(unit)) {
     if (v < 0.1) return `${String(Number(v.toPrecision(2)))} ${unit}`;
-    return v < 10 ? `${v.toFixed(2)} ${unit}` : v < 100 ? `${v.toFixed(1)} ${unit}` : `${v.toFixed(0)} ${unit}`;
+    return v < 10
+      ? `${v.toFixed(2)} ${unit}`
+      : v < 100
+        ? `${v.toFixed(1)} ${unit}`
+        : `${v.toFixed(0)} ${unit}`;
   }
   // Прочие единицы: убираем «хвост» плавающей точки (0.30000000000000004 → 0.3), единицу не теряем
   const s = String(Number(v.toPrecision(4)));
@@ -368,10 +397,19 @@ export const buildItems = (raw, formula, clean) => {
     if (typeof val === 'number') {
       const unit = units[key];
       const name =
-        labels[key] || (unit ? (unit === 'мл' ? 'Объём' : 'Доза') : `Результат ${key.replace('result', '')}`);
+        labels[key] ||
+        (unit ? (unit === 'мл' ? 'Объём' : 'Доза') : `Результат ${key.replace('result', '')}`);
       if (!Number.isFinite(val) || val <= 0) {
         // Нулевая/отрицательная/нечисловая доза — не результат: явно говорим, что не определена
-        items.push({ key, name, unit, value: null, text: '—', status: 'zero', badge: 'не определена для введённых данных' });
+        items.push({
+          key,
+          name,
+          unit,
+          value: null,
+          text: '—',
+          status: 'zero',
+          badge: 'не определена для введённых данных',
+        });
         return;
       }
       const lim = limits[key] || {};
@@ -386,7 +424,15 @@ export const buildItems = (raw, formula, clean) => {
               : null;
       items.push({ key, name, unit, value: val, text: fmtValue(val, unit), status, badge });
     } else if (typeof val === 'string' && val.trim()) {
-      items.push({ key, name: labels[key] || 'Примечание', unit: '', value: null, text: val.trim(), status: 'info', badge: null });
+      items.push({
+        key,
+        name: labels[key] || 'Примечание',
+        unit: '',
+        value: null,
+        text: val.trim(),
+        status: 'info',
+        badge: null,
+      });
     }
   });
 
@@ -397,7 +443,9 @@ export const buildItems = (raw, formula, clean) => {
     .filter((i) => i.unit === 'мл' && i.value !== null && i.value < 0.1 && !/развед/i.test(i.name))
     .reduce((m, i) => Math.min(m, i.value), Infinity);
   const said = items.some(
-    (i) => (i.status === 'info' && /0[,.]1\s*мл|развед|развест/i.test(i.text)) || (i.unit === 'мл' && /развед/i.test(i.name))
+    (i) =>
+      (i.status === 'info' && /0[,.]1\s*мл|развед|развест/i.test(i.text)) ||
+      (i.unit === 'мл' && /развед/i.test(i.name)),
   );
   if (smallest < 0.1 && !said) {
     items.push({
@@ -437,17 +485,25 @@ export const spokenBadge = (badge) =>
 
 // Подпись строки результата для диктора: «Доза, 2.00 мг, выше макс. 1.00 мг»
 export const itemSpoken = (item) =>
-  [item.name, item.status === 'zero' ? 'не определена' : item.text, item.status === 'zero' ? '' : spokenBadge(item.badge)]
+  [
+    item.name,
+    item.status === 'zero' ? 'не определена' : item.text,
+    item.status === 'zero' ? '' : spokenBadge(item.badge),
+  ]
     .filter(Boolean)
     .join(', ');
 
 // Общий уровень результата — по самой тревожной строке; всегда со словом, не только цветом
 export const resultLevel = (items) => {
   const list = items || [];
-  if (list.some((i) => i.status === 'high')) return { level: 'danger', label: 'Есть доза выше максимума — проверьте' };
-  if (list.some((i) => i.status === 'zero')) return { level: 'danger', label: 'Есть значение, не определённое для этих данных' };
-  if (list.some((i) => i.status === 'atmax')) return { level: 'warning', label: 'Доза на максимальном пределе' };
-  if (list.some((i) => i.status === 'low')) return { level: 'warning', label: 'Есть доза ниже минимума' };
+  if (list.some((i) => i.status === 'high'))
+    return { level: 'danger', label: 'Есть доза выше максимума — проверьте' };
+  if (list.some((i) => i.status === 'zero'))
+    return { level: 'danger', label: 'Есть значение, не определённое для этих данных' };
+  if (list.some((i) => i.status === 'atmax'))
+    return { level: 'warning', label: 'Доза на максимальном пределе' };
+  if (list.some((i) => i.status === 'low'))
+    return { level: 'warning', label: 'Есть доза ниже минимума' };
   return { level: null, label: null };
 };
 
@@ -482,7 +538,11 @@ export const nowText = (d = new Date()) =>
 // Полный расчёт записи: результат для экрана (ошибка ввода | «расчёт не выполняется» | успех).
 // options: { age: { years, months }, weightNote, now: Date }
 export const computeResult = (formula, rawInputs, options = {}) => {
-  const { ok, errors, clean, notes, choices, ageMonths } = validateAll(formula, rawInputs || {}, options);
+  const { ok, errors, clean, notes, choices, ageMonths } = validateAll(
+    formula,
+    rawInputs || {},
+    options,
+  );
   if (!ok) {
     return { error: true, type: 'validation', message: errors.join('\n'), errors };
   }
@@ -499,7 +559,12 @@ export const computeResult = (formula, rawInputs, options = {}) => {
       timestamp: nowText(options.now),
     };
     // Формула вернула {} — расчёт для этих данных не предусмотрен: показываем предупреждения записи, а не «ошибку»
-    if (!items.length) return { ...base, info: true, message: 'Для введённых данных расчёт не выполняется. См. указания ниже.' };
+    if (!items.length)
+      return {
+        ...base,
+        info: true,
+        message: 'Для введённых данных расчёт не выполняется. См. указания ниже.',
+      };
     return { ...base, success: true, items };
   } catch (error) {
     return {
@@ -531,20 +596,26 @@ export const buildCopyText = (results) => {
   if (results.inputsText) lines.push(`Данные: ${results.inputsText}`);
   (results.notes || []).forEach((n) => lines.push(`Внимание: ${n}`));
   if (results.info) lines.push(results.message);
-  (results.items || []).forEach((i) => lines.push(`${i.name}: ${i.text}${i.badge ? ` (${i.badge})` : ''}`));
+  (results.items || []).forEach((i) =>
+    lines.push(`${i.name}: ${i.text}${i.badge ? ` (${i.badge})` : ''}`),
+  );
   (results.warnings || []).forEach((w) => lines.push(`Внимание: ${w}`));
-  lines.push(`Рассчитано: ${results.timestamp}. Расчёт справочный — сверьте с инструкцией к препарату.`);
+  lines.push(
+    `Рассчитано: ${results.timestamp}. Расчёт справочный — сверьте с инструкцией к препарату.`,
+  );
   return lines.join('\n');
 };
 
 // Текст для диктора после расчёта
 export const resultSpoken = (results) => {
   if (!results) return '';
-  if (results.error) return `${results.type === 'validation' ? 'Проверьте введённые данные' : 'Ошибка расчёта'}. ${results.message}`;
+  if (results.error)
+    return `${results.type === 'validation' ? 'Проверьте введённые данные' : 'Ошибка расчёта'}. ${results.message}`;
   if (results.info) return results.message;
   const choices = (results.choices || []).map((c) => `${c.label} ${c.valueLabel}`);
   const rows = (results.items || []).filter((i) => i.status !== 'info').map(itemSpoken);
-  const hasNotes = (results.items || []).some((i) => i.status === 'info') || (results.notes || []).length > 0;
+  const hasNotes =
+    (results.items || []).some((i) => i.status === 'info') || (results.notes || []).length > 0;
   return ['Результат расчёта', ...choices, ...rows, hasNotes ? 'Есть примечания ниже' : '']
     .filter(Boolean)
     .join('. ');
@@ -631,14 +702,26 @@ export const SYNONYMS = [
 export const synonymsOf = (formula) => {
   const name = ` ${splitWords(formula.name).join(' ')}`;
   const own = Array.isArray(formula.synonyms) ? formula.synonyms.map(norm) : [];
-  const dict = SYNONYMS.filter(([mnn]) => name.includes(` ${splitWords(mnn).join(' ')}`)).flatMap(([, list]) =>
-    list.map(norm)
+  const dict = SYNONYMS.filter(([mnn]) => name.includes(` ${splitWords(mnn).join(' ')}`)).flatMap(
+    ([, list]) => list.map(norm),
   );
   return [...new Set([...own, ...dict])];
 };
 
 // Служебные токены запроса (дозы, единицы, проценты) в пословном сравнении не участвуют
-const SERVICE_TOKENS = new Set(['мл', 'мг', 'мкг', 'г', 'ед', 'ме', 'р-р', 'раствор', 'амп', 'ампула', '%']);
+const SERVICE_TOKENS = new Set([
+  'мл',
+  'мг',
+  'мкг',
+  'г',
+  'ед',
+  'ме',
+  'р-р',
+  'раствор',
+  'амп',
+  'ампула',
+  '%',
+]);
 export const queryTokens = (term) => {
   const all = norm(term)
     .split(/[\s,;]+/)
@@ -651,7 +734,10 @@ export const queryTokens = (term) => {
 // у слов от 6 букв («магний» → «магния»); слово запроса длиннее слова названия («адреналина»).
 const wordHit = (token, words) =>
   words.some(
-    (w) => w.startsWith(token) || (token.length >= 6 && w.startsWith(token.slice(0, -2))) || (w.length >= 4 && token.startsWith(w))
+    (w) =>
+      w.startsWith(token) ||
+      (token.length >= 6 && w.startsWith(token.slice(0, -2))) ||
+      (w.length >= 4 && token.startsWith(w)),
   );
 
 // Ранжирование: точное название → начало названия → начало слова названия → синоним →
@@ -669,13 +755,21 @@ export const scoreFormula = (formula, q, tokens) => {
   if (syn && q.length >= 2) return { score: 80, synonym: syn };
   if (tokens.every((t) => wordHit(t, nameWords) || wordHit(t, synWords))) {
     const viaSyn = !tokens.every((t) => wordHit(t, nameWords));
-    return { score: 70, synonym: viaSyn ? syns.find((s) => tokens.some((t) => wordHit(t, splitWords(s)))) : undefined };
+    return {
+      score: 70,
+      synonym: viaSyn ? syns.find((s) => tokens.some((t) => wordHit(t, splitWords(s)))) : undefined,
+    };
   }
   // Запрос из 1–2 букв — только по началу слов, иначе подстрока «ам»/«мл» находит полсписка
   if (q.length < 3) return { score: 0 };
   if (name.includes(q)) return { score: 60 };
   const descWords = splitWords(formula.description);
-  if (tokens.every((t) => name.includes(t) || wordHit(t, nameWords) || wordHit(t, synWords) || wordHit(t, descWords)))
+  if (
+    tokens.every(
+      (t) =>
+        name.includes(t) || wordHit(t, nameWords) || wordHit(t, synWords) || wordHit(t, descWords),
+    )
+  )
     return { score: 40 };
   if (desc.includes(q)) return { score: 30 };
   return { score: 0 };
@@ -697,7 +791,9 @@ export const searchFormulas = (list, term) => {
 export const highlightTerms = (term) => {
   const q = norm(term);
   if (!q) return [];
-  return [...new Set([q, ...queryTokens(term).filter((t) => t.length >= 2)])].sort((a, b) => b.length - a.length);
+  return [...new Set([q, ...queryTokens(term).filter((t) => t.length >= 2)])].sort(
+    (a, b) => b.length - a.length,
+  );
 };
 
 // Текст, разбитый на части для подсветки: [{ text, hit }]. ё и е считаются одной буквой.

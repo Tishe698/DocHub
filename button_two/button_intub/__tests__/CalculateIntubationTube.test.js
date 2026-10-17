@@ -321,7 +321,16 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
   });
 
   test('зона даёт тот же размер, что рост внутри зоны', () => {
-    const mid = { pink: 62, red: 70, purple: 80, yellow: 90, white: 100, blue: 115, orange: 125, green: 140 };
+    const mid = {
+      pink: 62,
+      red: 70,
+      purple: 80,
+      yellow: 90,
+      white: 100,
+      blue: 115,
+      orange: 125,
+      green: 140,
+    };
     for (const [key, h] of Object.entries(mid)) {
       for (const cuffed of [false, true]) {
         const z = calculateIntubationTubeByZone({ zoneKey: key, cuffed });
@@ -341,21 +350,33 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
 
   test('серая зона: подзоны 3 / 4 / 5 кг', () => {
     expect(GREY_SUBZONES.map((s) => s.value)).toEqual(['grey3', 'grey4', 'grey5']);
-    const g3 = calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey3', cuffed: true });
+    const g3 = calculateIntubationTubeByZone({
+      zoneKey: 'grey',
+      greySubzone: 'grey3',
+      cuffed: true,
+    });
     expect(g3.tubeIDmm).toBe(3.5);
     expect(g3.cuffedUsed).toBe(false);
     expect(g3.depthOralCm).toBe(8.5);
-    const g4 = calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey4', cuffed: true });
+    const g4 = calculateIntubationTubeByZone({
+      zoneKey: 'grey',
+      greySubzone: 'grey4',
+      cuffed: true,
+    });
     expect(g4.tubeIDmm).toBe(3.0);
     expect(g4.depthOralCm).toBe(9.0);
-    expect(calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey5' }).depthOralCm).toBe(10.5);
+    expect(
+      calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey5' }).depthOralCm,
+    ).toBe(10.5);
   });
 
   test('сверка с возрастом: расхождение больше 0,5 мм — предупреждение', () => {
     const r = calculateIntubationTubeByZone({ zoneKey: 'purple', ageYears: 8, ageMonths: 0 });
     expect(r.tubeIDmm).toBe(4.0);
     expect(has(r.warnings, /расхождение с зоной ленты/)).toBe(true);
-    expect(calculateIntubationTubeByZone({ zoneKey: 'yellow', ageYears: 2, ageMonths: 0 }).warnings).toEqual([]);
+    expect(
+      calculateIntubationTubeByZone({ zoneKey: 'yellow', ageYears: 2, ageMonths: 0 }).warnings,
+    ).toEqual([]);
   });
 
   test('возраст ≥13 лет при выбранной зоне — предупреждение', () => {
@@ -377,7 +398,9 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
   test('до 1 года: зоны синяя/оранжевая/зелёная — отказ', () => {
     for (const zoneKey of ['blue', 'orange', 'green']) {
       for (const ageMonths of [0, 6, 11]) {
-        expect(() => calculateIntubationTubeByZone({ zoneKey, ageYears: 0, ageMonths })).toThrow(/не бывает у ребёнка до года/);
+        expect(() => calculateIntubationTubeByZone({ zoneKey, ageYears: 0, ageMonths })).toThrow(
+          /не бывает у ребёнка до года/,
+        );
       }
     }
   });
@@ -385,13 +408,18 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
   test('новорождённый: зона на 2 и больше выше серой — отказ, розовая — предупреждение', () => {
     for (const zoneKey of ['red', 'purple', 'yellow', 'white']) {
       expect(() => calculateIntubationTubeByZone({ zoneKey, ageYears: 0, ageMonths: 0 })).toThrow(
-        /не соответствует возрасту новорождённого/
+        /не соответствует возрасту новорождённого/,
       );
     }
     const pink = calculateIntubationTubeByZone({ zoneKey: 'pink', ageYears: 0, ageMonths: 0 });
     expect(pink.tubeIDmm).toBe(3.5);
     expect(has(pink.warnings, /ожидается серая зона/)).toBe(true);
-    const grey = calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey3', ageYears: 0, ageMonths: 0 });
+    const grey = calculateIntubationTubeByZone({
+      zoneKey: 'grey',
+      greySubzone: 'grey3',
+      ageYears: 0,
+      ageMonths: 0,
+    });
     expect(grey.warnings).toEqual([]);
     expect(grey.depthOralCm).toBe(8.5);
   });
@@ -410,7 +438,12 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
       expect(r.tubeIDmm).toBe(byW.tubeIDmm);
       expect(r.depthOralCm).toBe(byW.depthOralCm);
     }
-    const cuffed = calculateIntubationTubeByZone({ zoneKey: 'purple', ageYears: 0, ageMonths: 6, cuffed: true });
+    const cuffed = calculateIntubationTubeByZone({
+      zoneKey: 'purple',
+      ageYears: 0,
+      ageMonths: 6,
+      cuffed: true,
+    });
     expect(cuffed.tubeIDmm).toBe(3.0);
   });
 
@@ -419,11 +452,18 @@ describe('ЭТТ: прямой расчёт по зоне ленты (BroselowPi
     expect(r.method).toBe('broselowZone');
     expect(r.warnings).toEqual([]);
     expect(has(r.used, /возраст 6 мес/)).toBe(true);
-    expect(calculateIntubationTubeByZone({ zoneKey: 'purple', ageYears: 0, ageMonths: 10 }).warnings).toEqual([]);
+    expect(
+      calculateIntubationTubeByZone({ zoneKey: 'purple', ageYears: 0, ageMonths: 10 }).warnings,
+    ).toEqual([]);
   });
 
   test('11 мес и серая зона — предупреждение, расчёт по выбранной зоне', () => {
-    const r = calculateIntubationTubeByZone({ zoneKey: 'grey', greySubzone: 'grey5', ageYears: 0, ageMonths: 11 });
+    const r = calculateIntubationTubeByZone({
+      zoneKey: 'grey',
+      greySubzone: 'grey5',
+      ageYears: 0,
+      ageMonths: 11,
+    });
     expect(r.method).toBe('broselowZone');
     expect(r.depthOralCm).toBe(10.5);
     expect(has(r.warnings, /меньше ожидаемой для возраста 11 мес/)).toBe(true);

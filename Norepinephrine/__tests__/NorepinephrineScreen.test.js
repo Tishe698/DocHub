@@ -5,7 +5,7 @@ import NorepinephrineScreen from '../NorepinephrineScreen';
 
 // Нативного AsyncStorage в Jest нет — официальный мок пакета (тема хранит режим)
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно (лишние предупреждения act) — заменяем заглушкой
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
@@ -17,7 +17,7 @@ const render = (patient) => {
     tree = create(
       <PatientProvider initialPatient={patient}>
         <NorepinephrineScreen />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;

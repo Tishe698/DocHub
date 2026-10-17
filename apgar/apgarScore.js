@@ -200,7 +200,8 @@ export function assessmentLine(minute, assessment) {
   if (total === null) return null;
   const band = interpretApgar(total);
   const parts = [band ? band.label.toLowerCase() : null];
-  if (assessment && assessment.duringResuscitation) parts.push('на фоне реанимационных мероприятий');
+  if (assessment && assessment.duringResuscitation)
+    parts.push('на фоне реанимационных мероприятий');
   const detail = parts.filter(Boolean).join(', ');
   return `${minuteShort(minute)} — ${formatPoints(total)}${detail ? ` (${detail})` : ''}`;
 }
@@ -310,7 +311,8 @@ export function summaryText(assessments, birthAt) {
   }
   const record = shortRecord(a);
   if (record) lines.push(`Итог: ${record} баллов`);
-  if (needsRepeat(a)) lines.push('На 5-й минуте < 7 баллов: повторные оценки на 10-й, 15-й, 20-й минуте');
+  if (needsRepeat(a))
+    lines.push('На 5-й минуте < 7 баллов: повторные оценки на 10-й, 15-й, 20-й минуте');
   else if (resuscitationAfterFive(a))
     lines.push('Реанимационные мероприятия продолжаются после 5-й минуты: оценка на 10-й минуте');
   return lines.join('\n');

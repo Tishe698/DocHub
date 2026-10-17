@@ -32,7 +32,8 @@ const SCALE_OPTIONS = [
   {
     value: 2,
     label: 'Шкала 2',
-    accessibilityLabel: 'Шкала 2, гиперкапническая дыхательная недостаточность, целевая SpO₂ 88–92 %',
+    accessibilityLabel:
+      'Шкала 2, гиперкапническая дыхательная недостаточность, целевая SpO₂ 88–92 %',
   },
 ];
 
@@ -48,7 +49,8 @@ const CONSCIOUSNESS_OPTIONS = ACVPU_OPTIONS.map((o) => ({
 }));
 
 // Уровень бейджа по баллам параметра: цвет дублируется текстом «N баллов»
-const pointsLevel = (p) => (p === 3 ? 'danger' : p === 2 ? 'warning' : p === 1 ? 'info' : 'success');
+const pointsLevel = (p) =>
+  p === 3 ? 'danger' : p === 2 ? 'warning' : p === 1 ? 'info' : 'success';
 const pointsText = (p) => (p === null || p === undefined ? null : `${p} ${pointsWord(p)}`);
 
 const EMPTY_FIELDS = { respRate: '', spo2: '', sbp: '', heartRate: '', temperature: '' };
@@ -100,7 +102,7 @@ export default function NewsScreen() {
       heartRate: setField('heartRate'),
       temperature: setField('temperature'),
     }),
-    [setField]
+    [setField],
   );
 
   const result = useMemo(() => {
@@ -165,14 +167,14 @@ export default function NewsScreen() {
         NEWS2
       </Text>
       <Text variant="body" color="textSecondary" style={styles.subtitle}>
-        Национальная шкала раннего предупреждения 2: оценка тяжести и риска ухудшения состояния
-        по 7 физиологическим параметрам.
+        Национальная шкала раннего предупреждения 2: оценка тяжести и риска ухудшения состояния по 7
+        физиологическим параметрам.
       </Text>
 
       <Note level="warning" title="Ограничения применения">
-        Только для взрослых от 16 лет. Не применяется у беременных (нужна акушерская шкала
-        раннего предупреждения) и у детей (педиатрические шкалы). Не заменяет клиническую
-        оценку: тяжёлое состояние требует действий при любой сумме баллов.
+        Только для взрослых от 16 лет. Не применяется у беременных (нужна акушерская шкала раннего
+        предупреждения) и у детей (педиатрические шкалы). Не заменяет клиническую оценку: тяжёлое
+        состояние требует действий при любой сумме баллов.
       </Note>
 
       {childWarning ? (
@@ -193,14 +195,14 @@ export default function NewsScreen() {
           style={styles.chipsWithBadge}
         />
         <Text variant="caption" color="textSecondary" style={styles.caption}>
-          Шкала 1 — стандартная. Шкала 2 — только при гиперкапнической дыхательной
-          недостаточности с целевой SpO₂ 88–92 %.
+          Шкала 1 — стандартная. Шкала 2 — только при гиперкапнической дыхательной недостаточности с
+          целевой SpO₂ 88–92 %.
         </Text>
         {scale === 2 ? (
           <Note level="warning" title="Шкала 2 — только по решению врача">
-            Для пациентов с подтверждённой гиперкапнической дыхательной недостаточностью
-            (например, ХОБЛ), которым назначена целевая SpO₂ 88–92 %. Решение фиксируется в
-            документации. Во всех остальных случаях — шкала 1.
+            Для пациентов с подтверждённой гиперкапнической дыхательной недостаточностью (например,
+            ХОБЛ), которым назначена целевая SpO₂ 88–92 %. Решение фиксируется в документации. Во
+            всех остальных случаях — шкала 1.
           </Note>
         ) : null}
 
@@ -235,8 +237,8 @@ export default function NewsScreen() {
           style={styles.chipsWithBadge}
         />
         <Text variant="caption" color="textSecondary" style={styles.caption}>
-          C — впервые возникшая спутанность, дезориентация или возбуждение (по сравнению с
-          обычным состоянием пациента): 3 балла, как V, P и U.
+          C — впервые возникшая спутанность, дезориентация или возбуждение (по сравнению с обычным
+          состоянием пациента): 3 балла, как V, P и U.
         </Text>
         <PointsBadge label="Сознание" points={points.consciousness} style={styles.badge} />
 
@@ -273,7 +275,11 @@ export default function NewsScreen() {
           </View>
         </ResultCard>
       ) : (
-        <Note level="info" title="Итог появится после ввода всех параметров" testID="news-incomplete">
+        <Note
+          level="info"
+          title="Итог появится после ввода всех параметров"
+          testID="news-incomplete"
+        >
           {`Заполнено ${result.scoredCount} из 7.${
             missingLabels.length ? ` Осталось: ${missingLabels.join(', ')}.` : ''
           }`}
@@ -281,7 +287,10 @@ export default function NewsScreen() {
       )}
 
       {!complete && result.minRisk && (result.anyThree || result.total >= 5) ? (
-        <Note level={result.minRisk.level} title={`Уже не менее ${result.total} ${pointsWord(result.total)}`}>
+        <Note
+          level={result.minRisk.level}
+          title={`Уже не менее ${result.total} ${pointsWord(result.total)}`}
+        >
           {`${result.minRisk.label}${
             result.minRisk.key === 'high' ? '' : ' или выше'
           } — по уже введённым параметрам. Остальные параметры могут только добавить баллы.`}
@@ -310,15 +319,15 @@ export default function NewsScreen() {
       </View>
 
       <Note level="info" title="На догоспитальном этапе">
-        Шкала разработана для стационаров. На вызове используйте её как ориентир тяжести и
-        для передачи пациента; тактика и решение о госпитализации — по клинической картине,
-        клиническим рекомендациям и стандартам СМП.
+        Шкала разработана для стационаров. На вызове используйте её как ориентир тяжести и для
+        передачи пациента; тактика и решение о госпитализации — по клинической картине, клиническим
+        рекомендациям и стандартам СМП.
       </Note>
 
       <Text variant="caption" color="textMuted" style={styles.source}>
-        Источник: Royal College of Physicians. National Early Warning Score (NEWS) 2, 2017.
-        Русские формулировки — по таблице NEWS из методических рекомендаций Минздрава России
-        (COVID-19, 2021).
+        Источник: Royal College of Physicians. National Early Warning Score (NEWS) 2, 2017. Русские
+        формулировки — по таблице NEWS из методических рекомендаций Минздрава России (COVID-19,
+        2021).
       </Text>
     </Screen>
   );
@@ -333,7 +342,12 @@ const makeStyles = ({ spacing }) => ({
   resultLine: { marginBottom: spacing.sm },
   breakdown: { marginTop: spacing.xs },
   breakdownRow: { marginBottom: 2 },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -spacing.xs, marginBottom: spacing.md },
+  actions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+    marginBottom: spacing.md,
+  },
   action: { margin: spacing.xs, flexGrow: 1 },
   source: { marginTop: spacing.sm, marginBottom: spacing.lg },
 });

@@ -106,7 +106,10 @@ export const QUESTIONS = [
 ];
 
 // Максимум шкалы — 20 баллов (сумма максимальных баллов всех 10 пунктов)
-export const MAX_SCORE = QUESTIONS.reduce((acc, q) => acc + Math.max(...q.options.map((o) => o.pts)), 0);
+export const MAX_SCORE = QUESTIONS.reduce(
+  (acc, q) => acc + Math.max(...q.options.map((o) => o.pts)),
+  0,
+);
 
 // «балл / балла / баллов»
 export function ptsWord(n) {
@@ -128,7 +131,12 @@ export function interpret(sum) {
   if (sum <= 6) return { fc: 2, cls: 'II функциональный класс', band: '4–6', badge: 'warning' };
   if (sum <= 9) return { fc: 3, cls: 'III функциональный класс', band: '7–9', badge: 'warning' };
   if (sum >= MAX_SCORE) {
-    return { fc: 4, cls: 'IV ФК — терминальная ХСН', band: `${MAX_SCORE} (максимум)`, badge: 'danger' };
+    return {
+      fc: 4,
+      cls: 'IV ФК — терминальная ХСН',
+      band: `${MAX_SCORE} (максимум)`,
+      badge: 'danger',
+    };
   }
   // >9 и <20
   return { fc: 4, cls: 'IV функциональный класс', band: '> 9', badge: 'danger' };

@@ -8,7 +8,7 @@ import WelcomeScreen from '../calculate_button';
 import { PatientProvider, usePatient } from '../../patient/PatientContext';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно — в тесте не нужны
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
@@ -55,11 +55,17 @@ function PatientSpy() {
 const textOf = (node) =>
   node
     .findAll((n) => typeof n.type === 'string' && n.type === 'Text')
-    .map((n) => [].concat(n.props.children).filter((c) => typeof c === 'string').join(''))
+    .map((n) =>
+      []
+        .concat(n.props.children)
+        .filter((c) => typeof c === 'string')
+        .join(''),
+    )
     .join('\n');
 
 // Pressable в тестовом окружении — обёртка, поэтому ищем по имени компонента
-const isPressable = (n) => typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
+const isPressable = (n) =>
+  typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
 const pressable = (root, label) => {
   const found = root.findAll((n) => isPressable(n) && n.props.accessibilityLabel === label);
   if (!found.length) throw new Error(`нет кнопки «${label}»`);
@@ -82,7 +88,7 @@ const renderScreen = (initialPatient) => {
       <PatientProvider initialPatient={initialPatient}>
         <PatientSpy />
         <WelcomeScreen />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;
@@ -120,7 +126,9 @@ describe('экран калькулятора препаратов', () => {
     expect(text).toContain('Результат расчёта');
     expect(text).toContain('Путь введения: в/м');
     expect(text).toContain('Показание: Анафилаксия');
-    expect(text).toContain('Рассчитано для: Вес — 20 кг (оценка по ленте Broselow) · Возраст — 5 лет 3 мес');
+    expect(text).toContain(
+      'Рассчитано для: Вес — 20 кг (оценка по ленте Broselow) · Возраст — 5 лет 3 мес',
+    );
     expect(text).toContain('0.80 мг');
     expect(text).toContain('↑ выше макс. 0.50 мг');
 
@@ -168,14 +176,20 @@ describe('экран калькулятора препаратов', () => {
     scroll.instance.scrollTo = scrollTo;
     // корневой View карточки — прямой потомок содержимого ScrollView после PatientBar
     const detail = root.findAll(
-      (n) => n.type === 'View' && n.props.onLayout && n.props.onLayout.name === 'onDetailLayout'
+      (n) => n.type === 'View' && n.props.onLayout && n.props.onLayout.name === 'onDetailLayout',
     )[0];
-    act(() => detail.props.onLayout({ nativeEvent: { layout: { x: 0, y: 180, width: 300, height: 900 } } }));
+    act(() =>
+      detail.props.onLayout({ nativeEvent: { layout: { x: 0, y: 180, width: 300, height: 900 } } }),
+    );
     press(root, 'Рассчитать');
     const resultBox = root.findAll(
-      (n) => n.type === 'View' && n.props.onLayout && n.props.onLayout.name === 'onResultLayout'
+      (n) => n.type === 'View' && n.props.onLayout && n.props.onLayout.name === 'onResultLayout',
     )[0];
-    act(() => resultBox.props.onLayout({ nativeEvent: { layout: { x: 0, y: 600, width: 300, height: 200 } } }));
+    act(() =>
+      resultBox.props.onLayout({
+        nativeEvent: { layout: { x: 0, y: 600, width: 300, height: 200 } },
+      }),
+    );
     expect(scrollTo).toHaveBeenCalledWith({ y: 180 + 600 - 16, animated: true });
   });
 

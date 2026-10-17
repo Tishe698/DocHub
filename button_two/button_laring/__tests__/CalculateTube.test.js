@@ -8,14 +8,50 @@ import { categoryFromAge, computeLaryngeal, laryngealAnnouncement } from '../lar
 
 describe('VBM LTS-D: таблица производителя', () => {
   test('строки таблицы (IFU 2017, с. 11)', () => {
-    expect(Object.keys(LT_SIZES).sort((a, b) => Number(a) - Number(b))).toEqual(['0', '1', '2', '2.5', '3', '4', '5']);
-    expect(LT_SIZES['0']).toMatchObject({ tubeColor: 'Прозрачный', cuffVolume: '10 мл', drainFr: '10 Fr' });
-    expect(LT_SIZES['1']).toMatchObject({ tubeColor: 'Белый', cuffVolume: '20 мл', drainFr: '10 Fr' });
-    expect(LT_SIZES['2']).toMatchObject({ tubeColor: 'Зелёный', cuffVolume: '35 мл', drainFr: '16 Fr' });
-    expect(LT_SIZES['2.5']).toMatchObject({ tubeColor: 'Оранжевый', cuffVolume: '40–45 мл', drainFr: '16 Fr' });
-    expect(LT_SIZES['3']).toMatchObject({ tubeColor: 'Жёлтый', cuffVolume: '50–60 мл', drainFr: '18 Fr' });
-    expect(LT_SIZES['4']).toMatchObject({ tubeColor: 'Красный', cuffVolume: '70–80 мл', drainFr: '18 Fr' });
-    expect(LT_SIZES['5']).toMatchObject({ tubeColor: 'Фиолетовый', cuffVolume: '80–90 мл', drainFr: '18 Fr' });
+    expect(Object.keys(LT_SIZES).sort((a, b) => Number(a) - Number(b))).toEqual([
+      '0',
+      '1',
+      '2',
+      '2.5',
+      '3',
+      '4',
+      '5',
+    ]);
+    expect(LT_SIZES['0']).toMatchObject({
+      tubeColor: 'Прозрачный',
+      cuffVolume: '10 мл',
+      drainFr: '10 Fr',
+    });
+    expect(LT_SIZES['1']).toMatchObject({
+      tubeColor: 'Белый',
+      cuffVolume: '20 мл',
+      drainFr: '10 Fr',
+    });
+    expect(LT_SIZES['2']).toMatchObject({
+      tubeColor: 'Зелёный',
+      cuffVolume: '35 мл',
+      drainFr: '16 Fr',
+    });
+    expect(LT_SIZES['2.5']).toMatchObject({
+      tubeColor: 'Оранжевый',
+      cuffVolume: '40–45 мл',
+      drainFr: '16 Fr',
+    });
+    expect(LT_SIZES['3']).toMatchObject({
+      tubeColor: 'Жёлтый',
+      cuffVolume: '50–60 мл',
+      drainFr: '18 Fr',
+    });
+    expect(LT_SIZES['4']).toMatchObject({
+      tubeColor: 'Красный',
+      cuffVolume: '70–80 мл',
+      drainFr: '18 Fr',
+    });
+    expect(LT_SIZES['5']).toMatchObject({
+      tubeColor: 'Фиолетовый',
+      cuffVolume: '80–90 мл',
+      drainFr: '18 Fr',
+    });
     expect(LT_MAX_CUFF_PRESSURE_CMH2O).toBe(60);
   });
 });
@@ -114,7 +150,10 @@ describe('laryngealFromPatient', () => {
   });
 
   test('ребёнок: масса пациента, рост не обязателен', () => {
-    expect(computeLaryngeal('child', 18, null)).toMatchObject({ prompt: null, result: { tubeSize: '2' } });
+    expect(computeLaryngeal('child', 18, null)).toMatchObject({
+      prompt: null,
+      result: { tubeSize: '2' },
+    });
   });
 
   test('взрослый: масса пациента игнорируется', () => {
@@ -123,15 +162,22 @@ describe('laryngealFromPatient', () => {
   });
 
   test('неполный ввод — подсказка без результата', () => {
-    expect(computeLaryngeal('child', null, null)).toEqual({ prompt: 'Введите массу ребёнка (кг)', result: null });
+    expect(computeLaryngeal('child', null, null)).toEqual({
+      prompt: 'Введите массу ребёнка (кг)',
+      result: null,
+    });
   });
 
   test('озвучка', () => {
     expect(laryngealAnnouncement(computeLaryngeal('child', 30, 140).result)).toBe(
-      'Ларингеальная трубка размер 2,5, коннектор оранжевый, объём манжеты 40–45 мл'
+      'Ларингеальная трубка размер 2,5, коннектор оранжевый, объём манжеты 40–45 мл',
     );
-    expect(laryngealAnnouncement(computeLaryngeal('child', 30, 120).result)).toMatch(/^Размер не определён/);
-    expect(laryngealAnnouncement(computeLaryngeal('child', 20, 160).result)).toMatch(/есть предупреждение$/);
+    expect(laryngealAnnouncement(computeLaryngeal('child', 30, 120).result)).toMatch(
+      /^Размер не определён/,
+    );
+    expect(laryngealAnnouncement(computeLaryngeal('child', 20, 160).result)).toMatch(
+      /есть предупреждение$/,
+    );
     expect(laryngealAnnouncement(null)).toBe('');
   });
 });

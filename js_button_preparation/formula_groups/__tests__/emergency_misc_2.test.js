@@ -70,7 +70,9 @@ describe('группа «прочее неотложное, часть 2»: ст
     expect(byName('Фильтрум').labels.result1).toMatch(/внутрь/);
     expect(byName('Меглюмина натрия сукцинат').labels.result1).toMatch(/в\/в капельно/);
     expect(byName('Меглюмина натрия сукцинат').labels.result3).toMatch(/в\/в капельно/);
-    expect(byName('Димеркаптопропансульфонат натрия (унитиол)').labels.result1).toMatch(/в\/м или п\/к/);
+    expect(byName('Димеркаптопропансульфонат натрия (унитиол)').labels.result1).toMatch(
+      /в\/м или п\/к/,
+    );
   });
 });
 
@@ -419,7 +421,9 @@ describe('через движок: выбор показан в результа
     const f = byName('Налоксон');
     const res = computeResult(f, { weight: '20', ageYears: '5', route: 'im' });
     expect(res.success).toBe(true);
-    expect(res.choices).toEqual([{ key: 'route', label: 'Путь введения', value: 'im', valueLabel: 'в/м' }]);
+    expect(res.choices).toEqual([
+      { key: 'route', label: 'Путь введения', value: 'im', valueLabel: 'в/м' },
+    ]);
   });
 
   it('пиридоксин: лимит зависит от показания', () => {

@@ -32,11 +32,15 @@ export default function BroselowPicker({ onSelect, style }) {
         Лента Broselow ({BROSELOW_VERSION})
       </Text>
       <Text variant="caption" color="textSecondary" style={styles.caption}>
-        Измерьте длину ребёнка лентой и выберите зону. Масса оценена по ленте Broselow:
-        середина диапазона зоны.
+        Измерьте длину ребёнка лентой и выберите зону. Масса оценена по ленте Broselow: середина
+        диапазона зоны.
         {byHeight ? ` По введённому росту — зона «${byHeight.name}».` : ''}
       </Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel="Зона ленты Broselow" style={styles.grid}>
+      <View
+        accessibilityRole="radiogroup"
+        accessibilityLabel="Зона ленты Broselow"
+        style={styles.grid}
+      >
         {BROSELOW_ZONES.map((zone) => {
           const c = broselow[zone.key];
           const selected = zone.key === selectedKey;
@@ -84,7 +88,9 @@ export default function BroselowPicker({ onSelect, style }) {
         })}
       </View>
       {patient.weightSource === 'broselow' ? (
-        <Note level="info">Масса оценена по ленте Broselow — при возможности уточните фактическую.</Note>
+        <Note level="info">
+          Масса оценена по ленте Broselow — при возможности уточните фактическую.
+        </Note>
       ) : null}
     </View>
   );
@@ -93,7 +99,12 @@ export default function BroselowPicker({ onSelect, style }) {
 const makeStyles = ({ colors, spacing, radius }) => ({
   title: { marginBottom: spacing.xs },
   caption: { marginBottom: spacing.sm },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -spacing.xs, marginBottom: spacing.sm },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.xs,
+    marginBottom: spacing.sm,
+  },
   tile: {
     flexGrow: 1,
     flexBasis: '45%',

@@ -61,7 +61,9 @@ describe('поля ввода', () => {
   it('правило поля: по ключу, по единице и своё из inputLimits', () => {
     expect(getFieldRule('weight', 'Вес (кг)')).toMatchObject({ min: 0.3, max: 250, unit: 'кг' });
     expect(getFieldRule('mass', 'Масса (кг)')).toMatchObject({ min: 0.3, max: 250 });
-    expect(getFieldRule('weight', 'Вес (кг)', { inputLimits: { weight: { max: 40, warnMax: 30 } } })).toMatchObject({
+    expect(
+      getFieldRule('weight', 'Вес (кг)', { inputLimits: { weight: { max: 40, warnMax: 30 } } }),
+    ).toMatchObject({
       min: 0.3,
       max: 40,
       warnMax: 30,
@@ -69,16 +71,28 @@ describe('поля ввода', () => {
   });
 
   it('проверка числа: пусто, мусор, ноль, отрицательное, диапазон, мягкое предупреждение', () => {
-    expect(validateField('weight', 'Вес (кг)', '', {})).toEqual({ error: 'Вес (кг): введите число' });
+    expect(validateField('weight', 'Вес (кг)', '', {})).toEqual({
+      error: 'Вес (кг): введите число',
+    });
     expect(validateField('weight', 'Вес (кг)', 'abc', {}).error).toMatch(/введите число/);
     expect(validateField('weight', 'Вес (кг)', '-5', {}).error).toMatch(/отрицательным/);
     expect(validateField('weight', 'Вес (кг)', '0', {}).error).toMatch(/больше 0/);
-    expect(validateField('weight', 'Вес (кг)', '0,2', {}).error).toBe('Вес (кг): допустимо 0,3–250 кг — проверьте ввод');
+    expect(validateField('weight', 'Вес (кг)', '0,2', {}).error).toBe(
+      'Вес (кг): допустимо 0,3–250 кг — проверьте ввод',
+    );
     expect(validateField('weight', 'Вес (кг)', '300', {}).error).toMatch(/0,3–250 кг/);
-    expect(validateField('weight', 'Вес (кг)', '20,5', {})).toEqual({ value: 20.5, warning: undefined });
-    expect(validateField('ageYears', 'Возраст (лет)', '0', {})).toEqual({ value: 0, warning: undefined });
+    expect(validateField('weight', 'Вес (кг)', '20,5', {})).toEqual({
+      value: 20.5,
+      warning: undefined,
+    });
+    expect(validateField('ageYears', 'Возраст (лет)', '0', {})).toEqual({
+      value: 0,
+      warning: undefined,
+    });
     expect(validateField('rate', 'Скорость (мкг/кг/мин)', '60', {}).error).toMatch(/не более 50/);
-    const w = validateField('weight', 'Вес (кг)', '35', { inputLimits: { weight: { warnMax: 30 } } });
+    const w = validateField('weight', 'Вес (кг)', '35', {
+      inputLimits: { weight: { warnMax: 30 } },
+    });
     expect(w.value).toBe(35);
     expect(w.warning).toBe('Вес 35 кг — выше обычного предела 30 кг. Проверьте ввод.');
   });
@@ -93,7 +107,9 @@ describe('поля ввода', () => {
     expect(choiceValue(route, undefined)).toBe('io');
     expect(validateField('route', route, undefined, {})).toEqual({ value: 'io' });
     expect(validateField('route', route, 'im', {})).toEqual({ value: 'im' });
-    expect(validateField('route', route, 'po', {}).error).toBe('Путь введения: выберите вариант из списка');
+    expect(validateField('route', route, 'po', {}).error).toBe(
+      'Путь введения: выберите вариант из списка',
+    );
   });
 
   it('пол без вариантов в записи — стандартные варианты, без значения — ошибка', () => {
@@ -169,15 +185,25 @@ describe('возраст из пары полей пациента', () => {
     expect(ok.ok).toBe(true);
     expect(ok.notes).toEqual([]);
     // ageMonths: предел записи по полному возрасту в месяцах
-    const fm = { inputs: { ageMonths: 'Возраст (мес)' }, inputLimits: { ageMonths: { max: 24, warnMin: 1 } } };
-    expect(resolveAge(fm.inputs, { years: '3', months: '' }, fm).error).toMatch(/Возраст \(мес\): допустимо 0–24 мес/);
-    expect(resolveAge(fm.inputs, { years: '', months: '0' }, fm).warnings[0]).toMatch(/ниже обычного предела 1 мес/);
+    const fm = {
+      inputs: { ageMonths: 'Возраст (мес)' },
+      inputLimits: { ageMonths: { max: 24, warnMin: 1 } },
+    };
+    expect(resolveAge(fm.inputs, { years: '3', months: '' }, fm).error).toMatch(
+      /Возраст \(мес\): допустимо 0–24 мес/,
+    );
+    expect(resolveAge(fm.inputs, { years: '', months: '0' }, fm).warnings[0]).toMatch(
+      /ниже обычного предела 1 мес/,
+    );
     // без формулы — только общие пределы
     expect(resolveAge(fm.inputs, { years: '3', months: '' }).values).toEqual({ ageMonths: 36 });
   });
 
   it('без пары полей — прежний режим: возраст из rawInputs', () => {
-    const r = validateAll({ inputs: { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' } }, { weight: '20', ageYears: '5' });
+    const r = validateAll(
+      { inputs: { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' } },
+      { weight: '20', ageYears: '5' },
+    );
     expect(r.clean).toEqual({ weight: 20, ageYears: 5 });
     expect(r.ageMonths).toBe(60);
   });
@@ -194,7 +220,9 @@ describe('вес ↔ возраст', () => {
   it('ошибка в разряде — предупреждение, норма — нет', () => {
     const map = { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' };
     expect(ageWeightWarning({ weight: 18 }, map, 60)).toBeNull();
-    expect(ageWeightWarning({ weight: 70 }, map, 60)).toMatch(/необычен для возраста 5 лет.*около 18 кг/);
+    expect(ageWeightWarning({ weight: 70 }, map, 60)).toMatch(
+      /необычен для возраста 5 лет.*около 18 кг/,
+    );
     expect(ageWeightWarning({ weight: 5 }, map, 60)).toMatch(/необычен/);
     // до 1 года нижний порог не применяется (недоношенные)
     expect(ageWeightWarning({ weight: 2 }, map, 3)).toBeNull();
@@ -227,7 +255,11 @@ describe('форматирование', () => {
   });
 
   it('ключи результатов по номеру', () => {
-    expect(resultKeys({ result10: 1, result2: 2, result1: 3, other: 4 })).toEqual(['result1', 'result2', 'result10']);
+    expect(resultKeys({ result10: 1, result2: 2, result1: 3, other: 4 })).toEqual([
+      'result1',
+      'result2',
+      'result10',
+    ]);
   });
 
   it('статус относительно пределов', () => {
@@ -247,8 +279,17 @@ describe('строки результата', () => {
   };
 
   it('пределы, нулевая доза, примечание', () => {
-    const items = buildItems({ result1: 2, result2: 0.5, result3: 0, result4: ' текст ' }, formula, {});
-    expect(items[0]).toMatchObject({ name: 'Доза', text: '2.00 мг', status: 'high', badge: '↑ выше макс. 1.00 мг' });
+    const items = buildItems(
+      { result1: 2, result2: 0.5, result3: 0, result4: ' текст ' },
+      formula,
+      {},
+    );
+    expect(items[0]).toMatchObject({
+      name: 'Доза',
+      text: '2.00 мг',
+      status: 'high',
+      badge: '↑ выше макс. 1.00 мг',
+    });
     expect(items[1]).toMatchObject({ name: 'Объём', text: '0.50 мл', status: 'ok', badge: null });
     expect(items[2]).toMatchObject({ status: 'zero', text: '—', value: null });
     expect(items[3]).toMatchObject({ name: 'Примечание', text: 'текст', status: 'info' });
@@ -282,10 +323,12 @@ describe('строки результата', () => {
     expect(itemLevel('ok')).toBeNull();
     expect(spokenBadge('↑ выше макс. 1.00 мг')).toBe('выше макс. 1.00 мг');
     expect(spokenBadge('= предел 1.00 мг')).toBe('на пределе 1.00 мг');
-    expect(itemSpoken({ name: 'Доза', text: '2.00 мг', badge: '↑ выше макс. 1.00 мг', status: 'high' })).toBe(
-      'Доза, 2.00 мг, выше макс. 1.00 мг'
+    expect(
+      itemSpoken({ name: 'Доза', text: '2.00 мг', badge: '↑ выше макс. 1.00 мг', status: 'high' }),
+    ).toBe('Доза, 2.00 мг, выше макс. 1.00 мг');
+    expect(itemSpoken({ name: 'Доза', text: '—', badge: 'не определена', status: 'zero' })).toBe(
+      'Доза, не определена',
     );
-    expect(itemSpoken({ name: 'Доза', text: '—', badge: 'не определена', status: 'zero' })).toBe('Доза, не определена');
     expect(resultLevel([{ status: 'ok' }, { status: 'high' }]).level).toBe('danger');
     expect(resultLevel([{ status: 'atmax' }]).label).toMatch(/пределе/);
     expect(resultLevel([{ status: 'ok' }])).toEqual({ level: null, label: null });
@@ -317,11 +360,15 @@ describe('computeResult', () => {
   };
 
   it('в formula приходят строки выбора; путь и показание — в результате и в копии', () => {
-    const r = computeResult(drug, { weight: '20', route: 'im', indication: 'anaphylaxis' }, {
-      age: { years: '5', months: '3' },
-      weightNote: 'оценка',
-      now: NOON,
-    });
+    const r = computeResult(
+      drug,
+      { weight: '20', route: 'im', indication: 'anaphylaxis' },
+      {
+        age: { years: '5', months: '3' },
+        weightNote: 'оценка',
+        now: NOON,
+      },
+    );
     expect(r.success).toBe(true);
     expect(r.items[0]).toMatchObject({ text: '0.40 мг', status: 'ok' });
     expect(r.choices).toEqual([
@@ -337,7 +384,9 @@ describe('computeResult', () => {
     expect(copy).toContain('Доза: 0.40 мг');
     expect(copy).toContain('Внимание: Предупреждение записи');
     expect(copy).toContain('Рассчитано: 09:05.');
-    expect(resultSpoken(r)).toBe('Результат расчёта. Путь введения в/м. Показание Анафилаксия. Доза, 0.40 мг. Объём, 0.40 мл');
+    expect(resultSpoken(r)).toBe(
+      'Результат расчёта. Путь введения в/м. Показание Анафилаксия. Доза, 0.40 мг. Объём, 0.40 мл',
+    );
   });
 
   it('значения выбора по умолчанию', () => {
@@ -367,8 +416,21 @@ describe('computeResult', () => {
   });
 
   it('исключение в формуле — ошибка расчёта', () => {
-    const r = computeResult({ name: 'x', inputs: {}, formula: () => { throw new Error('boom'); } }, {});
-    expect(r).toEqual({ error: true, type: 'calculation', message: 'Ошибка при выполнении расчёта: boom.' });
+    const r = computeResult(
+      {
+        name: 'x',
+        inputs: {},
+        formula: () => {
+          throw new Error('boom');
+        },
+      },
+      {},
+    );
+    expect(r).toEqual({
+      error: true,
+      type: 'calculation',
+      message: 'Ошибка при выполнении расчёта: boom.',
+    });
   });
 
   it('предупреждение «вес не по возрасту» попадает в notes', () => {
@@ -381,9 +443,12 @@ describe('computeResult', () => {
   });
 
   it('inputsSummary без пары возраста — прежний вид', () => {
-    expect(inputsSummary({ inputs: { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' } }, { weight: 20.5, ageYears: 5 })).toBe(
-      'Вес — 20,5 кг · Возраст — 5 лет'
-    );
+    expect(
+      inputsSummary(
+        { inputs: { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' } },
+        { weight: 20.5, ageYears: 5 },
+      ),
+    ).toBe('Вес — 20,5 кг · Возраст — 5 лет');
   });
 });
 
@@ -418,14 +483,19 @@ describe('поиск', () => {
   });
 
   it('торговое название и падеж', () => {
-    expect(searchFormulas(list, 'анальгин')[0]).toMatchObject({ formula: list[3], synonym: 'анальгин' });
+    expect(searchFormulas(list, 'анальгин')[0]).toMatchObject({
+      formula: list[3],
+      synonym: 'анальгин',
+    });
     expect(names('магнезия')[0]).toBe('Магния сульфат 25%');
     expect(names('магний')[0]).toBe('Магния сульфат 25%');
     expect(names('ё')).toEqual([]);
   });
 
   it('свои синонимы записи', () => {
-    expect(synonymsOf(list[4])).toEqual(expect.arrayContaining(['сибазон-собственный', 'реланиум']));
+    expect(synonymsOf(list[4])).toEqual(
+      expect.arrayContaining(['сибазон-собственный', 'реланиум']),
+    );
   });
 
   it('короткий запрос — только по началу слов', () => {

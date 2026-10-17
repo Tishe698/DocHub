@@ -46,7 +46,8 @@ describe('группа антибиотиков и противоаллерги�
       Object.values(f.inputs)
         .filter(isChoiceInput)
         .forEach((c) => expect(c.choices.some((x) => x.value === c.default)).toBe(true));
-      if (f.inputs.route) f.inputs.route.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
+      if (f.inputs.route)
+        f.inputs.route.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
     });
     const cef = byName('Цефтриаксон').inputs;
     expect(cef.route.choices.map((c) => c.value)).toEqual(['iv', 'im', 'io']);
@@ -189,7 +190,7 @@ describe('Цефтриаксон', () => {
     const res = computeResult(
       f,
       { weight: '20', indication: 'meningitis', route: 'im' },
-      { age: { years: '5', months: '0' } }
+      { age: { years: '5', months: '0' } },
     );
     expect(res.success).toBe(true);
     expect(res.choices.map((c) => c.valueLabel)).toEqual(['Менингит / ГМИ', 'в/м']);

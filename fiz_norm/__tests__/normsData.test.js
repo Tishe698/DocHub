@@ -20,7 +20,18 @@ const range = (s) => s.split('–').map(Number);
 
 // Эталон таблицы (перенесена без изменений из экрана, значения ветки fix/clinical-audit)
 const EXPECTED = [
-  ['Новорожденные', 0, '3,5', '50', '40–60', '30–60', '130–140', '100–205', '70/40', '60–84 / 31–53'],
+  [
+    'Новорожденные',
+    0,
+    '3,5',
+    '50',
+    '40–60',
+    '30–60',
+    '130–140',
+    '100–205',
+    '70/40',
+    '60–84 / 31–53',
+  ],
   ['3 мес', 3, '5,5–6', '60–62', '35–40', '30–53', '120–130', '100–180', '85/40', '72–104 / 37–56'],
   ['6 мес', 6, '7', '67', '33–35', '30–53', '120–125', '100–180', '95/55', '72–104 / 37–56'],
   ['1 год', 12, '10', '75', '30–32', '22–37', '120', '98–140', '92/56', '86–106 / 42–63'],
@@ -40,7 +51,18 @@ describe('NORMS — таблица', () => {
     expect(NORMS).toHaveLength(EXPECTED.length);
     NORMS.forEach((n, i) => {
       const [label, months, weight, height, rr, rrRange, hr, hrRange, bp, bpRange] = EXPECTED[i];
-      expect(n).toMatchObject({ label, months, weight, height, rr, rrRange, hr, hrRange, bp, bpRange });
+      expect(n).toMatchObject({
+        label,
+        months,
+        weight,
+        height,
+        rr,
+        rrRange,
+        hr,
+        hrRange,
+        bp,
+        bpRange,
+      });
     });
   });
 
@@ -50,7 +72,8 @@ describe('NORMS — таблица', () => {
   });
 
   test('возраст строк растёт и не повторяется', () => {
-    for (let i = 1; i < NORMS.length; i++) expect(NORMS[i].months).toBeGreaterThan(NORMS[i - 1].months);
+    for (let i = 1; i < NORMS.length; i++)
+      expect(NORMS[i].months).toBeGreaterThan(NORMS[i - 1].months);
   });
 
   test.each(NORMS.map((n) => [n.label, n]))('%s: формат значений', (_, n) => {
@@ -64,29 +87,35 @@ describe('NORMS — таблица', () => {
     expect(n.height).toMatch(/^\d+(–\d+)?$/);
   });
 
-  test.each(NORMS.map((n) => [n.label, n]))('%s: средние значения внутри границ нормы PALS', (_, n) => {
-    const [rrLo, rrHi] = range(n.rrRange);
-    range(n.rr).forEach((v) => {
-      expect(v).toBeGreaterThanOrEqual(rrLo);
-      expect(v).toBeLessThanOrEqual(rrHi);
-    });
-    const [hrLo, hrHi] = range(n.hrRange);
-    range(n.hr).forEach((v) => {
-      expect(v).toBeGreaterThanOrEqual(hrLo);
-      expect(v).toBeLessThanOrEqual(hrHi);
-    });
-    const [, sys, dia] = n.bp.match(BP).map(Number);
-    const [, sLo, sHi, dLo, dHi] = n.bpRange.match(BP_RANGE).map(Number);
-    expect(sys).toBeGreaterThanOrEqual(sLo);
-    expect(sys).toBeLessThanOrEqual(sHi);
-    expect(dia).toBeGreaterThanOrEqual(dLo);
-    expect(dia).toBeLessThanOrEqual(dHi);
-  });
+  test.each(NORMS.map((n) => [n.label, n]))(
+    '%s: средние значения внутри границ нормы PALS',
+    (_, n) => {
+      const [rrLo, rrHi] = range(n.rrRange);
+      range(n.rr).forEach((v) => {
+        expect(v).toBeGreaterThanOrEqual(rrLo);
+        expect(v).toBeLessThanOrEqual(rrHi);
+      });
+      const [hrLo, hrHi] = range(n.hrRange);
+      range(n.hr).forEach((v) => {
+        expect(v).toBeGreaterThanOrEqual(hrLo);
+        expect(v).toBeLessThanOrEqual(hrHi);
+      });
+      const [, sys, dia] = n.bp.match(BP).map(Number);
+      const [, sLo, sHi, dLo, dHi] = n.bpRange.match(BP_RANGE).map(Number);
+      expect(sys).toBeGreaterThanOrEqual(sLo);
+      expect(sys).toBeLessThanOrEqual(sHi);
+      expect(dia).toBeGreaterThanOrEqual(dLo);
+      expect(dia).toBeLessThanOrEqual(dHi);
+    },
+  );
 
-  test.each(NORMS.map((n) => [n.label, n]))('%s: порог гипотензии не выше нижней границы САД', (_, n) => {
-    const [, sLo] = n.bpRange.match(BP_RANGE).map(Number);
-    expect(hypotensionSbp(n.months)).toBeLessThanOrEqual(sLo);
-  });
+  test.each(NORMS.map((n) => [n.label, n]))(
+    '%s: порог гипотензии не выше нижней границы САД',
+    (_, n) => {
+      const [, sLo] = n.bpRange.match(BP_RANGE).map(Number);
+      expect(hypotensionSbp(n.months)).toBeLessThanOrEqual(sLo);
+    },
+  );
 });
 
 describe('подписи возраста', () => {
@@ -219,7 +248,9 @@ describe('подписи для диктора', () => {
     expect(spokenValue('120')).toBe('120');
     expect(spokenValue('5,5–6')).toBe('от 5,5 до 6');
     expect(spokenValue('70/40')).toBe('70 на 40');
-    expect(spokenValue('60–84 / 31–53')).toBe('систолическое от 60 до 84, диастолическое от 31 до 53');
+    expect(spokenValue('60–84 / 31–53')).toBe(
+      'систолическое от 60 до 84, диастолическое от 31 до 53',
+    );
   });
 
   test('normMetrics: пять показателей с видимым текстом и подписью для диктора без тире', () => {

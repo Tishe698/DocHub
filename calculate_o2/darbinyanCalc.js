@@ -29,7 +29,9 @@ export function computeDarbinyan(weight) {
     return { error: 'Масса тела должна быть числом больше нуля' };
   }
   if (weight > WEIGHT_MAX) {
-    return { error: `Масса больше ${WEIGHT_MAX} кг — проверьте ввод. При ожирении считайте по должной массе тела.` };
+    return {
+      error: `Масса больше ${WEIGHT_MAX} кг — проверьте ввод. При ожирении считайте по должной массе тела.`,
+    };
   }
   if (weight < WEIGHT_MIN) {
     return {
@@ -57,7 +59,12 @@ export function darbinyanFor({ weightKg, heightCm, sex, basis = 'actual' }) {
   const pbw = pbwRaw ? { ...pbwRaw, kg: round1(pbwRaw.kg) } : null;
   if (basis === 'pbw') {
     if (!pbw) {
-      return { basis, massKg: null, pbw, error: 'Для должной массы введите рост (130–230 см) и пол.' };
+      return {
+        basis,
+        massKg: null,
+        pbw,
+        error: 'Для должной массы введите рост (130–230 см) и пол.',
+      };
     }
     // Здесь пол не подставляем: заниженный МОД — тоже риск (гиповентиляция), «консервативной» стороны нет
     if (pbw.sexAssumed) {

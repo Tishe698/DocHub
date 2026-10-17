@@ -42,9 +42,17 @@ describe('взрослые пороги', () => {
   it('категории по SI', () => {
     expect(cat(55, 120).category).toMatchObject({ level: 0, tone: 'neutral' }); // 0,46
     expect(cat(60, 120).category).toMatchObject({ level: 1, label: 'норма', tone: 'success' }); // 0,5
-    expect(cat(84, 120).category).toMatchObject({ level: 2, label: 'пограничный', tone: 'warning' }); // 0,7
+    expect(cat(84, 120).category).toMatchObject({
+      level: 2,
+      label: 'пограничный',
+      tone: 'warning',
+    }); // 0,7
     expect(cat(89, 100).category.level).toBe(2); // 0,89
-    expect(cat(90, 100).category).toMatchObject({ level: 3, label: 'высокий риск шока', tone: 'danger' }); // 0,9
+    expect(cat(90, 100).category).toMatchObject({
+      level: 3,
+      label: 'высокий риск шока',
+      tone: 'danger',
+    }); // 0,9
     expect(cat(129, 100).category.level).toBe(3); // 1,29
     expect(cat(130, 100).category).toMatchObject({ level: 4, tone: 'danger' }); // 1,3
   });
@@ -52,7 +60,9 @@ describe('взрослые пороги', () => {
   it('режим adult, с 17 лет — взрослая шкала', () => {
     expect(cat(80, 120).mode).toBe('adult');
     expect(calculateShockIndex({ hr: 80, sbp: 120, ageYears: 17 }).mode).toBe('adult');
-    expect(calculateShockIndex({ hr: 80, sbp: 120, ageYears: 17 }).thresholds.hypotensionSBP).toBeNull();
+    expect(
+      calculateShockIndex({ hr: 80, sbp: 120, ageYears: 17 }).thresholds.hypotensionSBP,
+    ).toBeNull();
   });
 
   it('без возраста — взрослая шкала с предупреждением', () => {
@@ -62,7 +72,13 @@ describe('взрослые пороги', () => {
   });
 
   it('у категорий нет литералов цвета — только уровень темы', () => {
-    for (const [hr, sbp] of [[55, 120], [60, 120], [84, 120], [90, 100], [130, 100]]) {
+    for (const [hr, sbp] of [
+      [55, 120],
+      [60, 120],
+      [84, 120],
+      [90, 100],
+      [130, 100],
+    ]) {
       const c = cat(hr, sbp).category;
       expect(c.color).toBeUndefined();
       expect(TONES).toContain(c.tone);
@@ -89,7 +105,8 @@ describe('кровопотеря (только взрослые)', () => {
 });
 
 describe('SIPA по возрасту', () => {
-  const sipa = (ageYears, hr, sbp, trauma = false) => calculateShockIndex({ hr, sbp, ageYears, trauma });
+  const sipa = (ageYears, hr, sbp, trauma = false) =>
+    calculateShockIndex({ hr, sbp, ageYears, trauma });
 
   it('пороги: 1–6 лет 1,2; 7–12 — 1,0; 13–16 — 0,9', () => {
     expect(sipa(1, 100, 100).pediatric.cutoff).toBe(1.2);
@@ -146,14 +163,21 @@ describe('дети до 1 года', () => {
   it('гипотензия: новорождённый < 60, 1–12 мес < 70', () => {
     expect(calculateShockIndex({ hr: 140, sbp: 59, ageYears: 0 }).flags.hypotension).toBe(true);
     expect(calculateShockIndex({ hr: 140, sbp: 60, ageYears: 0 }).flags.hypotension).toBe(false);
-    expect(calculateShockIndex({ hr: 140, sbp: 69, ageYears: 3 / 12 }).flags.hypotension).toBe(true);
-    expect(calculateShockIndex({ hr: 140, sbp: 70, ageYears: 3 / 12 }).flags.hypotension).toBe(false);
-    expect(calculateShockIndex({ hr: 140, sbp: 70, ageYears: 0 }).interpretation).toMatch('до 1 мес');
+    expect(calculateShockIndex({ hr: 140, sbp: 69, ageYears: 3 / 12 }).flags.hypotension).toBe(
+      true,
+    );
+    expect(calculateShockIndex({ hr: 140, sbp: 70, ageYears: 3 / 12 }).flags.hypotension).toBe(
+      false,
+    );
+    expect(calculateShockIndex({ hr: 140, sbp: 70, ageYears: 0 }).interpretation).toMatch(
+      'до 1 мес',
+    );
   });
 });
 
 describe('беременность / послеродовой период', () => {
-  const preg = (hr, sbp, extra = {}) => calculateShockIndex({ hr, sbp, ageYears: 28, pregnant: true, ...extra });
+  const preg = (hr, sbp, extra = {}) =>
+    calculateShockIndex({ hr, sbp, ageYears: 28, pregnant: true, ...extra });
 
   it('пороги КР МЗ РФ 2021 и CRADLE', () => {
     expect(preg(80, 110).category).toMatchObject({ level: 1, tone: 'success' }); // 0,73
@@ -175,21 +199,28 @@ describe('беременность / послеродовой период', () 
   });
 
   it('беременность важнее SIPA у подростка; < 10 лет — ошибка ввода', () => {
-    expect(calculateShockIndex({ hr: 100, sbp: 100, ageYears: 15, pregnant: true }).mode).toBe('pregnancy');
-    expect(() => calculateShockIndex({ hr: 100, sbp: 100, ageYears: 9, pregnant: true })).toThrow('беременность');
+    expect(calculateShockIndex({ hr: 100, sbp: 100, ageYears: 15, pregnant: true }).mode).toBe(
+      'pregnancy',
+    );
+    expect(() => calculateShockIndex({ hr: 100, sbp: 100, ageYears: 9, pregnant: true })).toThrow(
+      'беременность',
+    );
   });
 });
 
 describe('травма', () => {
   it('взрослые и беременные: SI ≥ 0,9', () => {
-    expect(calculateShockIndex({ hr: 89, sbp: 100, ageYears: 30, trauma: true }).flags.traumaHighRisk).toBe(false);
+    expect(
+      calculateShockIndex({ hr: 89, sbp: 100, ageYears: 30, trauma: true }).flags.traumaHighRisk,
+    ).toBe(false);
     const r = calculateShockIndex({ hr: 90, sbp: 100, ageYears: 30, trauma: true });
     expect(r.flags.traumaHighRisk).toBe(true);
     expect(r.traumaLabel).toBe('Травма: SI ≥ 0,9');
     expect(r.thresholds.traumaActionSI).toBe(0.9);
-    expect(calculateShockIndex({ hr: 90, sbp: 100, ageYears: 30, trauma: true, pregnant: true }).flags.traumaHighRisk).toBe(
-      true
-    );
+    expect(
+      calculateShockIndex({ hr: 90, sbp: 100, ageYears: 30, trauma: true, pregnant: true }).flags
+        .traumaHighRisk,
+    ).toBe(true);
   });
 
   it('дети: SI > порога SIPA', () => {
@@ -203,14 +234,20 @@ describe('травма', () => {
   });
 
   it('без отметки травмы флага нет', () => {
-    expect(calculateShockIndex({ hr: 150, sbp: 100, ageYears: 30 }).flags.traumaHighRisk).toBe(false);
+    expect(calculateShockIndex({ hr: 150, sbp: 100, ageYears: 30 }).flags.traumaHighRisk).toBe(
+      false,
+    );
   });
 });
 
 describe('проверка возраста', () => {
   it('вне 0–120 лет — ошибка', () => {
-    expect(() => calculateShockIndex({ hr: 80, sbp: 120, ageYears: -1 })).toThrow('Недопустимый возраст');
-    expect(() => calculateShockIndex({ hr: 80, sbp: 120, ageYears: 121 })).toThrow('Недопустимый возраст');
+    expect(() => calculateShockIndex({ hr: 80, sbp: 120, ageYears: -1 })).toThrow(
+      'Недопустимый возраст',
+    );
+    expect(() => calculateShockIndex({ hr: 80, sbp: 120, ageYears: 121 })).toThrow(
+      'Недопустимый возраст',
+    );
   });
 
   it('ageFieldErrors: месяцев 0–11 при указанных годах', () => {
@@ -255,7 +292,9 @@ describe('evaluateShockIndex (ввод экрана)', () => {
     expect(infant.result.mode).toBe('infant');
     const adult = evaluateShockIndex({ hrText: '90,6', sbpText: '100', ageMonths: 40 * 12 });
     expect(adult.result.si).toBe(0.91);
-    expect(evaluateShockIndex({ hrText: '90', sbpText: '100', ageMonths: null }).result.mode).toBe('adult_noage');
+    expect(evaluateShockIndex({ hrText: '90', sbpText: '100', ageMonths: null }).result.mode).toBe(
+      'adult_noage',
+    );
   });
 
   it('ошибка расчёта превращается в status error', () => {

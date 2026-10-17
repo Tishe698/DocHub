@@ -68,7 +68,8 @@ const indicationRoute = (options, defaultValue) => {
   return { input, parse };
 };
 
-const routeOf = (input, value) => (input.choices.some((c) => c.value === value) ? value : input.default);
+const routeOf = (input, value) =>
+  input.choices.some((c) => c.value === value) ? value : input.default;
 
 /** ------------------------------ Парацетамол ------------------------------ **/
 
@@ -119,8 +120,20 @@ const suppText = (parts) => {
 // гепатотоксичности). Интервал ≥ 4 ч, не более 4 введений; КК ≤ 30 мл/мин — интервал ≥ 6 ч.
 export const paracetamolIv = (w) => {
   if (w <= 10) return { mg: 7.5 * w, daily: 30 * w, singleMax: 75, band: '≤ 10 кг: 7.5 мг/кг' };
-  if (w <= 33) return { mg: 15 * w, daily: Math.min(60 * w, 2000), singleMax: 495, band: '10–33 кг: 15 мг/кг' };
-  if (w <= 50) return { mg: 15 * w, daily: Math.min(60 * w, 3000), singleMax: 750, band: '33–50 кг: 15 мг/кг' };
+  if (w <= 33)
+    return {
+      mg: 15 * w,
+      daily: Math.min(60 * w, 2000),
+      singleMax: 495,
+      band: '10–33 кг: 15 мг/кг',
+    };
+  if (w <= 50)
+    return {
+      mg: 15 * w,
+      daily: Math.min(60 * w, 3000),
+      singleMax: 750,
+      band: '33–50 кг: 15 мг/кг',
+    };
   return { mg: 1000, daily: 4000, singleMax: 1000, band: '> 50 кг: 1 г' };
 };
 
@@ -135,13 +148,17 @@ const paracetamol = {
     const a = ageOf(ageYears);
     if (w <= 0 || Number.isNaN(a)) return {};
     const r = routeOf(PARACETAMOL_ROUTE, route);
-    const interval = 'Повтор не ранее чем через 4 ч, не более 4 доз за 24 ч; учитывать все препараты с парацетамолом.';
+    const interval =
+      'Повтор не ранее чем через 4 ч, не более 4 доз за 24 ч; учитывать все препараты с парацетамолом.';
 
     if (r === 'iv') {
       // Инструкция «Парацетамол Каби»: противопоказан в период новорождённости (до 1 мес);
       // недоношенные — нет данных
       if (a < 1 / 12 - EPS) {
-        return { result7: 'В/в: до 1 мес — противопоказан (инструкция «Парацетамол Каби»); у недоношенных данных нет. Расчёт не выполняется.' };
+        return {
+          result7:
+            'В/в: до 1 мес — противопоказан (инструкция «Парацетамол Каби»); у недоношенных данных нет. Расчёт не выполняется.',
+        };
       }
       const d = paracetamolIv(w);
       const ml = d.mg / PARA_IV_MG_ML;
@@ -157,9 +174,11 @@ const paracetamol = {
       };
       // КР ОРВИ: жаропонижающие противопоказаны до 3 мес; в/в по инструкции — с 1 мес
       if (a < 0.25 - EPS) {
-        out.result7 = 'До 3 мес: по КР «ОРВИ» жаропонижающие противопоказаны; по инструкции в/в допустим с 1 мес — только по решению врача.';
+        out.result7 =
+          'До 3 мес: по КР «ОРВИ» жаропонижающие противопоказаны; по инструкции в/в допустим с 1 мес — только по решению врача.';
       } else if (w > 50) {
-        out.result7 = 'Факторы риска гепатотоксичности (болезни печени, алкоголизм, истощение, обезвоживание): не более 3 г/сут.';
+        out.result7 =
+          'Факторы риска гепатотоксичности (болезни печени, алкоголизм, истощение, обезвоживание): не более 3 г/сут.';
       }
       return out;
     }
@@ -168,7 +187,8 @@ const paracetamol = {
     // только по назначению врача: при расхождении — консервативный вариант КР)
     if (a < 0.25 - EPS) {
       return {
-        result7: 'До 3 мес — противопоказан (КР «ОРВИ»); по инструкциям с 1–2 мес — только по назначению врача. Лихорадка у ребёнка до 3 мес — показание к госпитализации. Расчёт не выполняется.',
+        result7:
+          'До 3 мес — противопоказан (КР «ОРВИ»); по инструкциям с 1–2 мес — только по назначению врача. Лихорадка у ребёнка до 3 мес — показание к госпитализации. Расчёт не выполняется.',
       };
     }
     const daily = paraDailyMg(w, a);
@@ -176,7 +196,10 @@ const paracetamol = {
     if (r === 'pr') {
       const s = paracetamolSuppositories(w);
       if (!s) {
-        return { result7: 'Ректально: даже свеча 50 мг больше 15 мг/кг для этой массы — используйте суспензию внутрь. Расчёт не выполняется.' };
+        return {
+          result7:
+            'Ректально: даже свеча 50 мг больше 15 мг/кг для этой массы — используйте суспензию внутрь. Расчёт не выполняется.',
+        };
       }
       const perKg = s.mg / w;
       return {
@@ -190,13 +213,18 @@ const paracetamol = {
     // Внутрь: таблетки 500 мг — с 12 лет при массе ≥ 40 кг (инструкция таблеток 500 мг);
     // взрослым ≥ 50 кг — 1 г разово (максимум разовой дозы 1 г, суточной 4 г)
     if (w >= 40 && atLeast(a, 12)) {
-      const mg = isAdult(a) && w >= 50 ? 1000 : Math.max(500, Math.floor(Math.min(15 * w, 1000) / 250) * 250);
+      const mg =
+        isAdult(a) && w >= 50
+          ? 1000
+          : Math.max(500, Math.floor(Math.min(15 * w, 1000) / 250) * 250);
       return {
         result1: mg,
         result3: mg / PARA_TAB_MG,
         result5: daily,
         result6: `Внутрь, запить водой: ${num(mg / PARA_TAB_MG, 1)} таб. по 500 мг. Разово 500–1000 мг. ${interval}`,
-        result7: isAdult(a) ? 'Факторы риска гепатотоксичности (болезни печени, алкоголизм, истощение): не более 2–3 г/сут.' : undefined,
+        result7: isAdult(a)
+          ? 'Факторы риска гепатотоксичности (болезни печени, алкоголизм, истощение): не более 2–3 г/сут.'
+          : undefined,
       };
     }
     // Суспензия: 15 мг/кг (верхняя граница 10–15 мг/кг инструкции; 4 дозы = 60 мг/кг/сут по КР),
@@ -226,7 +254,11 @@ const paracetamol = {
     const w = weightOf(weight);
     if (route === 'iv' && w > 0) {
       const d = paracetamolIv(w);
-      return { result1: { max: d.singleMax }, result4: { max: d.singleMax / PARA_IV_MG_ML }, result5: { max: 4000 } };
+      return {
+        result1: { max: d.singleMax },
+        result4: { max: d.singleMax / PARA_IV_MG_ML },
+        result5: { max: 4000 },
+      };
     }
     return {
       result1: { max: 1000 },
@@ -285,10 +317,15 @@ const ibuprofen = {
       // 3–9 мес (6–8 кг) — до 3 раз (≤ 180 мг/сут), 9 мес – 2 года (8–12 кг) — до 4 раз (≤ 240 мг/сут);
       // интервал 6–8 ч, не более 30 мг/кг/сут
       if (a < 0.25 - EPS || w < 6) {
-        return { result6: 'Свечи 60 мг: противопоказаны до 3 мес и при массе < 6 кг (инструкция). Расчёт не выполняется.' };
+        return {
+          result6:
+            'Свечи 60 мг: противопоказаны до 3 мес и при массе < 6 кг (инструкция). Расчёт не выполняется.',
+        };
       }
       if (atLeast(a, 2)) {
-        return { result6: 'Свечи 60 мг — только детям до 2 лет (инструкция). Старше — выберите «внутрь».' };
+        return {
+          result6: 'Свечи 60 мг — только детям до 2 лет (инструкция). Старше — выберите «внутрь».',
+        };
       }
       const daily = Math.min(a < 0.75 - EPS ? 180 : 240, 30 * w);
       const out = {
@@ -297,13 +334,18 @@ const ibuprofen = {
         result5: `1 свеча 60 мг ректально (${num(IBU_SUPP_MG / w, 1)} мг/кг). Повтор через 6–8 ч, не более ${a < 0.75 - EPS ? 3 : 4} раз за 24 ч.`,
         result6: 'Ректально — при рвоте или непереносимости приёма внутрь (КР «ОРВИ»).',
       };
-      if (w > 12) out.result6 += ' Масса > 12 кг: по инструкции свечи — для 6–12 кг, доза мала; точнее — суспензия внутрь.';
+      if (w > 12)
+        out.result6 +=
+          ' Масса > 12 кг: по инструкции свечи — для 6–12 кг, доза мала; точнее — суспензия внутрь.';
       return out;
     }
 
     // Внутрь: противопоказан до 3 мес и при массе < 5 кг (КР «ОРВИ», инструкция «Нурофен для детей»)
     if (a < 0.25 - EPS || w < 5) {
-      return { result6: 'Внутрь: противопоказан до 3 мес и при массе < 5 кг (КР «ОРВИ», инструкция). Расчёт не выполняется.' };
+      return {
+        result6:
+          'Внутрь: противопоказан до 3 мес и при массе < 5 кг (КР «ОРВИ», инструкция). Расчёт не выполняется.',
+      };
     }
     const d = ibuprofenOral(w, a);
     const out = { result1: d.mg, result4: d.daily };
@@ -332,7 +374,12 @@ const ibuprofen = {
   limits: ({ route } = {}) =>
     route === 'pr'
       ? { result1: { max: IBU_SUPP_MG }, result4: { max: 240 } }
-      : { result1: { max: 400 }, result2: { max: 400 / IBU_SUSP_MG_ML }, result3: { max: 2 }, result4: { max: 1200 } },
+      : {
+          result1: { max: 400 },
+          result2: { max: 400 / IBU_SUSP_MG_ML },
+          result3: { max: 2 },
+          result4: { max: 1200 },
+        },
   warnings: [
     'Детям не более 30 мг/кг/сут; противопоказан до 3 мес и при массе < 5 кг (КР «ОРВИ», инструкция).',
     'Противопоказан: обезвоживание (рвота, диарея — риск ОПП), ЖКК и язва, «аспириновая» астма, тяжёлая почечная или печёночная недостаточность, нарушения свёртывания, беременность > 20 нед.',
@@ -357,7 +404,7 @@ const PRED = indicationRoute(
     { value: 'croup-im', indication: 'croup', route: 'im', label: 'Круп' },
     { value: 'croup-iv', indication: 'croup', route: 'iv', label: 'Круп' },
   ],
-  'anaphylaxis-iv'
+  'anaphylaxis-iv',
 );
 
 // КР «Бронхиальная астма» (ID 359): предел дозы преднизолона детям по возрасту
@@ -375,23 +422,39 @@ export const prednisoloneDose = (w, a, indication, route) => {
     // КР «Анафилактический шок» (263_2), рек. 24: взрослым преднизолон 60–120 мг; детям
     // 1.3–2.6 мг/кг, максимум 50 мг
     if (adult) return { mg: 60, up: 120, cap: 120, range: 'взрослым 60–120 мг' };
-    return { mg: Math.min(1.3 * w, 50), up: Math.min(2.6 * w, 50), cap: 50, range: '1.3–2.6 мг/кг, не более 50 мг' };
+    return {
+      mg: Math.min(1.3 * w, 50),
+      up: Math.min(2.6 * w, 50),
+      cap: 50,
+      range: '1.3–2.6 мг/кг, не более 50 мг',
+    };
   }
   if (indication === 'asthma') {
     // КР «Бронхиальная астма» (359_3): взрослым 40–50 мг/сут; детям 1–2 мг/кг/сут с пределом по
     // возрасту; на догоспитальном этапе детям в/м 1 мг/кг, внутрь 1–2 мг/кг не более 40 мг
     if (adult) return { mg: 40, up: 50, cap: 50, range: 'взрослым 40–50 мг/сут' };
     const cap = route === 'po' ? Math.min(asthmaPredCapMg(a), 40) : asthmaPredCapMg(a);
-    return { mg: Math.min(w, cap), up: Math.min(2 * w, cap), cap, range: `1–2 мг/кг, не более ${cap} мг в этом возрасте` };
+    return {
+      mg: Math.min(w, cap),
+      up: Math.min(2 * w, cap),
+      cap,
+      range: `1–2 мг/кг, не более ${cap} мг в этом возрасте`,
+    };
   }
   // Круп — КР «Круп и эпиглоттит» (2024), 3.1.1: при отсутствии дексаметазона преднизолон 1–2 мг/кг
   // (≈ дексаметазон 0.15–0.6 мг/кг). Предел в КР не указан: принят 50 мг — как детский максимум
   // преднизолона в КР «Анафилактический шок» (консервативно).
-  return { mg: Math.min(w, 50), up: Math.min(2 * w, 50), cap: 50, range: '1–2 мг/кг, не более 50 мг' };
+  return {
+    mg: Math.min(w, 50),
+    up: Math.min(2 * w, 50),
+    cap: 50,
+    range: '1–2 мг/кг, не более 50 мг',
+  };
 };
 
 // Внутрь — таблетки 5 мг: доза округляется до ½ таблетки (2.5 мг), но не выше предела
-const roundHalfTab = (mg, tabMg, cap) => Math.min(Math.max(tabMg / 2, Math.round(mg / (tabMg / 2)) * (tabMg / 2)), cap);
+const roundHalfTab = (mg, tabMg, cap) =>
+  Math.min(Math.max(tabMg / 2, Math.round(mg / (tabMg / 2)) * (tabMg / 2)), cap);
 
 const prednisolone = {
   name: 'Преднизолон',
@@ -417,7 +480,10 @@ const prednisolone = {
         result1: mg,
         result3: mg / PRED_TAB_MG,
         result4: `Внутрь утром после еды: ${num(mg / PRED_TAB_MG, 1)} таб. по 5 мг. ${extra}`,
-        result5: ind === 'croup' ? 'Препарат выбора при крупе — дексаметазон: после преднизолона чаще возврат симптомов (КР «Круп»).' : undefined,
+        result5:
+          ind === 'croup'
+            ? 'Препарат выбора при крупе — дексаметазон: после преднизолона чаще возврат симптомов (КР «Круп»).'
+            : undefined,
       };
     }
 
@@ -427,11 +493,14 @@ const prednisolone = {
     let note = `${how}: ${mlText(ml)} мл раствора 30 мг/мл. Верхняя граница — ${num(d.up, 1)} мг (${mlText(upMl)} мл): ${d.range}.`;
     let warn;
     if (ind === 'anaphylaxis') {
-      note += ' Только после эпинефрина и стабилизации АД — ГКС не заменяют эпинефрин (КР «Анафилактический шок»).';
-      if (adult && route === 'im') warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
+      note +=
+        ' Только после эпинефрина и стабилизации АД — ГКС не заменяют эпинефрин (КР «Анафилактический шок»).';
+      if (adult && route === 'im')
+        warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
     } else if (ind === 'croup') {
       note += ' Обычно достаточно однократного введения.';
-      warn = 'Препарат выбора при крупе — дексаметазон: после преднизолона чаще возврат симптомов (КР «Круп»).';
+      warn =
+        'Препарат выбора при крупе — дексаметазон: после преднизолона чаще возврат симптомов (КР «Круп»).';
     } else if (!adult) {
       note += ' Догоспитально детям — 1 мг/кг в/м (КР «БА»).';
     }
@@ -448,7 +517,11 @@ const prednisolone = {
   limits: ({ weight, ageYears, indication } = {}) => {
     const { indication: ind, route } = PRED.parse(indication);
     const d = prednisoloneDose(weightOf(weight) || 1, ageOf(ageYears) || 0, ind, route);
-    return { result1: { max: d.cap }, result2: { max: d.cap / PRED_MG_ML }, result3: { max: d.cap / PRED_TAB_MG } };
+    return {
+      result1: { max: d.cap },
+      result2: { max: d.cap / PRED_MG_ML },
+      result3: { max: d.cap / PRED_TAB_MG },
+    };
   },
   warnings: [
     'Расчёт — по нижней границе диапазона КР; верхняя граница — в примечании.',
@@ -472,7 +545,7 @@ const DEX = indicationRoute(
     { value: 'croup-im', indication: 'croup', route: 'im', label: 'Круп' },
     { value: 'croup-iv', indication: 'croup', route: 'iv', label: 'Круп' },
   ],
-  'anaphylaxis-iv'
+  'anaphylaxis-iv',
 );
 
 export const dexamethasoneDose = (w, a, indication) => {
@@ -480,12 +553,22 @@ export const dexamethasoneDose = (w, a, indication) => {
     // КР «Анафилактический шок» (263_2), рек. 24: взрослым дексаметазон 8–16 мг; детям в/в или в/м
     // 0.1–0.4 мг/кг, максимум 10 мг
     if (isAdult(a)) return { mg: 8, up: 16, cap: 16, range: 'взрослым 8–16 мг' };
-    return { mg: Math.min(0.1 * w, DEX_CHILD_CAP), up: Math.min(0.4 * w, DEX_CHILD_CAP), cap: DEX_CHILD_CAP, range: '0.1–0.4 мг/кг, не более 10 мг' };
+    return {
+      mg: Math.min(0.1 * w, DEX_CHILD_CAP),
+      up: Math.min(0.4 * w, DEX_CHILD_CAP),
+      cap: DEX_CHILD_CAP,
+      range: '0.1–0.4 мг/кг, не более 10 мг',
+    };
   }
   // Круп — КР «Круп и эпиглоттит» (2024), 3.1.1: 0.15–0.6 мг/кг в/м (в/в), внутрь — 0.15 мг/кг.
   // Предел в КР не указан: 10 мг — консервативно (детский максимум дексаметазона в КР
   // «Анафилактический шок»; международные руководства — 10–16 мг).
-  return { mg: Math.min(0.15 * w, DEX_CHILD_CAP), up: Math.min(0.6 * w, DEX_CHILD_CAP), cap: DEX_CHILD_CAP, range: '0.15–0.6 мг/кг, не более 10 мг' };
+  return {
+    mg: Math.min(0.15 * w, DEX_CHILD_CAP),
+    up: Math.min(0.6 * w, DEX_CHILD_CAP),
+    cap: DEX_CHILD_CAP,
+    range: '0.15–0.6 мг/кг, не более 10 мг',
+  };
 };
 
 const dexamethasone = {
@@ -524,7 +607,8 @@ const dexamethasone = {
       note += ` Тяжёлый круп (стеноз гортани II–III ст.): до ${num(d.up, 2)} мг (${mlText(upMl)} мл) — ${d.range}. Обычно достаточно однократного введения (КР «Круп»).`;
     } else {
       note += ` Верхняя граница — ${num(d.up, 2)} мг (${mlText(upMl)} мл): ${d.range}. Только после эпинефрина и стабилизации АД (КР «Анафилактический шок»).`;
-      if (isAdult(a) && route === 'im') warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
+      if (isAdult(a) && route === 'im')
+        warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
     }
     return { result1: d.mg, result2: ml, result4: note, result5: warn };
   },
@@ -539,7 +623,11 @@ const dexamethasone = {
   limits: ({ weight, ageYears, indication } = {}) => {
     const { indication: ind } = DEX.parse(indication);
     const d = dexamethasoneDose(weightOf(weight) || 1, ageOf(ageYears) || 0, ind);
-    return { result1: { max: d.cap }, result2: { max: d.cap / DEX_MG_ML }, result3: { max: d.cap / DEX_TAB_MG } };
+    return {
+      result1: { max: d.cap },
+      result2: { max: d.cap / DEX_MG_ML },
+      result3: { max: d.cap / DEX_TAB_MG },
+    };
   },
   warnings: [
     'Расчёт — по нижней границе диапазона КР; верхняя граница — в примечании.',
@@ -560,7 +648,7 @@ const HC = indicationRoute(
     { value: 'anaphylaxis-iv', indication: 'anaphylaxis', route: 'iv', label: 'Анафилаксия' },
     { value: 'anaphylaxis-im', indication: 'anaphylaxis', route: 'im', label: 'Анафилаксия' },
   ],
-  'crisis-iv'
+  'crisis-iv',
 );
 
 // Площадь поверхности тела по массе — формула Costeff (Arch Dis Child 1966): (4 × кг + 7) / (кг + 90);
@@ -572,7 +660,12 @@ export const hydrocortisoneDose = (w, a, indication) => {
     // КР «Анафилактический шок» (263_2), рек. 24: взрослым #гидрокортизон 200 мг в/в;
     // детям в/в или в/м 2–4 мг/кг, максимум 100 мг
     if (isAdult(a)) return { mg: 200, up: 200, cap: 200, range: 'взрослым 200 мг' };
-    return { mg: Math.min(2 * w, 100), up: Math.min(4 * w, 100), cap: 100, range: '2–4 мг/кг, не более 100 мг' };
+    return {
+      mg: Math.min(2 * w, 100),
+      up: Math.min(4 * w, 100),
+      cap: 100,
+      range: '2–4 мг/кг, не более 100 мг',
+    };
   }
   // Криз — КР «Первичная надпочечниковая недостаточность» (524_3): взрослым 100 мг болюсно;
   // детям 100 мг/м² болюсно (не выше взрослой дозы 100 мг)
@@ -596,7 +689,10 @@ const hydrocortisone = {
     const adult = isAdult(a);
     const ml = d.mg / HC_MG_ML;
     const how = route === 'iv' ? 'В/в медленно (не менее 30 с)' : 'В/м глубоко';
-    const susp = route === 'im' ? ` Суспензия ацетата 25 мг/мл: ${mlText(d.mg / HC_SUSP_MG_ML)} мл (только в/м, действует медленнее).` : '';
+    const susp =
+      route === 'im'
+        ? ` Суспензия ацетата 25 мг/мл: ${mlText(d.mg / HC_SUSP_MG_ML)} мл (только в/м, действует медленнее).`
+        : '';
     let note;
     let warn;
     if (ind === 'crisis') {
@@ -607,16 +703,24 @@ const hydrocortisone = {
         // КР 524_3 (дети): далее 100–200 мг/м²/сут; 0.9% NaCl + 5–10% глюкоза 450–500 мл/м² за 1-й час
         const bsa = d.bsa;
         note = `${how}: ${mlText(ml)} мл раствора 50 мг/мл (100 мг/м², ППТ ≈ ${num(bsa, 2)} м² по массе). Далее 100–200 мг/м²/сут = ${num(100 * bsa, 0)}–${num(200 * bsa, 0)} мг/сут в/в; 0.9% NaCl + 5–10% глюкоза ${num(450 * bsa, 0)}–${num(500 * bsa, 0)} мл за первый час.${susp}`;
-        if (route === 'im') warn = 'До госпитализации КР допускают 25–50 мг в/м (самостоятельное введение пациентом).';
+        if (route === 'im')
+          warn =
+            'До госпитализации КР допускают 25–50 мг в/м (самостоятельное введение пациентом).';
       }
     } else {
       note = `${how}: ${mlText(ml)} мл раствора 50 мг/мл.${d.up > d.mg ? ` Верхняя граница — ${num(d.up, 1)} мг (${mlText(d.up / HC_MG_ML)} мл): ${d.range}.` : ''} Только после эпинефрина и стабилизации АД (КР «Анафилактический шок»).${susp}`;
-      if (adult && route === 'im') warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
+      if (adult && route === 'im')
+        warn = 'Взрослым КР предусматривают в/в введение; в/м — если нет венозного доступа.';
     }
     return { result1: d.mg, result2: ml, result3: note, result4: warn };
   },
   units: { result1: 'мг', result2: 'мл' },
-  labels: { result1: 'Разовая доза', result2: 'Объём раствора 50 мг/мл', result3: 'Введение', result4: 'Внимание' },
+  labels: {
+    result1: 'Разовая доза',
+    result2: 'Объём раствора 50 мг/мл',
+    result3: 'Введение',
+    result4: 'Внимание',
+  },
   limits: ({ weight, ageYears, indication } = {}) => {
     const { indication: ind } = HC.parse(indication);
     const d = hydrocortisoneDose(weightOf(weight) || 1, ageOf(ageYears) || 0, ind);

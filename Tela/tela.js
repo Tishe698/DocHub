@@ -113,8 +113,17 @@ export default function GenevaScoreScreen() {
         </Note>
       ) : null}
 
-      <Section title="Частота сердечных сокращений" description={complete ? null : 'Обязательный пункт — выберите'}>
-        <ChoiceChips label="ЧСС" options={HR_CHOICES} value={hr} onChange={setHr} testID="geneva-hr" />
+      <Section
+        title="Частота сердечных сокращений"
+        description={complete ? null : 'Обязательный пункт — выберите'}
+      >
+        <ChoiceChips
+          label="ЧСС"
+          options={HR_CHOICES}
+          value={hr}
+          onChange={setHr}
+          testID="geneva-hr"
+        />
       </Section>
 
       <Section title="Клинические признаки">
@@ -145,7 +154,9 @@ export default function GenevaScoreScreen() {
         value={complete ? String(sum) : null}
         unit={complete ? ptsWord(sum) : null}
         level={risk ? risk.badge : null}
-        levelLabel={risk ? `Вероятность ТЭЛА: ${risk.level.toLowerCase()} (${risk.prevalence})` : null}
+        levelLabel={
+          risk ? `Вероятность ТЭЛА: ${risk.level.toLowerCase()} (${risk.prevalence})` : null
+        }
         announceText={genevaSummary(result)}
         testID="geneva-result"
       >
@@ -168,7 +179,13 @@ export default function GenevaScoreScreen() {
         )}
       </ResultCard>
 
-      <Button title="Сбросить" variant="secondary" icon="refresh" onPress={onReset} testID="geneva-reset" />
+      <Button
+        title="Сбросить"
+        variant="secondary"
+        icon="refresh"
+        onPress={onReset}
+        testID="geneva-reset"
+      />
     </Screen>
   );
 }

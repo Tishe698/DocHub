@@ -56,7 +56,7 @@ const Highlighted = ({ text, ranges, style, hlStyle }) => (
         </Text>
       ) : (
         p.text
-      )
+      ),
     )}
   </Text>
 );
@@ -67,7 +67,11 @@ const IcdRow = memo(function IcdRow({ item, q, styles }) {
   const nameRanges = q ? highlightRanges(item.name, q, false) : [];
   const badges = itemBadges(item);
   return (
-    <View style={[styles.row, item.ext && styles.rowExt]} accessible accessibilityLabel={itemA11yLabel(item)}>
+    <View
+      style={[styles.row, item.ext && styles.rowExt]}
+      accessible
+      accessibilityLabel={itemA11yLabel(item)}
+    >
       <View style={styles.codeLine}>
         <Highlighted text={item.code} ranges={codeRanges} style={styles.code} hlStyle={styles.hl} />
         {badges.map((b) => (
@@ -165,8 +169,10 @@ export default function ICDSearchScreen() {
 
   const { results, fallback } = useMemo(
     () =>
-      dataset && isSearchMode ? searchWithFallback(dataset.index, q) : { results: [], fallback: '' },
-    [dataset, isSearchMode, q]
+      dataset && isSearchMode
+        ? searchWithFallback(dataset.index, q)
+        : { results: [], fallback: '' },
+    [dataset, isSearchMode, q],
   );
 
   const data = !dataset ? [] : isSearchMode ? results : dataset.browse;
@@ -217,7 +223,7 @@ export default function ICDSearchScreen() {
   const rowQuery = isSearchMode ? q : null;
   const renderItem = useCallback(
     ({ item }) => <IcdRow item={item} q={rowQuery} styles={styles} />,
-    [rowQuery, styles]
+    [rowQuery, styles],
   );
 
   const meta = dataset ? dataset.meta : null;
@@ -232,7 +238,7 @@ export default function ICDSearchScreen() {
         </Text>
       </View>
     ),
-    [meta, styles]
+    [meta, styles],
   );
 
   const listEmpty = (
@@ -256,10 +262,19 @@ export default function ICDSearchScreen() {
             <Note level="danger" title="Ошибка загрузки">
               {loadError}
             </Note>
-            <Button title="Повторить" onPress={retry} accessibilityLabel="Повторить загрузку справочника" />
+            <Button
+              title="Повторить"
+              onPress={retry}
+              accessibilityLabel="Повторить загрузку справочника"
+            />
           </View>
         ) : (
-          <View style={styles.loading} accessible accessibilityLiveRegion="polite" accessibilityLabel="Загрузка справочника МКБ-10">
+          <View
+            style={styles.loading}
+            accessible
+            accessibilityLiveRegion="polite"
+            accessibilityLabel="Загрузка справочника МКБ-10"
+          >
             <ActivityIndicator size="large" color={colors.primary} />
             <Text variant="body" color="textSecondary" style={styles.loadingText}>
               Загрузка справочника МКБ-10…
@@ -410,7 +425,12 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({
     borderColor: colors.border,
   },
   rowExt: { borderLeftWidth: 4, borderLeftColor: colors.danger },
-  codeLine: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: spacing.xs },
+  codeLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
   code: {
     ...typography.bodyStrong,
     color: colors.section.icd,
@@ -431,7 +451,12 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({
     textDecorationLine: 'underline',
   },
 
-  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl },
+  placeholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl,
+  },
   placeholderHint: { marginTop: spacing.sm },
   center: { textAlign: 'center' },
 

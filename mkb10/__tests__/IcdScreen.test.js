@@ -11,11 +11,16 @@ jest.mock('../mkb_data.json', () => ({
     { code: 'I21', name: 'Острый инфаркт миокарда' },
     { code: 'I21.0', name: 'Острый трансмуральный инфаркт передней стенки миокарда' },
     { code: 'J18.9', name: 'Пневмония неуточненная' },
-    { code: 'I20.00', name: 'Нестабильная стенокардия с гипертензией', note: 'Используйте I20.0', ext: 1 },
+    {
+      code: 'I20.00',
+      name: 'Нестабильная стенокардия с гипертензией',
+      note: 'Используйте I20.0',
+      ext: 1,
+    },
   ],
 }));
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -23,7 +28,8 @@ jest.mock('react-native-safe-area-context', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
-const byTestID = (root, id) => root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
+const byTestID = (root, id) =>
+  root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
 const textOf = (node) =>
   node
     .findAll((n) => typeof n.children !== 'undefined')

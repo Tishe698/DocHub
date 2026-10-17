@@ -4,7 +4,7 @@ import renderer, { act } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('@react-native-community/datetimepicker', () => {
@@ -36,15 +36,20 @@ jest.mock('../../components/a11y', () => ({
 const { announce } = require('../../components/a11y');
 const Date_pregnancy = require('../pregnancy').default;
 
-const metrics = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
+const metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 0, left: 0, right: 0, bottom: 0 },
+};
 
-const isPressable = (n) => typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
+const isPressable = (n) =>
+  typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
 const texts = (tree) =>
   tree.root
     .findAll((n) => n.type === 'Text')
     .map((n) => [].concat(n.props.children).join(''))
     .join('|');
-const input = (tree) => tree.root.find((n) => n.type === 'TextInput' && n.props.testID === 'lmp-input');
+const input = (tree) =>
+  tree.root.find((n) => n.type === 'TextInput' && n.props.testID === 'lmp-input');
 const pressByLabel = (tree, re) => {
   const p = tree.root.find((n) => isPressable(n) && re.test(n.props.accessibilityLabel || ''));
   act(() => p.props.onPress());
@@ -56,7 +61,7 @@ function mount() {
     tree = renderer.create(
       <SafeAreaProvider initialMetrics={metrics}>
         <Date_pregnancy />
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
   });
   return tree;
@@ -84,9 +89,14 @@ test('ввод даты цифрами → срок, ПДР и категори�
   expect(all).toMatch(/Предполагаемая дата родов: 5 февраля 2027 г\./);
   expect(all).toMatch(/преждевременные/);
   act(() => jest.advanceTimersByTime(1000));
-  expect(announce).toHaveBeenCalledWith(expect.stringMatching(/^Срок беременности 24 недели 1 день/));
+  expect(announce).toHaveBeenCalledWith(
+    expect.stringMatching(/^Срок беременности 24 недели 1 день/),
+  );
   // при переходе свайпом значение читается словами, а не сокращениями «нед/дн»
-  const valueRow = tree.root.find((n) => n.type === 'View' && n.props.accessible && /^Срок 24/.test(n.props.accessibilityLabel || ''));
+  const valueRow = tree.root.find(
+    (n) =>
+      n.type === 'View' && n.props.accessible && /^Срок 24/.test(n.props.accessibilityLabel || ''),
+  );
   expect(valueRow.props.accessibilityLabel).toBe('Срок 24 недели 1 день');
 });
 
@@ -113,11 +123,15 @@ test('повторный расчёт очищает дату', () => {
 test('календарь: открыть и выбрать дату (Android — событие set)', () => {
   const tree = mount();
   pressByLabel(tree, /Выбрать в календаре/);
-  const picker = tree.root.find((n) => n.props.testID === 'date-picker' && typeof n.type !== 'string');
+  const picker = tree.root.find(
+    (n) => n.props.testID === 'date-picker' && typeof n.type !== 'string',
+  );
   expect(picker.props.maximumDate.getDate()).toBe(17);
   act(() => picker.props.onChange({ type: 'set' }, new Date(2026, 0, 10, 15, 30)));
   // iOS-ветка запоминает значение до «Готово»; на платформе теста (iOS по умолчанию) — применяем «Готово»
-  const done = tree.root.findAll((n) => isPressable(n) && n.props.accessibilityLabel === 'Применить выбранную дату');
+  const done = tree.root.findAll(
+    (n) => isPressable(n) && n.props.accessibilityLabel === 'Применить выбранную дату',
+  );
   if (done.length) act(() => done[0].props.onPress());
   expect(texts(tree)).toMatch(/ДПМ \(первый день последней менструации\): 10 января 2026 г\./);
   expect(texts(tree)).toMatch(/40 нед 0 дн/);
@@ -127,7 +141,9 @@ test('видео: g.mp4 через expo-video, кнопки управления
   const tree = mount();
   expect(mockPlayer.source).toBeTruthy();
   expect(mockPlayer.loop).toBe(true);
-  expect(tree.root.findAll((n) => n.props.testID === 'video' && typeof n.type === 'string')).toHaveLength(1);
+  expect(
+    tree.root.findAll((n) => n.props.testID === 'video' && typeof n.type === 'string'),
+  ).toHaveLength(1);
   pressByLabel(tree, /Воспроизвести видео/);
   expect(mockPlayer.play).toHaveBeenCalled();
   pressByLabel(tree, /Выключить звук видео/);

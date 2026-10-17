@@ -45,7 +45,11 @@ describe('должная масса тела (ARDSNet)', () => {
   });
 
   test('пол не указан — женская формула (консервативно) с пометкой', () => {
-    expect(predictedBodyWeight(null, 180)).toEqual({ kg: predictedBodyWeight('female', 180).kg, sex: 'female', sexAssumed: true });
+    expect(predictedBodyWeight(null, 180)).toEqual({
+      kg: predictedBodyWeight('female', 180).kg,
+      sex: 'female',
+      sexAssumed: true,
+    });
   });
 
   test('рост вне 130–230 см или пустой — null; строка разбирается', () => {
@@ -220,16 +224,23 @@ describe('computeIvl', () => {
   });
 
   test('ребёнок без возраста — просьба ввести возраст; старше 12 лет без массы — не оценивается', () => {
-    expect(computeIvl({ ...adult, group: 'child', ageMonths: null, weightKg: '' }).warnings.join(' ')).toMatch(
-      /Введите возраст/
-    );
+    expect(
+      computeIvl({ ...adult, group: 'child', ageMonths: null, weightKg: '' }).warnings.join(' '),
+    ).toMatch(/Введите возраст/);
     const r = computeIvl({ ...adult, group: 'child', ageMonths: 168, weightKg: '', heightCm: '' });
     expect(r.vt).toBeNull();
     expect(r.warnings.join(' ')).toMatch(/Старше 12 лет/);
   });
 
   test('подросток 16 лет, 110 кг, 170 см, муж. — ДО на должную массу, ≤ 8 мл/кг должной', () => {
-    const teen = { ...adult, group: 'child', ageMonths: 192, sex: 'male', heightCm: 170, weightKg: 110 };
+    const teen = {
+      ...adult,
+      group: 'child',
+      ageMonths: 192,
+      sex: 'male',
+      heightCm: 170,
+      weightKg: 110,
+    };
     const r = computeIvl(teen);
     expect(r.massBasis).toBe('ibw');
     expect(r.mass).toBe(66);
@@ -243,7 +254,14 @@ describe('computeIvl', () => {
   });
 
   test('подросток без массы, но с ростом — ДО на должную массу', () => {
-    const r = computeIvl({ ...adult, group: 'child', ageMonths: 192, sex: 'male', heightCm: 170, weightKg: '' });
+    const r = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 192,
+      sex: 'male',
+      heightCm: 170,
+      weightKg: '',
+    });
     expect(r.massBasis).toBe('ibw');
     expect(r.vt).toBe(396);
     expect(r.warnings.join(' ')).not.toMatch(/Старше 12 лет/);
@@ -257,11 +275,25 @@ describe('computeIvl', () => {
   });
 
   test('ребёнок: фактическая масса меньше должной — берётся фактическая; без пола — женская формула', () => {
-    const lean = computeIvl({ ...adult, group: 'child', ageMonths: 144, sex: 'male', heightCm: 150, weightKg: 38 });
+    const lean = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 144,
+      sex: 'male',
+      heightCm: 150,
+      weightKg: 38,
+    });
     expect(lean.massBasis).toBe('actual');
     expect(lean.mass).toBe(38);
     expect(lean.tones.mass).toBe('default');
-    const noSex = computeIvl({ ...adult, group: 'child', ageMonths: 192, sex: null, heightCm: 170, weightKg: 110 });
+    const noSex = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 192,
+      sex: null,
+      heightCm: 170,
+      weightKg: 110,
+    });
     expect(noSex.massBasis).toBe('ibw');
     expect(noSex.mass).toBe(61.5);
     expect(noSex.warnings.join(' ')).toMatch(/женской формуле/);
@@ -274,11 +306,20 @@ describe('computeIvl', () => {
   });
 
   test('ребёнок 18 лет и старше — подсказка выбрать «Взрослый»', () => {
-    expect(computeIvl({ ...adult, group: 'child', ageMonths: 216 }).warnings.join(' ')).toMatch(/Взрослый/);
+    expect(computeIvl({ ...adult, group: 'child', ageMonths: 216 }).warnings.join(' ')).toMatch(
+      /Взрослый/,
+    );
   });
 
   test('новорождённый — предупреждение про алгоритм реанимации новорождённых', () => {
-    const r = computeIvl({ ...adult, group: 'child', ageMonths: 0, weightKg: 3.5, rr: '25', pmax: '20' });
+    const r = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 0,
+      weightKg: 3.5,
+      rr: '25',
+      pmax: '20',
+    });
     expect(r.warnings.join(' ')).toMatch(/Новорождённый/);
   });
 
@@ -286,7 +327,15 @@ describe('computeIvl', () => {
     expect(computeIvl({ ...adult, vtPerKg: '10' }).tones.vt).toBe('bad');
     expect(computeIvl({ ...adult, vtPerKg: '3' }).tones.vt).toBe('bad');
     expect(computeIvl({ ...adult, vtPerKg: '8' }).tones.vt).toBe('default');
-    const small = computeIvl({ ...adult, group: 'child', ageMonths: 0, weightKg: 3, vtPerKg: '6', rr: '25', pmax: '20' });
+    const small = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 0,
+      weightKg: 3,
+      vtPerKg: '6',
+      rr: '25',
+      pmax: '20',
+    });
     expect(small.vt).toBe(18);
     expect(small.tones.vt).toBe('bad');
     expect(small.warnings.join(' ')).toMatch(/вне возможностей аппарата \(50–2000 мл\)/);
@@ -335,9 +384,25 @@ describe('computeIvl', () => {
   });
 
   test('А-ИВЛ 4/40 у ребёнка до 1 года — предупреждение; до 7 лет — детские пределы', () => {
-    const baby = computeIvl({ ...adult, device: 'ivl440', group: 'child', ageMonths: 6, weightKg: 7, rr: '33', pmax: '20' });
+    const baby = computeIvl({
+      ...adult,
+      device: 'ivl440',
+      group: 'child',
+      ageMonths: 6,
+      weightKg: 7,
+      rr: '33',
+      pmax: '20',
+    });
     expect(baby.warnings.join(' ')).toMatch(/от 1 года/);
-    const kid = computeIvl({ ...adult, device: 'ivl440', group: 'child', ageMonths: 60, weightKg: '', rr: '20', pmax: '40' });
+    const kid = computeIvl({
+      ...adult,
+      device: 'ivl440',
+      group: 'child',
+      ageMonths: 60,
+      weightKg: '',
+      rr: '20',
+      pmax: '40',
+    });
     expect(kid.caps.childLimits).toBe(true);
     expect(kid.tones.pmax).toBe('bad');
     expect(kid.warnings.join(' ')).toMatch(/дети до 7 лет/);
@@ -357,14 +422,28 @@ describe('возраст ребёнка и подпись основы масс�
   });
 
   test('ageInvalid: возраст из контекста не берётся — ни ЧДД-пределов по возрасту, ни APLS', () => {
-    const r = computeIvl({ ...adult, group: 'child', ageMonths: 74, ageInvalid: true, weightKg: '', heightCm: '' });
+    const r = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 74,
+      ageInvalid: true,
+      weightKg: '',
+      heightCm: '',
+    });
     expect(r.months).toBeUndefined();
     expect(r.mass).toBeNull();
     expect(r.warnings.join(' ')).toMatch(/лет 0–17, мес 0–11 — проверьте ввод/);
   });
 
   test('масса по Broselow — «оценка», а не «фактическая»', () => {
-    const r = computeIvl({ ...adult, group: 'child', ageMonths: 60, weightKg: 19, heightCm: '', weightSource: 'broselow' });
+    const r = computeIvl({
+      ...adult,
+      group: 'child',
+      ageMonths: 60,
+      weightKg: 19,
+      heightCm: '',
+      weightSource: 'broselow',
+    });
     expect(r.massBasis).toBe('actual');
     expect(r.massBasisText).toBe('оценка (лента Broselow)');
     expect(massBasisText('actual', 'entered')).toBe('фактическая');

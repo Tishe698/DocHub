@@ -4,7 +4,15 @@ import { View } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { announce } from '../components/a11y';
-import { Button, ChoiceChips, NumberField, ResultCard, Section, Card, Note } from '../components/ui';
+import {
+  Button,
+  ChoiceChips,
+  NumberField,
+  ResultCard,
+  Section,
+  Card,
+  Note,
+} from '../components/ui';
 import parseNum from '../utils/parseNum';
 import { useOxyStyles } from './style_oxy';
 import {
@@ -44,7 +52,7 @@ const Calc_max_time_o2 = () => {
       flow: parseNum(flow),
       reserveAtm: parseNum(reserve),
     }),
-    [volume, pressure, unit, flow, reserve]
+    [volume, pressure, unit, flow, reserve],
   );
 
   // Ошибки показываем только у заполненных полей; текст, который не разобрался как число, — тоже ошибка
@@ -60,7 +68,10 @@ const Calc_max_time_o2 = () => {
 
   const hasErrors = Object.keys(errors).length > 0;
   const ready =
-    input.volume !== undefined && input.pressure !== undefined && input.flow !== undefined && input.reserveAtm !== undefined;
+    input.volume !== undefined &&
+    input.pressure !== undefined &&
+    input.flow !== undefined &&
+    input.reserveAtm !== undefined;
   const result = useMemo(() => {
     if (!ready || hasErrors) return null;
     const r = computeO2Time(input);
@@ -82,8 +93,8 @@ const Calc_max_time_o2 = () => {
   return (
     <Screen scroll>
       <Text variant="body" color="textSecondary" style={styles.intro}>
-        Продолжительность кислородотерапии по вместимости баллона, показанию манометра и скорости потока. Время
-        считается до резерва давления, который не расходуют.
+        Продолжительность кислородотерапии по вместимости баллона, показанию манометра и скорости
+        потока. Время считается до резерва давления, который не расходуют.
       </Text>
 
       <Section title="Баллон и поток">
@@ -96,7 +107,12 @@ const Calc_max_time_o2 = () => {
           error={errors.volume}
           testID="o2-volume"
         />
-        <ChoiceChips label="Единица давления" options={UNIT_OPTIONS} value={unit} onChange={setUnit} />
+        <ChoiceChips
+          label="Единица давления"
+          options={UNIT_OPTIONS}
+          value={unit}
+          onChange={setUnit}
+        />
         <NumberField
           label="Показание манометра"
           unit={unitLabel}
@@ -164,7 +180,9 @@ const Calc_max_time_o2 = () => {
             unit={pluralMinutes(result.minutes)}
             announceText={`Время до резерва: ${formatMinutes(result.minutes)}. До нуля: ${formatMinutes(result.maxMinutes)}.`}
           >
-            {hoursText(result.minutes) ? <Text variant="bodyStrong">{`= ${hoursText(result.minutes)}`}</Text> : null}
+            {hoursText(result.minutes) ? (
+              <Text variant="bodyStrong">{`= ${hoursText(result.minutes)}`}</Text>
+            ) : null}
             <Text variant="caption" color="textSecondary" style={styles.paragraph}>
               Расчётное время непрерывной ингаляции; округлено вниз.
             </Text>
@@ -188,16 +206,21 @@ const Calc_max_time_o2 = () => {
       <Section title="Формулы">
         <Card>
           <Text variant="bodyStrong">Давление в атм (кгс/см², бар)</Text>
-          <Text style={styles.formulaLine}>Время (мин) = Объём (л) × (Давление − Резерв) ÷ Поток (л/мин)</Text>
+          <Text style={styles.formulaLine}>
+            Время (мин) = Объём (л) × (Давление − Резерв) ÷ Поток (л/мин)
+          </Text>
         </Card>
         <Card>
           <Text variant="bodyStrong">Давление в МПа</Text>
-          <Text style={styles.formulaLine}>Время (мин) = Объём × (Давление × 10 − Резерв в атм) ÷ Поток</Text>
+          <Text style={styles.formulaLine}>
+            Время (мин) = Объём × (Давление × 10 − Резерв в атм) ÷ Поток
+          </Text>
         </Card>
       </Section>
 
       <Note level="warning" title="Замена баллона">
-        Готовьте замену заранее, когда давление приближается к резерву. Рекомендуется иметь резервный баллон.
+        Готовьте замену заранее, когда давление приближается к резерву. Рекомендуется иметь
+        резервный баллон.
       </Note>
     </Screen>
   );

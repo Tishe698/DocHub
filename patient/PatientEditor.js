@@ -46,7 +46,11 @@ function EditorBody({ onClose }) {
 
   const mismatch = ageWeightMismatch(patient.ageMonths, patient.weightKg);
   const weightBadge =
-    patient.weightSource === 'broselow' ? 'оценка: Broselow' : patient.weightSource === 'age' ? 'оценка: по возрасту' : null;
+    patient.weightSource === 'broselow'
+      ? 'оценка: Broselow'
+      : patient.weightSource === 'age'
+        ? 'оценка: по возрасту'
+        : null;
 
   const applyAgeEstimate = () => {
     setPatient({ weightKg: derived.estimatedWeightKg, weightSource: 'age', broselowZone: null });
@@ -131,14 +135,25 @@ function EditorBody({ onClose }) {
           value={patient.sex}
           onChange={(sex) => setPatient({ sex })}
         />
-        <NumberField label="Рост (длина тела)" unit="см" value={height.text} onChangeText={height.onChangeText} />
+        <NumberField
+          label="Рост (длина тела)"
+          unit="см"
+          value={height.text}
+          onChangeText={height.onChangeText}
+        />
       </Section>
 
       <Section>
         <BroselowPicker />
       </Section>
 
-      <Button title="Новый пациент" variant="danger" icon="trash-outline" onPress={onReset} fullWidth />
+      <Button
+        title="Новый пациент"
+        variant="danger"
+        icon="trash-outline"
+        onPress={onReset}
+        fullWidth
+      />
       <Button title="Готово" onPress={onClose} fullWidth style={styles.gapTop} />
     </Screen>
   );

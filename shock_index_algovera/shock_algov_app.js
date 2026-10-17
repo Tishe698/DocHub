@@ -55,7 +55,7 @@ export default function CalcShockIndexScreen() {
         pregnant: pregnant && !isMale,
         trauma,
       }),
-    [hr, sbp, patient.ageMonths, ageInvalid, pregnant, isMale, trauma]
+    [hr, sbp, patient.ageMonths, ageInvalid, pregnant, isMale, trauma],
   );
   const res = evaluation.result;
 
@@ -169,7 +169,8 @@ export default function CalcShockIndexScreen() {
 }
 
 function ShockResult({ res, styles }) {
-  const bloodLossTitle = res.mode === 'pregnancy' ? 'Кровопотеря' : 'Кровопотеря (ориентировочно, взрослые)';
+  const bloodLossTitle =
+    res.mode === 'pregnancy' ? 'Кровопотеря' : 'Кровопотеря (ориентировочно, взрослые)';
   return (
     <>
       <ResultCard

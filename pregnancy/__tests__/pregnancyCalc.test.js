@@ -97,7 +97,14 @@ describe('calcPregnancy — срок и ПДР', () => {
   test('ДПМ + 280 дней', () => {
     const r = calcPregnancy(d(2026, 1, 1), d(2026, 1, 1));
     expect(ymd(r.due)).toBe('2026-10-8');
-    expect(r).toMatchObject({ daysSinceLMP: 0, weeks: 0, days: 0, currentWeek: 1, daysToDue: 280, category: 'early' });
+    expect(r).toMatchObject({
+      daysSinceLMP: 0,
+      weeks: 0,
+      days: 0,
+      currentWeek: 1,
+      daysToDue: 280,
+      category: 'early',
+    });
   });
 
   test('ДПМ 29.02 (високосный год)', () => {
@@ -131,7 +138,13 @@ describe('calcPregnancy — срок и ПДР', () => {
   ])('%i дн → %i нед %i дн, %s', (k, w, dd, cat) => {
     const lmp = d(2026, 1, 10);
     const r = calcPregnancy(lmp, addDays(lmp, k));
-    expect(r).toMatchObject({ daysSinceLMP: k, weeks: w, days: dd, category: cat, daysToDue: 280 - k });
+    expect(r).toMatchObject({
+      daysSinceLMP: k,
+      weeks: w,
+      days: dd,
+      category: cat,
+      daysToDue: 280 - k,
+    });
     expect(r.tooLong).toBe(false);
   });
 
@@ -203,9 +216,18 @@ describe('parseDDMMYYYY', () => {
     expect(parseDDMMYYYY(s, today)).toEqual({ error: ERRORS.format });
   });
 
-  test.each(['31.02.2026', '29.02.2025', '30.02.2024', '31.04.2026', '00.05.2026', '01.13.2026', '01.00.2026', '99.99.2026', '01.01.0099'])(
-    'несуществующая дата %s',
-    (s) => expect(parseDDMMYYYY(s, today)).toEqual({ error: ERRORS.notExists })
+  test.each([
+    '31.02.2026',
+    '29.02.2025',
+    '30.02.2024',
+    '31.04.2026',
+    '00.05.2026',
+    '01.13.2026',
+    '01.00.2026',
+    '99.99.2026',
+    '01.01.0099',
+  ])('несуществующая дата %s', (s) =>
+    expect(parseDDMMYYYY(s, today)).toEqual({ error: ERRORS.notExists }),
   );
 
   test('29.02 високосного года — существует', () => {
@@ -219,7 +241,9 @@ describe('parseDDMMYYYY', () => {
   test('ровно 45⁰ нед назад — допустимо, на день раньше — нет', () => {
     const limit = addDays(startOfDay(today), -DAYS_MAX);
     expect(parseDDMMYYYY(formatShortDate(limit), today).date).toBeTruthy();
-    expect(parseDDMMYYYY(formatShortDate(addDays(limit, -1)), today)).toEqual({ error: ERRORS.tooOld });
+    expect(parseDDMMYYYY(formatShortDate(addDays(limit, -1)), today)).toEqual({
+      error: ERRORS.tooOld,
+    });
     expect(parseDDMMYYYY('17.10.2025', today)).toEqual({ error: ERRORS.tooOld });
   });
 });
@@ -266,7 +290,9 @@ describe('форматирование', () => {
     expect(s).toMatch(/^Срок беременности 14 недель 2 дня, идёт 15-я неделя\./);
     expect(s).toMatch(/выкидыш/);
     expect(s).toMatch(/8 октября 2026 года$/);
-    expect(spokenSummary(calcPregnancy(lmp, addDays(lmp, 320)))).toMatch(/^Внимание: срок больше 45 недель/);
+    expect(spokenSummary(calcPregnancy(lmp, addDays(lmp, 320)))).toMatch(
+      /^Внимание: срок больше 45 недель/,
+    );
     expect(spokenSummary(null)).toBe('');
   });
 });
