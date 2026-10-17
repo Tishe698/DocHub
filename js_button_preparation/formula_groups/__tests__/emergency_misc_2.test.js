@@ -13,16 +13,16 @@ const limitsOf = (f, clean) => (typeof f.limits === 'function' ? f.limits(clean)
 describe('группа «прочее неотложное, часть 2»: структура', () => {
   it('содержит все записи в прежнем порядке', () => {
     expect(group.map((g) => g.name)).toEqual([
-      'Дротаверин',
+      'Но-шпа (дротаверин)',
       'Платифиллин',
       'Налоксон',
-      'Вальпроевая кислота',
-      'Пиридоксин',
-      'Тиамин',
+      'Конвулекс (вальпроевая кислота)',
+      'Витамин B6 (пиридоксин)',
+      'Витамин B1 (тиамин)',
       'Фильтрум',
-      'Меглюмина натрия сукцинат',
-      'Парафин жидкий',
-      'Димеркаптопропансульфонат натрия (унитиол)',
+      'Реамберин (меглюмина натрия сукцинат)',
+      'Вазелиновое масло (парафин жидкий)',
+      'Унитиол (димеркаптопропансульфонат натрия)',
     ]);
   });
 
@@ -47,37 +47,37 @@ describe('группа «прочее неотложное, часть 2»: ст
         .filter(isChoiceInput)
         .forEach((c) => expect(c.choices.some((x) => x.value === c.default)).toBe(true));
     });
-    const dro = byName('Дротаверин').inputs.route;
+    const dro = byName('Но-шпа (дротаверин)').inputs.route;
     expect(dro.choices.map((c) => c.value)).toEqual(['im', 'iv', 'sc']);
     dro.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
     expect(dro.default).toBe('im');
     const nal = byName('Налоксон').inputs.route;
     expect(nal.choices.map((c) => c.value)).toEqual(['iv', 'im', 'sc']);
     expect(nal.default).toBe('iv');
-    const pyr = byName('Пиридоксин').inputs.indication;
+    const pyr = byName('Витамин B6 (пиридоксин)').inputs.indication;
     expect(pyr.choices.map((c) => c.value)).toEqual(['isoniazid', 'pds']);
     expect(pyr.default).toBe('isoniazid');
-    const uni = byName('Димеркаптопропансульфонат натрия (унитиол)').inputs.indication;
+    const uni = byName('Унитиол (димеркаптопропансульфонат натрия)').inputs.indication;
     expect(uni.choices.map((c) => c.value)).toEqual(['metals', 'glycosides']);
     expect(uni.default).toBe('metals');
   });
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
     expect(byName('Платифиллин').labels.result1).toMatch(/п\/к/);
-    expect(byName('Вальпроевая кислота').labels.result1).toMatch(/в\/в/);
-    expect(byName('Пиридоксин').labels.result1).toMatch(/в\/в/);
-    expect(byName('Тиамин').labels.result1).toMatch(/в\/м/);
+    expect(byName('Конвулекс (вальпроевая кислота)').labels.result1).toMatch(/в\/в/);
+    expect(byName('Витамин B6 (пиридоксин)').labels.result1).toMatch(/в\/в/);
+    expect(byName('Витамин B1 (тиамин)').labels.result1).toMatch(/в\/м/);
     expect(byName('Фильтрум').labels.result1).toMatch(/внутрь/);
-    expect(byName('Меглюмина натрия сукцинат').labels.result1).toMatch(/в\/в капельно/);
-    expect(byName('Меглюмина натрия сукцинат').labels.result3).toMatch(/в\/в капельно/);
-    expect(byName('Димеркаптопропансульфонат натрия (унитиол)').labels.result1).toMatch(
+    expect(byName('Реамберин (меглюмина натрия сукцинат)').labels.result1).toMatch(/в\/в капельно/);
+    expect(byName('Реамберин (меглюмина натрия сукцинат)').labels.result3).toMatch(/в\/в капельно/);
+    expect(byName('Унитиол (димеркаптопропансульфонат натрия)').labels.result1).toMatch(
       /в\/м или п\/к/,
     );
   });
 });
 
-describe('Дротаверин', () => {
-  const f = byName('Дротаверин');
+describe('Но-шпа (дротаверин)', () => {
+  const f = byName('Но-шпа (дротаверин)');
 
   it('до 1 года — расчёт не выполняется', () => {
     expect(f.formula({ ageYears: 0 })).toEqual({});
@@ -211,7 +211,7 @@ describe('Налоксон', () => {
 });
 
 describe('Вальпроевая кислота (в/в)', () => {
-  const f = byName('Вальпроевая кислота');
+  const f = byName('Конвулекс (вальпроевая кислота)');
 
   it('ребёнок 20 кг: 15 мг/кг = 300 мг = 3 мл, инфузия 20 мг/ч', () => {
     const r = f.formula({ weight: 20, ageYears: 5 });
@@ -243,8 +243,8 @@ describe('Вальпроевая кислота (в/в)', () => {
   });
 });
 
-describe('Пиридоксин', () => {
-  const f = byName('Пиридоксин');
+describe('Витамин B6 (пиридоксин)', () => {
+  const f = byName('Витамин B6 (пиридоксин)');
 
   it('изониазид, ребёнок 20 кг: 70 мг/кг = 1400 мг = 28 мл', () => {
     const r = f.formula({ weight: 20, ageYears: 5, indication: 'isoniazid' });
@@ -297,7 +297,7 @@ describe('Пиридоксин', () => {
 });
 
 describe('Тиамин (в/м)', () => {
-  const f = byName('Тиамин');
+  const f = byName('Витамин B1 (тиамин)');
 
   it('ребёнок: 12.5 мг = 0.5 мл 2.5%, без объёма 5%', () => {
     const r = f.formula({ ageYears: 5 });
@@ -340,7 +340,7 @@ describe('Фильтрум (внутрь)', () => {
 });
 
 describe('Меглюмина натрия сукцинат (в/в капельно)', () => {
-  const f = byName('Меглюмина натрия сукцинат');
+  const f = byName('Реамберин (меглюмина натрия сукцинат)');
 
   it('до 1 года противопоказан', () => {
     expect(f.formula({ weight: 8, ageYears: 0.9 })).toEqual({});
@@ -366,7 +366,7 @@ describe('Меглюмина натрия сукцинат (в/в капельн
 });
 
 describe('Парафин жидкий (справочная запись)', () => {
-  const f = byName('Парафин жидкий');
+  const f = byName('Вазелиновое масло (парафин жидкий)');
 
   it('расчёт не выполняется, есть указания', () => {
     expect(f.inputs).toEqual({});
@@ -379,7 +379,7 @@ describe('Парафин жидкий (справочная запись)', () =
 });
 
 describe('Унитиол (в/м или п/к)', () => {
-  const f = byName('Димеркаптопропансульфонат натрия (унитиол)');
+  const f = byName('Унитиол (димеркаптопропансульфонат натрия)');
 
   it('взрослый 70 кг: 350 мг = 7 мл', () => {
     const r = f.formula({ weight: 70, ageYears: 30 });
@@ -427,7 +427,7 @@ describe('через движок: выбор показан в результа
   });
 
   it('пиридоксин: лимит зависит от показания', () => {
-    const f = byName('Пиридоксин');
+    const f = byName('Витамин B6 (пиридоксин)');
     const res = computeResult(f, { weight: '12', ageYears: '0.9', indication: 'pds' });
     expect(res.success).toBe(true);
     expect(res.items.find((i) => i.key === 'result1').status).toBe('atmax');

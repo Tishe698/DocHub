@@ -13,11 +13,11 @@ const limitsOf = (f, clean = {}) => (typeof f.limits === 'function' ? f.limits(c
 describe('группа НМБД и гематологии: структура', () => {
   it('содержит все записи в прежнем порядке (дубли гепарина и этамзилата объединены)', () => {
     expect(group.map((g) => g.name)).toEqual([
-      'Суксаметония хлорид',
-      'Пипекурония бромид',
+      'Листенон (суксаметония хлорид)',
+      'Ардуан (пипекурония бромид)',
       'Гепарин натрия',
-      'Этамзилат',
-      'Транексамовая кислота',
+      'Дицинон (этамзилат)',
+      'Транексам (транексамовая кислота)',
     ]);
   });
 
@@ -44,42 +44,42 @@ describe('группа НМБД и гематологии: структура', 
         .filter(isChoiceInput)
         .forEach((c) => expect(c.choices.some((x) => x.value === c.default)).toBe(true));
     });
-    const sux = byName('Суксаметония хлорид').inputs.route;
+    const sux = byName('Листенон (суксаметония хлорид)').inputs.route;
     expect(sux.choices.map((c) => c.value)).toEqual(['iv', 'im']);
     sux.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
     expect(sux.default).toBe('iv');
     const hep = byName('Гепарин натрия').inputs.indication;
     expect(hep.choices.map((c) => c.value)).toEqual(['peds', 'stemi_tlt', 'nste', 'pe']);
     expect(hep.default).toBe('peds');
-    const txa = byName('Транексамовая кислота').inputs;
+    const txa = byName('Транексам (транексамовая кислота)').inputs;
     expect(txa.indication.choices.map((c) => c.value)).toEqual(['trauma', 'pph']);
     expect(txa.concentration.choices.map((c) => c.value)).toEqual(['50', '100']);
     expect(txa.concentration.default).toBe('50');
   });
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
-    expect(byName('Пипекурония бромид').labels.result1).toMatch(/в\/в/);
+    expect(byName('Ардуан (пипекурония бромид)').labels.result1).toMatch(/в\/в/);
     expect(byName('Гепарин натрия').labels.result1).toMatch(/в\/в/);
     expect(byName('Гепарин натрия').labels.result3).toMatch(/в\/в/);
-    expect(byName('Этамзилат').labels.result1).toMatch(/в\/в или в\/м/);
-    expect(byName('Транексамовая кислота').labels.result1).toMatch(/в\/в/);
+    expect(byName('Дицинон (этамзилат)').labels.result1).toMatch(/в\/в или в\/м/);
+    expect(byName('Транексам (транексамовая кислота)').labels.result1).toMatch(/в\/в/);
   });
 
   it('неизвестное значение выбора — расчёт не выполняется', () => {
-    expect(byName('Суксаметония хлорид').formula({ weight: 20, ageYears: 5, route: 'po' })).toEqual(
-      {},
-    );
+    expect(
+      byName('Листенон (суксаметония хлорид)').formula({ weight: 20, ageYears: 5, route: 'po' }),
+    ).toEqual({});
     expect(byName('Гепарин натрия').formula({ weight: 20, ageYears: 5, indication: 'x' })).toEqual(
       {},
     );
-    expect(byName('Транексамовая кислота').formula({ weight: 20, concentration: '25' })).toEqual(
-      {},
-    );
+    expect(
+      byName('Транексам (транексамовая кислота)').formula({ weight: 20, concentration: '25' }),
+    ).toEqual({});
   });
 });
 
-describe('Суксаметония хлорид', () => {
-  const f = byName('Суксаметония хлорид');
+describe('Листенон (суксаметония хлорид)', () => {
+  const f = byName('Листенон (суксаметония хлорид)');
 
   it('в/в, ребёнок 5 лет 20 кг: 1 мг/кг = 20 мг = 1 мл', () => {
     const r = f.formula({ weight: 20, ageYears: 5, route: 'iv' });
@@ -147,8 +147,8 @@ describe('Суксаметония хлорид', () => {
   });
 });
 
-describe('Пипекурония бромид', () => {
-  const f = byName('Пипекурония бромид');
+describe('Ардуан (пипекурония бромид)', () => {
+  const f = byName('Ардуан (пипекурония бромид)');
 
   it('до 3 мес — противопоказан, без числовой дозы', () => {
     const r = f.formula({ weight: 5, ageMonths: 2 });
@@ -310,8 +310,8 @@ describe('Гепарин натрия', () => {
   });
 });
 
-describe('Этамзилат', () => {
-  const f = byName('Этамзилат');
+describe('Дицинон (этамзилат)', () => {
+  const f = byName('Дицинон (этамзилат)');
 
   it('новорождённый 3,5 кг (возраст 0): 10 мг/кг = 35 мг = 0,28 мл, каждые 6 ч', () => {
     const r = f.formula({ weight: 3.5, ageYears: 0 });
@@ -365,8 +365,8 @@ describe('Этамзилат', () => {
   });
 });
 
-describe('Транексамовая кислота', () => {
-  const f = byName('Транексамовая кислота');
+describe('Транексам (транексамовая кислота)', () => {
+  const f = byName('Транексам (транексамовая кислота)');
 
   it('травма, ребёнок 20 кг, 50 мг/мл: болюс 300 мг = 6 мл за 10 мин, инфузия 40 мг/ч', () => {
     const r = f.formula({ weight: 20, indication: 'trauma', concentration: '50' });
