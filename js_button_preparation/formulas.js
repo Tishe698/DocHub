@@ -10,6 +10,8 @@ import antibioticsAntiallergic from './formula_groups/antibiotics_antiallergic';
 import emergencyMisc1 from './formula_groups/emergency_misc_1';
 import emergencyMisc2 from './formula_groups/emergency_misc_2';
 import adultOnly from './formula_groups/adult_only';
+import analgesicsSteroids from './formula_groups/analgesics_steroids';
+import cardioEndocrineMisc from './formula_groups/cardio_endocrine_misc';
 
 const formulas = [
   ...toxicology,
@@ -21,6 +23,8 @@ const formulas = [
   ...emergencyMisc1,
   ...emergencyMisc2,
   ...adultOnly,
+  ...analgesicsSteroids,
+  ...cardioEndocrineMisc,
 ];
 
 export default formulas;
