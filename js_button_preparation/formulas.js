@@ -17,6 +17,9 @@ import antiarrhythmicsVasopressors from './formula_groups/antiarrhythmics_vasopr
 import bronchodilatorsRsi from './formula_groups/bronchodilators_rsi';
 import electrolytesSolutions from './formula_groups/electrolytes_solutions';
 import antidotesLocalAnalgesia from './formula_groups/antidotes_local_analgesia';
+import antimicrobialsAntihistamines from './formula_groups/antimicrobials_antihistamines';
+import neuroCardioVolume from './formula_groups/neuro_cardio_volume';
+import nebulizedPediatrics from './formula_groups/nebulized_pediatrics';
 
 const formulas = [
   ...toxicology,
@@ -35,6 +38,9 @@ const formulas = [
   ...bronchodilatorsRsi,
   ...electrolytesSolutions,
   ...antidotesLocalAnalgesia,
+  ...antimicrobialsAntihistamines,
+  ...neuroCardioVolume,
+  ...nebulizedPediatrics,
 ];
 
 export default formulas;
