@@ -1,281 +1,303 @@
-import React, { useState } from 'react';
-import { View, Switch, TouchableOpacity, ScrollView } from 'react-native';
-import { Text, TextInput } from '../../components/AppText';
-import { calculateIntubationTubeLogic } from './CalculateIntubationTube';
+// IntubationTubeCalculation.js — подбор эндотрахеальной трубки (интерфейс).
+// Расчёт — CalculateIntubationTube.js (клинические значения и источники там),
+// связь с общим пациентом — intubationFromPatient.js.
+import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import { Text } from '../../components/AppText';
+import Screen from '../../components/Screen';
+import { a11yLabel } from '../../components/a11y';
+import {
+  Button,
+  ChoiceChips,
+  NumberField,
+  Note,
+  ResultCard,
+  Section,
+  SwitchRow,
+  Card,
+} from '../../components/ui';
+import PatientBar from '../../patient/PatientBar';
+import BroselowPicker from '../../patient/BroselowPicker';
+import { usePatient, usePatientAge, usePatientNumber } from '../../patient/PatientContext';
+import { zoneByKey as patientZoneByKey } from '../../patient/estimates';
+import { useThemedStyles } from '../../theme/index';
+import { GREY_SUBZONES } from './CalculateIntubationTube';
+import {
+  METHOD_LABELS,
+  ROUTE_OPTIONS,
+  computeIntubation,
+  depthRows,
+  fmtCm,
+  fmtMm,
+  intubationAnnouncement,
+} from './intubationFromPatient';
 
-const Label = ({ children }) => (
-  <Text style={{ fontSize: 14, color: '#374151', marginBottom: 6 }}>{children}</Text>
-);
+const SEX_OPTIONS = [
+  { value: 'female', label: 'Женский', accessibilityLabel: 'Пол женский' },
+  { value: 'male', label: 'Мужской', accessibilityLabel: 'Пол мужской' },
+];
 
-const Box = ({ children }) => (
-  <View style={{
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-    marginBottom: 12
-  }}>{children}</View>
-);
-
-const Row = ({ children }) => (
-  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>{children}</View>
-);
-
-const Pill = ({ active, onPress, children }) => (
-  <TouchableOpacity
-    onPress={onPress}
-    accessibilityRole="button"
-    accessibilityLabel={`Выбрать: ${children}`}
-    style={{
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 999,
-      backgroundColor: active ? '#2563EB' : '#E5E7EB'
-    }}
-  >
-    <Text style={{ color: active ? '#FFFFFF' : '#111827', fontWeight: '600' }}>{children}</Text>
-  </TouchableOpacity>
-);
-
-const NumberInput = ({ value, onChangeText, placeholder }) => (
-  <TextInput
-    keyboardType="decimal-pad"
-    value={value || ''}
-    onChangeText={onChangeText}
-    placeholder={placeholder}
-    placeholderTextColor="#9CA3AF"
-    textAlignVertical="center"
-    style={{
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      borderRadius: 10,
-      padding: 10,
-      fontSize: 16,
-      flex: 1
-    }}
-  />
-);
-
-const ResultRow = ({ label, value }) => (
-  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, gap: 12 }}>
-    <Text style={{ color: '#6B7280', flexShrink: 1 }}>{label}</Text>
-    <Text style={{ fontWeight: '700', flexShrink: 1, textAlign: 'right' }}>{value}</Text>
+const InfoRow = ({ label, value, styles }) => (
+  <View style={styles.infoRow} accessible accessibilityLabel={`${label}: ${value}`}>
+    <Text variant="body" color="textSecondary" style={styles.infoLabel}>
+      {label}
+    </Text>
+    <Text variant="bodyStrong" style={styles.infoValue}>
+      {value}
+    </Text>
   </View>
 );
 
-const METHOD_LABELS = {
-  neonate: 'новорождённый, по массе (NRP)',
-  broselowHeight: 'по длине тела (Broselow)',
-  broselowWeight: 'по массе (зона Broselow)',
-  infantAge: 'младенец, по возрасту (масса по APLS)',
-  age: 'по возрасту (PALS/ERC)',
-  teen: 'подросток 13–15 лет: по возрасту и росту, не больше взрослых',
-  adult: 'взрослые размеры (с 16 лет), по полу',
-};
-
-const fmtNum = (x) => String(x).replace('.', ',');
-const fmtMm = (x) => Number(x).toFixed(1).replace('.', ',');
+// Локальные настройки экрана (манжета, путь, подзона серой зоны) сбрасываются при «Новый пациент»:
+// храним вместе с resetCount и считаем устаревшими, если счётчик изменился.
+const LOCAL_DEFAULTS = { cuffed: false, route: 'both', greySubzone: null };
 
 const IntubationTubeCalculation = () => {
-  const [heightCm, setHeightCm] = useState('');
-  const [ageYears, setAgeYears] = useState('');
-  const [ageMonths, setAgeMonths] = useState('');
-  const [weightKg, setWeightKg] = useState('');
-  const [sex, setSex] = useState(null);
-  const [cuffed, setCuffed] = useState(false);
-  const [route, setRoute] = useState('both');
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const styles = useThemedStyles(makeStyles);
+  const { patient, setPatient, derived, resetCount } = usePatient();
+  const height = usePatientNumber('heightCm');
+  const weight = usePatientNumber('weightKg');
+  const age = usePatientAge();
 
-  // Любое изменение ввода сбрасывает прежний результат, чтобы на экране не оставался
-  // расчёт для других данных.
-  const withReset = (setter) => (value) => {
-    setter(value);
-    setResult(null);
-    setError(null);
-  };
+  const [local, setLocal] = useState({ ...LOCAL_DEFAULTS, resetCount });
+  const opts = local.resetCount === resetCount ? local : { ...LOCAL_DEFAULTS, resetCount };
+  const update = (patch) => setLocal({ ...opts, ...patch, resetCount });
+  // Подзона серой зоны действует только пока выбрана серая зона (по ленте): при смене зоны
+  // или вводе массы она сбрасывается и при повторном выборе серой зоны выбирается заново.
+  const greyPicked = patient.broselowZone === 'grey' && patient.weightSource === 'broselow';
+  useEffect(() => {
+    if (!greyPicked && local.greySubzone) setLocal((l) => ({ ...l, greySubzone: null }));
+  }, [greyPicked, local.greySubzone]);
+  const greySubzone = greyPicked ? opts.greySubzone : null;
 
-  const onCalculate = () => {
-    setError(null);
-    try {
-      // Строгий разбор: «1.2.3» или «12кг» — ошибка ввода, а не 1,2 / 12.
-      const num = (s) => (s && s.trim() ? Number(s.trim().replace(',', '.')) : undefined);
-      const h = num(heightCm);
-      const ageY = num(ageYears);
-      const ageM = num(ageMonths);
-      const w = num(weightKg);
+  const { mode, result, error, needsGreySubzone } = computeIntubation(patient, {
+    cuffed: opts.cuffed,
+    route: opts.route,
+    greySubzone: greySubzone || undefined,
+  });
 
-      const bad = [
-        [heightCm, h, 'Рост'],
-        [ageYears, ageY, 'Годы'],
-        [ageMonths, ageM, 'Месяцы'],
-        [weightKg, w, 'Масса'],
-      ].find(([, val]) => val !== undefined && !isFinite(val));
-      if (bad) throw new Error(`${bad[2]}: введите число.`);
-
-      const res = calculateIntubationTubeLogic({
-        heightCm: isFinite(h) ? h : undefined,
-        ageYears: isFinite(ageY) ? ageY : undefined,
-        ageMonths: isFinite(ageM) ? ageM : undefined,
-        weightKg: isFinite(w) ? w : undefined,
-        sex: sex || undefined,
-        cuffed,
-        route,
-      });
-      setResult(res);
-    } catch (e) {
-      setResult(null);
-      setError(e?.message || 'Ошибка расчёта');
-    }
-  };
-
-  const clearAll = () => {
-    setHeightCm('');
-    setAgeYears('');
-    setAgeMonths('');
-    setWeightKg('');
-    setSex(null);
-    setCuffed(false);
-    setRoute('both');
-    setResult(null);
-    setError(null);
-  };
+  const pickedZone =
+    patient.weightSource === 'broselow' ? patientZoneByKey(patient.broselowZone) : null;
+  const isNeonate = patient.ageMonths === 0;
+  const depths = depthRows(result, opts.route);
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: '#F3F4F6' }}
-      contentContainerStyle={{
-        flexGrow: 1,
-        padding: 16,
-        paddingBottom: 32,
-      }}
-      showsVerticalScrollIndicator={false}
-      bounces={false}
-      alwaysBounceVertical={false}
-    >
-      <Text style={{ fontSize: 20, fontWeight: '800', marginBottom: 12 }}>
-        Расчёт эндотрахеальной трубки (Скорая помощь)
-      </Text>
+    <Screen scroll>
+      <PatientBar />
 
-      <Box>
-        <Label>Рост / длина тела (см) — приоритетно (лента Broselow 46,8–143,3 см)</Label>
-        <Row>
-          <NumberInput value={heightCm} onChangeText={withReset(setHeightCm)} placeholder="Напр. 92" />
-        </Row>
+      <Section
+        title="Данные пациента"
+        description="Общие для всех калькуляторов. Главный признак — рост (длина тела) по ленте Broselow 46,8–143,3 см; без роста — зона ленты, возраст или масса."
+      >
+        <NumberField
+          label="Рост (длина тела)"
+          unit="см"
+          value={height.text}
+          onChangeText={height.onChangeText}
+          placeholder="например, 92"
+          hint="Приоритетно для детей: лента Broselow 46,8–143,3 см"
+        />
+        <View style={styles.ageRow}>
+          <NumberField
+            label="Возраст"
+            unit="лет"
+            value={age.years.text}
+            onChangeText={age.years.onChangeText}
+            placeholder="0"
+            style={styles.ageField}
+          />
+          <NumberField
+            label="Месяцы"
+            unit="мес"
+            value={age.months.text}
+            onChangeText={age.months.onChangeText}
+            placeholder="0"
+            style={styles.ageField}
+          />
+        </View>
+        <Button
+          title="Новорождённый (до 1 мес)"
+          variant="secondary"
+          icon={isNeonate ? 'checkmark-circle' : 'happy-outline'}
+          onPress={age.setNeonate}
+          selected={isNeonate}
+          accessibilityHint="Ставит возраст 0 лет 0 месяцев"
+          style={styles.neonateButton}
+        />
+        <NumberField
+          label="Масса"
+          unit="кг"
+          value={weight.text}
+          onChangeText={weight.onChangeText}
+          placeholder="например, 3,2"
+          badge={derived.weightIsEstimate ? 'оценка' : null}
+          badgeLevel="warning"
+          hint="Новорождённым — обязательно; детям с известным ростом или возрастом — для сверки"
+        />
+        <ChoiceChips
+          label="Пол"
+          options={SEX_OPTIONS}
+          value={patient.sex}
+          onChange={(sex) => setPatient({ sex })}
+          hint="Нужен с 13 лет и при росте больше 143 см"
+        />
+      </Section>
 
-        <View style={{ height: 12 }} />
+      <Section
+        title="Зона ленты Broselow"
+        description={
+          mode === 'height'
+            ? 'Рост указан — трубка подбирается по росту; выбор зоны нужен, только если рост не измерен.'
+            : 'Если рост не измерен: приложите ленту и выберите зону — размер трубки берётся прямо по зоне.'
+        }
+      >
+        <BroselowPicker />
+        {greyPicked ? (
+          <ChoiceChips
+            label="Подзона серой зоны (масса на ленте)"
+            options={GREY_SUBZONES.map((s) => ({
+              ...s,
+              accessibilityLabel: `Серая зона, ${s.label}`,
+            }))}
+            value={greySubzone}
+            onChange={(v) => update({ greySubzone: v })}
+            hint="От подзоны зависят глубина и возможность трубки с манжетой"
+          />
+        ) : null}
+      </Section>
 
-        <Label>Возраст</Label>
-        <Row>
-          <NumberInput value={ageYears} onChangeText={withReset(setAgeYears)} placeholder="Годы" />
-          <NumberInput value={ageMonths} onChangeText={withReset(setAgeMonths)} placeholder="Месяцы" />
-        </Row>
+      <Section title="Трубка">
+        <SwitchRow
+          label="Трубка с манжетой"
+          description={
+            opts.cuffed ? 'Размер для трубки с манжетой' : 'Размер для трубки без манжеты'
+          }
+          value={opts.cuffed}
+          onValueChange={(v) => update({ cuffed: v })}
+        />
+        <ChoiceChips
+          label="Путь интубации"
+          options={ROUTE_OPTIONS}
+          value={opts.route}
+          onChange={(v) => update({ route: v })}
+          style={styles.routeChips}
+        />
+      </Section>
 
-        <View style={{ height: 12 }} />
+      <Section title="Результат">
+        {mode === 'empty' ? (
+          <Note level="info" title="Нет данных для расчёта">
+            Укажите рост (длину тела), выберите зону ленты Broselow, либо укажите возраст или массу.
+          </Note>
+        ) : null}
 
-        <Label>Масса (кг)</Label>
-        <Row>
-          <NumberInput value={weightKg} onChangeText={withReset(setWeightKg)} placeholder="Напр. 3,2" />
-        </Row>
+        {needsGreySubzone ? (
+          <Note level="info" title="Выберите подзону серой зоны">
+            Серая зона ленты разделена на 3, 4 и 5 кг. Диаметр во всех подзонах — 3,5 мм без
+            манжеты; глубина (8,5 / 9 / 10,5 см) и возможность трубки с манжетой зависят от подзоны.
+          </Note>
+        ) : null}
 
-        <View style={{ height: 12 }} />
+        {error && !needsGreySubzone ? (
+          <Note level="warning" title="Расчёт невозможен">
+            {`${error}\n\nПорядок: новорождённый с массой → по массе; рост 46,8–143,3 см или зона ленты → Broselow; 1–12 лет → по возрасту; до 1 года → по массе или возрасту; 13–15 лет и рост больше 143 см без возраста → по возрасту и росту, не больше взрослых (нужен пол); с 16 лет → взрослые размеры по полу.`}
+          </Note>
+        ) : null}
 
-        <Label>Пол (нужен с 13 лет и при росте &gt;143 см)</Label>
-        <Row>
-          <Pill active={sex === 'female'} onPress={() => withReset(setSex)(sex === 'female' ? null : 'female')}>Женский</Pill>
-          <Pill active={sex === 'male'} onPress={() => withReset(setSex)(sex === 'male' ? null : 'male')}>Мужской</Pill>
-        </Row>
-
-        <View style={{ height: 12 }} />
-
-        <Label>Манжетка</Label>
-        <Row>
-          <Text>Без манжетки</Text>
-          <Switch value={cuffed} onValueChange={withReset(setCuffed)} />
-          <Text>С манжеткой</Text>
-        </Row>
-
-        <View style={{ height: 12 }} />
-
-        <Label>Путь</Label>
-        <Row>
-          <Pill active={route === 'oral'} onPress={() => withReset(setRoute)('oral')}>Оральная</Pill>
-          <Pill active={route === 'nasal'} onPress={() => withReset(setRoute)('nasal')}>Назальная</Pill>
-          <Pill active={route === 'both'} onPress={() => withReset(setRoute)('both')}>Обе</Pill>
-        </Row>
-      </Box>
-
-      <Row>
-        <TouchableOpacity
-          onPress={onCalculate}
-          style={{ backgroundColor: '#10B981', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12 }}
-        >
-          <Text style={{ color: '#fff', fontWeight: '700' }}>🔢 Рассчитать</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={clearAll}
-          style={{ backgroundColor: '#E5E7EB', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12 }}
-        >
-          <Text style={{ color: '#111827', fontWeight: '700' }}>♻️ Очистить</Text>
-        </TouchableOpacity>
-      </Row>
-
-      {error && (
-        <Box>
-          <Text style={{ color: '#B91C1C' }}>Ошибка: {error}</Text>
-          <Text style={{ color: '#6B7280', marginTop: 6, fontSize: 12 }}>
-            Порядок: новорождённый (&lt;1 мес) с массой → по массе; рост 46,8–143,3 см → лента Broselow;
-            1–12 лет → по возрасту; до 1 года → по массе (или по возрасту); 13–15 лет и рост &gt;143 см без возраста →
-            по возрасту и росту, не больше взрослых (нужен пол); с 16 лет → взрослые размеры по полу.
-          </Text>
-        </Box>
-      )}
-
-      {result && (
-        <Box>
-          <Text style={{ fontWeight: '800', marginBottom: 8 }}>Результаты</Text>
-          <ResultRow label="Метод" value={METHOD_LABELS[result.method] || result.method} />
-          {result.broselowZone && (
-            <ResultRow label="Зона Broselow" value={`${result.broselowZone}, ${result.zoneRange}`} />
-          )}
-          {result.approxWeightKg && <ResultRow label="Масса зоны (кг)" value={String(result.approxWeightKg)} />}
-          <ResultRow label="Тип трубки" value={result.tubeType} />
-          <ResultRow label="Внутренний диаметр (мм)" value={fmtMm(result.tubeIDmm)} />
-          <ResultRow label="Альтернативы (мм)" value={result.alternativesMm.map(fmtMm).join(' / ')} />
-          {(route === 'oral' || route === 'both') && (
-            <ResultRow label="Глубина через рот (см)" value={fmtNum(result.depthOralCm)} />
-          )}
-          {(route === 'nasal' || route === 'both') && (
-            <ResultRow label="Глубина назальная (см)" value={fmtNum(result.depthNasalCm)} />
-          )}
-          {!!result?.used?.length && (
-            <Text style={{ color: '#374151', fontSize: 12, marginBottom: 2 }}>Учтено: {result.used.join(', ')}</Text>
-          )}
-          {!!result?.ignored?.length && (
-            <Text style={{ color: '#374151', fontSize: 12, marginBottom: 2 }}>Не использовано: {result.ignored.join('; ')}</Text>
-          )}
-          {!!result?.warnings?.length && (
-            <View style={{ marginTop: 8, backgroundColor: '#FEF3C7', borderRadius: 8, padding: 8 }}>
-              {result.warnings.map((n, i) => (
-                <Text key={i} style={{ color: '#92400E', fontSize: 13, marginBottom: 2 }}>⚠️ {n}</Text>
+        {result ? (
+          <>
+            <ResultCard
+              title="Внутренний диаметр трубки"
+              value={fmtMm(result.tubeIDmm)}
+              unit="мм"
+              level={result.warnings && result.warnings.length ? 'warning' : 'info'}
+              levelLabel={result.tubeType}
+              announceText={intubationAnnouncement(result, opts.route)}
+            >
+              {depths.map((d) => (
+                <InfoRow
+                  key={d.key}
+                  label={d.label}
+                  value={`${fmtCm(d.value)} см`}
+                  styles={styles}
+                />
               ))}
-            </View>
-          )}
-          {!!result?.notes?.length && (
-            <View style={{ marginTop: 8 }}>
-              {result.notes.map((n, i) => (
-                <Text key={i} style={{ color: '#6B7280', fontSize: 12, marginBottom: 2 }}>• {n}</Text>
+              <InfoRow
+                label="Альтернативы"
+                value={`${result.alternativesMm.map(fmtMm).join(' / ')} мм`}
+                styles={styles}
+              />
+              <InfoRow
+                label="Метод"
+                value={METHOD_LABELS[result.method] || result.method}
+                styles={styles}
+              />
+              {result.method === 'broselowZone' && pickedZone ? (
+                <InfoRow
+                  label="Зона ленты"
+                  value={a11yLabel(
+                    pickedZone.name,
+                    greySubzone ? GREY_SUBZONES.find((s) => s.value === greySubzone)?.label : null,
+                    `${fmtCm(pickedZone.lengthMinCm)}–${fmtCm(pickedZone.lengthMaxCm)} см`,
+                  )}
+                  styles={styles}
+                />
+              ) : result.broselowZone ? (
+                <InfoRow
+                  label="Зона Broselow"
+                  value={`${result.broselowZone}, ${result.zoneRange}`}
+                  styles={styles}
+                />
+              ) : null}
+              {result.approxWeightKg ? (
+                <InfoRow label="Масса зоны" value={`${result.approxWeightKg} кг`} styles={styles} />
+              ) : null}
+            </ResultCard>
+
+            {result.warnings && result.warnings.length ? (
+              <Note level="warning" title="Проверьте">
+                {result.warnings.map((w) => `• ${w}`).join('\n')}
+              </Note>
+            ) : null}
+
+            <Card>
+              {result.used && result.used.length ? (
+                <Text variant="caption" color="textSecondary" style={styles.para}>
+                  {`Учтено: ${result.used.join(', ')}`}
+                </Text>
+              ) : null}
+              {result.ignored && result.ignored.length ? (
+                <Text variant="caption" color="textSecondary" style={styles.para}>
+                  {`Не использовано: ${result.ignored.join('; ')}`}
+                </Text>
+              ) : null}
+              {(result.notes || []).map((n, i) => (
+                <Text key={i} variant="caption" style={styles.para}>
+                  {`• ${n}`}
+                </Text>
               ))}
-            </View>
-          )}
-        </Box>
-      )}
-    </ScrollView>
+            </Card>
+          </>
+        ) : null}
+      </Section>
+    </Screen>
   );
 };
+
+const makeStyles = ({ spacing }) => ({
+  ageRow: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -spacing.xs },
+  ageField: { flexGrow: 1, flexBasis: 140, marginHorizontal: spacing.xs },
+  neonateButton: { alignSelf: 'flex-start', marginBottom: spacing.md },
+  routeChips: { marginTop: spacing.sm },
+  infoRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+  },
+  infoLabel: { flexShrink: 1, marginRight: spacing.sm },
+  infoValue: { flexShrink: 1, textAlign: 'right' },
+  para: { marginBottom: spacing.xs },
+});
 
 export default IntubationTubeCalculation;

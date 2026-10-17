@@ -1,80 +1,41 @@
+// tabnav_oxy.js — подменю «Кислород»: время работы баллона, формула Дарбиняна, ИВЛ.
+// Данные карточек — main_screen/menuConfig.js (OXYGEN_MENU). Свой StatusBar не рисуем.
 import React from 'react';
-import { TouchableOpacity, SafeAreaView, ScrollView, StatusBar, View } from 'react-native';
+import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
-import styles from './style_oxy'
+import { Note } from '../components/ui';
+import { useThemedStyles } from '../theme/index';
+import MenuCard from '../main_screen/MenuCard';
+import { OXYGEN_MENU } from '../main_screen/menuConfig';
 
 const Tabnav_oxy = ({ navigation }) => {
-    const handleButtonPress = (screenName) => {
-        navigation.navigate(screenName);
-    };
+  const styles = useThemedStyles(makeStyles);
 
-    return (
-        <SafeAreaView style={styles.container_2}>
-            <StatusBar barStyle="dark-content" backgroundColor="#f8fbff" />
-            <ScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={{ flexGrow: 1, padding: 16, paddingBottom: 32 }}
-            >
-                {/* Заголовок */}
-                <Text style={styles.header}>Кислородные расчеты</Text>
+  return (
+    <Screen scroll keyboardAvoiding={false}>
+      <Text variant="body" color="textSecondary" style={styles.subtitle}>
+        Выберите расчёт
+      </Text>
 
-                {/* Описание */}
-                <Text style={styles.subtitle}>
-                    Выберите расчёт
-                </Text>
-                {/* Кнопки с иконками */}
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                        style={styles.buttonoxygen_2}
-                        onPress={() => handleButtonPress('Calc_max_time_o2')}
-                    >
-                        <View style={styles.buttonContent}>
-                            <Text style={styles.buttonIcon}>⏱️</Text>
-                            <View style={styles.buttonTextContainer}>
-                                <Text style={styles.buttonText}>Время работы баллона</Text>
-                                <Text style={styles.buttonSubtext}>По объёму, давлению и потоку — до резерва давления</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+      {OXYGEN_MENU.map((card) => (
+        <MenuCard
+          key={card.route}
+          card={card}
+          onPress={() => navigation.navigate(card.route)}
+          testID={`oxy-card-${card.route}`}
+        />
+      ))}
 
-                    <TouchableOpacity
-                        style={styles.buttonoxygen_2}
-                        onPress={() => handleButtonPress('Calc_dorbinyn')}
-                    >
-                        <View style={styles.buttonContent}>
-                            <Text style={styles.buttonIcon}>📊</Text>
-                            <View style={styles.buttonTextContainer}>
-                                <Text style={styles.buttonText}>Формула Дарбиняна</Text>
-                                <Text style={styles.buttonSubtext}>Минутный объём дыхания по массе тела</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.buttonoxygen_2}
-                        onPress={() => handleButtonPress('Calc_aparat_IVL')}
-                    >
-                        <View style={styles.buttonContent}>
-                            <Text style={styles.buttonIcon}>🏥</Text>
-                            <View style={styles.buttonTextContainer}>
-                                <Text style={styles.buttonText}>Аппаратная ИВЛ</Text>
-                                <Text style={styles.buttonSubtext}>Стартовые параметры: MEDUMAT, А-ИВЛ/ВВЛ/ВЧп-4/40</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Дополнительная информация внизу */}
-                <View style={styles.footerInfo}>
-                    <Text style={styles.footerText}>
-                        ⚠️ Расчёты справочные.{'\n'}
-                        Перед применением проверьте их по состоянию пациента и инструкции к аппарату.
-                    </Text>
-                </View>
-
-            </ScrollView>
-        </SafeAreaView>
-    );
+      <Note level="warning" title="Расчёты справочные" style={styles.note}>
+        Перед применением проверьте их по состоянию пациента и инструкции к аппарату.
+      </Note>
+    </Screen>
+  );
 };
+
+const makeStyles = ({ spacing }) => ({
+  subtitle: { marginBottom: spacing.lg },
+  note: { marginTop: spacing.md },
+});
 
 export default Tabnav_oxy;
