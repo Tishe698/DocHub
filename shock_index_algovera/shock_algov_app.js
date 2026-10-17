@@ -1,241 +1,256 @@
-// shock_algov_app.js
-import React, { useMemo, useState } from 'react';
-import { View, Switch, Pressable, ScrollView, Platform } from 'react-native';
-import { Text, TextInput } from '../components/AppText';
-import calculateShockIndex, { fmt } from './calculateShockIndex';
+// shock_algov_app.js — экран «Шоковый индекс» (Альговер / SIPA).
+// Расчёт и интерпретация — в calculateShockIndex.js (чистые функции с тестами);
+// возраст берётся из общего пациента (PatientContext), правка поля меняет пациента.
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View } from 'react-native';
+import Screen from '../components/Screen';
+import { Text } from '../components/AppText';
+import { announce, hideFromA11y } from '../components/a11y';
+import { Badge, Button, Note, NumberField, ResultCard, Section, SwitchRow } from '../components/ui';
+import PatientBar from '../patient/PatientBar';
+import { usePatient, usePatientAge } from '../patient/PatientContext';
+import { useThemedStyles } from '../theme/index';
+import { ageFieldErrors, evaluateShockIndex, fmt, shockIndexSummary } from './calculateShockIndex';
 
-const theme = {
-  bg: '#111827',
-  accent: '#6366F1',
-  card: '#FFFFFF',
-  text: '#0F172A',
-  sub: '#475569',
-  line: '#E2E8F0',
-  danger: '#EF4444',
-  ok: '#10B981',
-  warn: '#F59E0B',
+const MODE_TITLES = {
+  adult: 'Взрослая шкала',
+  adult_noage: 'Взрослая шкала (возраст не указан)',
+  sipa: 'Дети 1–16 лет: SIPA',
+  infant: 'Ребёнок до 1 года',
+  pregnancy: 'Беременность / после родов',
 };
 
-const shadow = {
-  shadowColor: '#000',
-  shadowOpacity: 0.08,
-  shadowRadius: 12,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 4,
-};
+export default function CalcShockIndexScreen() {
+  const styles = useThemedStyles(makeStyles);
+  const { patient, resetCount } = usePatient();
+  const age = usePatientAge();
 
-const Header = ({ title, subtitle }) => (
-  <View style={{ padding: 22, backgroundColor: theme.bg }}>
-    <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800' }}>{title}</Text>
-    {!!subtitle && <Text style={{ color: 'rgba(255,255,255,0.9)', marginTop: 6 }}>{subtitle}</Text>}
-  </View>
-);
-
-const Section = ({ title, children }) => (
-  <View style={[{ backgroundColor: theme.card, borderRadius: 16, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: theme.line }, shadow]}>
-    {!!title && <Text style={{ fontSize: 14, color: theme.sub, marginBottom: 8, fontWeight: '700' }}>{title}</Text>}
-    {children}
-  </View>
-);
-
-const Row = ({ children }) => (
-  <View style={{ flexDirection: 'row', gap: 10 }}>{children}</View>
-);
-
-const Input = ({ value, onChangeText, placeholder }) => (
-  <TextInput
-    keyboardType={Platform.OS === 'ios' ? 'decimal-pad' : 'numeric'}
-    value={value}
-    onChangeText={onChangeText}
-    placeholder={placeholder}
-    placeholderTextColor={theme.line}
-    style={{ flex: 1, borderWidth: 1, borderColor: theme.line, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, fontSize: 16, color: theme.text, backgroundColor: '#fff' }}
-  />
-);
-
-const Button = ({ title, onPress, type = 'primary' }) => {
-  const bg = type === 'primary' ? theme.accent : '#E5E7EB';
-  const fg = type === 'primary' ? '#fff' : theme.text;
-  return (
-    <Pressable onPress={onPress} android_ripple={{ color: '#cbd5e1' }} style={{ backgroundColor: bg, paddingVertical: 14, borderRadius: 14, alignItems: 'center', flex: 1 }}>
-      <Text style={{ color: fg, fontWeight: '800' }}>{title}</Text>
-    </Pressable>
-  );
-};
-
-const Chip = ({ label, color }) => (
-  <View style={{ backgroundColor: color, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999 }}>
-    <Text style={{ color: '#fff', fontWeight: '800' }}>{label}</Text>
-  </View>
-);
-
-const CalcShockIndexScreen = () => {
-  const [sbp, setSbp] = useState('');
   const [hr, setHr] = useState('');
-  const [ageYears, setAgeYears] = useState('');
-  const [ageMonths, setAgeMonths] = useState('');
+  const [sbp, setSbp] = useState('');
   const [pregnant, setPregnant] = useState(false);
   const [trauma, setTrauma] = useState(false);
-  const [res, setRes] = useState(null);
-  const [err, setErr] = useState(null);
 
-  const subtitle = useMemo(() => 'Индекс Альговера (SI = пульс / САД): взрослые, дети (SIPA), беременность, травма.', []);
-
-  const parse = (s) => {
-    if (!s) return undefined;
-    const v = parseFloat(String(s).replace(',', '.'));
-    return Number.isFinite(v) ? v : undefined;
-  };
-
-  // Возраст = лет + мес / 12 (аудит M5-11: «6 мес» не должен читаться как 6 лет).
-  // Оба поля пусты → возраст не указан (взрослая шкала с пометкой).
-  const parseAge = () => {
-    const hasY = String(ageYears).trim() !== '';
-    const hasM = String(ageMonths).trim() !== '';
-    if (!hasY && !hasM) return undefined;
-    const y = hasY ? parse(ageYears) : 0;
-    const m = hasM ? parse(ageMonths) : 0;
-    if (y === undefined || y < 0) throw new Error('Недопустимый возраст (лет).');
-    if (m === undefined || m < 0) throw new Error('Недопустимый возраст (мес).');
-    if (hasY && hasM && m >= 12) throw new Error('Месяцев должно быть 0–11, если указаны годы.');
-    return y + m / 12;
-  };
-
-  const doCalc = () => {
-    setErr(null);
-    try {
-      const out = calculateShockIndex({
-        sbp: parse(sbp),
-        hr: parse(hr),
-        ageYears: parseAge(),
-        pregnant,
-        trauma,
-      });
-      setRes(out);
-    } catch (e) {
-      setRes(null);
-      setErr(e?.message || 'Ошибка расчёта');
-    }
-  };
-
-  const doClear = () => {
-    setSbp('');
+  // «Новый пациент» в PatientBar очищает и показатели этого экрана
+  const lastReset = useRef(resetCount);
+  useEffect(() => {
+    if (lastReset.current === resetCount) return;
+    lastReset.current = resetCount;
     setHr('');
-    setAgeYears('');
-    setAgeMonths('');
+    setSbp('');
     setPregnant(false);
     setTrauma(false);
-    setRes(null);
-    setErr(null);
+  }, [resetCount]);
+
+  const isMale = patient.sex === 'male';
+  const ageErrors = ageFieldErrors(age.years.text, age.months.text);
+  const ageInvalid = !!(ageErrors.years || ageErrors.months);
+
+  const evaluation = useMemo(
+    () =>
+      evaluateShockIndex({
+        hrText: hr,
+        sbpText: sbp,
+        ageMonths: patient.ageMonths,
+        ageInvalid,
+        pregnant: pregnant && !isMale,
+        trauma,
+      }),
+    [hr, sbp, patient.ageMonths, ageInvalid, pregnant, isMale, trauma],
+  );
+  const res = evaluation.result;
+
+  const clearVitals = () => {
+    setHr('');
+    setSbp('');
+    setPregnant(false);
+    setTrauma(false);
+    announce('Показатели очищены');
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-      <Header title="Шоковый индекс Альговера" subtitle={subtitle} />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Section title="Входные данные">
-          <Row>
-            <Input value={hr} onChangeText={setHr} placeholder="Пульс (уд/мин)" />
-            <Input value={sbp} onChangeText={setSbp} placeholder="САД (мм рт. ст.)" />
-          </Row>
+    <Screen scroll>
+      <PatientBar />
 
-          <View style={{ height: 12 }} />
+      <Text variant="body" color="textSecondary" style={styles.intro}>
+        Индекс Альговера: SI = пульс / САД. Взрослые, дети (SIPA), беременность, травма.
+      </Text>
 
-          <Row>
-            <Input value={ageYears} onChangeText={setAgeYears} placeholder="Возраст, лет" />
-            <Input value={ageMonths} onChangeText={setAgeMonths} placeholder="+ мес" />
-          </Row>
-          <Text style={{ color: theme.sub, fontSize: 12, marginTop: 6 }}>
-            Для ребёнка возраст обязателен (до 1 года — в мес). Пусто — взрослая шкала.
-          </Text>
+      <Section title="Показатели">
+        <View style={styles.row}>
+          <NumberField
+            label="Пульс"
+            unit="уд/мин"
+            value={hr}
+            onChangeText={setHr}
+            error={evaluation.fieldErrors.hr}
+            style={styles.cell}
+            testID="shock-hr"
+          />
+          <NumberField
+            label="САД"
+            unit="мм рт. ст."
+            value={sbp}
+            onChangeText={setSbp}
+            error={evaluation.fieldErrors.sbp}
+            hint="Систолическое давление"
+            style={styles.cell}
+            testID="shock-sbp"
+          />
+        </View>
+      </Section>
 
-          <View style={{ height: 12 }} />
+      <Section
+        title="Возраст"
+        description="Общий для всех калькуляторов. Для ребёнка обязателен (до 1 года — в месяцах). Пусто — взрослая шкала."
+      >
+        <View style={styles.row}>
+          <NumberField
+            label="Лет"
+            unit="лет"
+            value={age.years.text}
+            onChangeText={age.years.onChangeText}
+            error={ageErrors.years}
+            style={styles.cell}
+            testID="shock-age-years"
+          />
+          <NumberField
+            label="Месяцев"
+            unit="мес"
+            value={age.months.text}
+            onChangeText={age.months.onChangeText}
+            error={ageErrors.months}
+            style={styles.cell}
+            testID="shock-age-months"
+          />
+        </View>
+      </Section>
 
-          <Row>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ color: theme.sub, flexShrink: 1 }}>Беременность / после родов</Text>
-              <Switch
-                value={pregnant}
-                onValueChange={setPregnant}
-                trackColor={{
-                  false: Platform.OS === 'android' ? '#E5E7EB' : undefined,
-                  true: Platform.OS === 'android' ? theme.accent : undefined
-                }}
-                thumbColor={Platform.OS === 'android' ? (pregnant ? '#FFFFFF' : '#F9FAFB') : undefined}
-              />
-            </View>
-            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ color: theme.sub }}>Травма</Text>
-              <Switch
-                value={trauma}
-                onValueChange={setTrauma}
-                trackColor={{
-                  false: Platform.OS === 'android' ? '#E5E7EB' : undefined,
-                  true: Platform.OS === 'android' ? theme.accent : undefined
-                }}
-                thumbColor={Platform.OS === 'android' ? (trauma ? '#FFFFFF' : '#F9FAFB') : undefined}
-              />
-            </View>
-          </Row>
-        </Section>
-
-        <Row>
-          <Button title="🔢 Рассчитать" onPress={doCalc} />
-          <Button title="♻️ Очистить" onPress={doClear} type="secondary" />
-        </Row>
-
-        {err && (
-          <Section title="Ошибка">
-            <Text style={{ color: theme.danger, fontWeight: '700' }}>{err}</Text>
-          </Section>
+      <Section title="Условия">
+        {isMale ? null : (
+          <SwitchRow
+            label="Беременность / после родов"
+            description="Отдельные пороги КР МЗ РФ «Послеродовое кровотечение»"
+            value={pregnant}
+            onValueChange={setPregnant}
+            testID="shock-pregnant"
+          />
         )}
+        <SwitchRow
+          label="Травма"
+          description="Порог раннего вмешательства и трансфузии"
+          value={trauma}
+          onValueChange={setTrauma}
+          testID="shock-trauma"
+        />
+      </Section>
 
-        {res && (
-          <Section title="Результат">
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <Text style={{ color: theme.sub }}>SI = Пульс / САД</Text>
-              <Chip label={`SI = ${fmt(res.si, 2)}`} color={res.category.color} />
-            </View>
+      <Section title="Результат">
+        {evaluation.status === 'empty' ? (
+          <Note level="info">Введите пульс и САД — индекс рассчитается сразу.</Note>
+        ) : null}
+        {evaluation.status === 'error' ? (
+          <Note level="danger" title="Проверьте ввод">
+            {evaluation.error}
+          </Note>
+        ) : null}
+        {res ? <ShockResult res={res} styles={styles} /> : null}
+      </Section>
 
-            <View style={{ height: 8 }} />
-            <Text style={{ fontWeight: '800', marginBottom: 6 }}>Интерпретация</Text>
-            <Text style={{ color: theme.text, marginBottom: 4 }}>{res.category.label}</Text>
-            <Text style={{ color: theme.sub }}>{res.interpretation}</Text>
-
-            <View style={{ height: 12 }} />
-
-            {res.pediatric && (
-              <View style={{ marginBottom: 10 }}>
-                <Text style={{ color: theme.sub }}>Порог SIPA для возраста: превышен при SI {'>'} {fmt(res.pediatric.cutoff)}</Text>
-              </View>
-            )}
-
-            {res.warnings.map((w, i) => (
-              <Text key={`w${i}`} style={{ color: theme.danger, fontWeight: '700', marginBottom: 6 }}>⚠ {w}</Text>
-            ))}
-
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-              {!!res.bloodLossHint && (
-                <Chip
-                  label={`${res.mode === 'pregnancy' ? 'Кровопотеря' : 'Кровопотеря (ориент., взрослые)'}: ${res.bloodLossHint}`}
-                  color="#64748B"
-                />
-              )}
-              {res.flags.hypotension && <Chip label="Гипотензия для возраста" color={theme.danger} />}
-              {res.flags.pregnancyConcern && <Chip label="Беременность: SI ≥ 1,0" color={theme.danger} />}
-              {res.flags.traumaHighRisk && <Chip label={res.traumaLabel} color={theme.warn} />}
-            </View>
-
-            <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 12 }}>
-              {res.notes.map((n, i) => (
-                <Text key={i} style={{ color: theme.sub, marginBottom: 4 }}>• {n}</Text>
-              ))}
-            </View>
-          </Section>
-        )}
-      </ScrollView>
-    </View>
+      <Button
+        title="Очистить показатели"
+        variant="secondary"
+        icon="refresh"
+        onPress={clearVitals}
+        accessibilityHint="Очистить пульс, давление и переключатели; данные пациента не меняются"
+        fullWidth
+      />
+    </Screen>
   );
-};
+}
 
-export default CalcShockIndexScreen;
+function ShockResult({ res, styles }) {
+  const bloodLossTitle =
+    res.mode === 'pregnancy' ? 'Кровопотеря' : 'Кровопотеря (ориентировочно, взрослые)';
+  return (
+    <>
+      <ResultCard
+        title="Шоковый индекс"
+        value={fmt(res.si, 2)}
+        level={res.category.tone}
+        levelLabel={res.category.label}
+        announceText={shockIndexSummary(res)}
+        testID="shock-result"
+      >
+        <Text variant="caption" color="textSecondary">
+          {MODE_TITLES[res.mode]}
+        </Text>
+        <Text variant="body" style={styles.paragraph}>
+          {res.interpretation}
+        </Text>
+        {res.pediatric ? (
+          <Text variant="body" style={styles.paragraph}>
+            {`Порог SIPA для возраста: превышен при SI > ${fmt(res.pediatric.cutoff)}`}
+          </Text>
+        ) : null}
+        {res.bloodLossHint ? (
+          <View style={styles.kv}>
+            <Text variant="bodyStrong">{`${bloodLossTitle}: `}</Text>
+            <Text variant="body" style={styles.kvValue}>
+              {res.bloodLossHint}
+            </Text>
+          </View>
+        ) : null}
+        <View style={styles.badges}>
+          {res.flags.hypotension ? (
+            <Badge level="danger" label="Гипотензия для возраста" style={styles.badge} />
+          ) : null}
+          {res.flags.pregnancyConcern ? (
+            <Badge level="danger" label="Беременность: SI ≥ 1,0" style={styles.badge} />
+          ) : null}
+          {res.flags.traumaHighRisk ? (
+            <Badge level="warning" label={res.traumaLabel} style={styles.badge} />
+          ) : null}
+        </View>
+      </ResultCard>
+
+      {res.warnings.map((w) => (
+        <Note key={w} level="danger">
+          {w}
+        </Note>
+      ))}
+
+      <View style={styles.notes}>
+        {res.notes.map((n) => (
+          <View key={n} style={styles.noteRow}>
+            <Text variant="body" color="textSecondary" style={styles.bullet} {...hideFromA11y}>
+              •
+            </Text>
+            <Text variant="caption" color="textSecondary" style={styles.noteText}>
+              {n}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </>
+  );
+}
+
+const makeStyles = ({ colors, spacing }) => ({
+  intro: { marginBottom: spacing.lg },
+  row: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -spacing.xs },
+  cell: { flexGrow: 1, flexBasis: 150, marginHorizontal: spacing.xs },
+  paragraph: { marginTop: spacing.sm },
+  kv: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.sm },
+  kvValue: { flexShrink: 1 },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', marginTop: spacing.xs },
+  badge: { marginRight: spacing.sm, marginTop: spacing.sm },
+  notes: {
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    paddingTop: spacing.md,
+    marginTop: spacing.xs,
+  },
+  noteRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xs },
+  bullet: { marginRight: spacing.sm },
+  noteText: { flex: 1 },
+});
