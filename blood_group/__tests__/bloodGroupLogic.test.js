@@ -1,174 +1,128 @@
+// Тесты таблиц учёта и итога (приказ МЗ РФ №363, табл. 1; №1134н, п. 6, 11)
 import {
+  AB0_REAGENTS,
+  AB0_ROWS,
+  CONTROL_NOTE,
   NEG,
   POS,
-  WEAK,
-  NOT_SET,
-  EMPTY_REACTIONS,
-  REACTION_OPTIONS,
-  REAGENTS,
-  interpretBloodGroup,
-  isDoubtful,
-  pendingHints,
+  RH_REAGENTS,
+  RH_ROWS,
+  bloodGroupResult,
   reactionWord,
-  resultLevel,
-  resultSummary,
+  rowA11yLabel,
 } from '../bloodGroupLogic';
 
-const run = (r) => interpretBloodGroup({ ...EMPTY_REACTIONS, ...r });
+const pattern = (row, reagents) => reagents.map((r) => row[r.key]).join('');
 
-describe('таблица AB0 (приказ №363, табл. 1)', () => {
-  it.each([
-    [NEG, NEG, NEG, '0 (I)'],
-    [POS, NEG, POS, 'A (II)'],
-    [NEG, POS, POS, 'B (III)'],
-  ])('анти-A %p, анти-B %p, анти-AB %p → %s', (antiA, antiB, antiAB, abo) => {
-    const r = run({ antiA, antiB, antiAB });
-    expect(r.abo).toBe(abo);
-    expect(r.warnings).toEqual([]);
-    expect(r.aboReady).toBe(true);
-  });
-
-  it('AB (IV) — только при отрицательном контроле с NaCl', () => {
-    const pending = run({ antiA: POS, antiB: POS, antiAB: POS });
-    expect(pending.abo).toBe('AB (IV)?');
-    expect(pending.warnings[0]).toMatch(/выполните контроль/);
-
-    const confirmed = run({ antiA: POS, antiB: POS, antiAB: POS, control: NEG });
-    expect(confirmed.abo).toBe('AB (IV)');
-    expect(confirmed.warnings).toEqual([]);
-  });
-
-  it('без анти-AB группа определяется по анти-A/анти-B; для 0 (I) — подсказка про анти-AB', () => {
-    expect(run({ antiA: POS, antiB: NEG }).abo).toBe('A (II)');
-    const zero = run({ antiA: NEG, antiB: NEG });
-    expect(zero.abo).toBe('0 (I)');
-    expect(zero.infos[0]).toMatch(/анти-AB/);
-    expect(run({ antiA: NEG, antiB: NEG, antiAB: NEG }).infos).toEqual([]);
-  });
-
-  it('только анти-A — группа ещё не определяется', () => {
-    const r = run({ antiA: POS });
-    expect(r.abo).toBe(NOT_SET);
-    expect(r.aboReady).toBe(false);
-    expect(r.anyResult).toBe(false);
-  });
-});
-
-describe('неоднозначные реакции', () => {
-  it('агглютинация в контроле — группа и резус не определяются', () => {
-    for (const control of [POS, WEAK]) {
-      const r = run({ antiA: POS, antiB: POS, antiAB: POS, antiD: POS, control });
-      expect(r.abo).toBe('Не определена');
-      expect(r.rh).toBe('Не определён');
-      expect(r.anyResult).toBe(true);
-      expect(r.warnings).toHaveLength(1);
-      expect(r.warnings[0]).toMatch(/неспецифическая/);
-    }
-  });
-
-  it('слабая реакция с анти-A/анти-B/анти-AB — слабый вариант, в лабораторию', () => {
-    for (const r of [
-      run({ antiA: WEAK, antiB: NEG }),
-      run({ antiA: NEG, antiB: WEAK }),
-      run({ antiA: NEG, antiB: NEG, antiAB: WEAK }),
-    ]) {
-      expect(r.abo).toBe('Не определена');
-      expect(r.warnings[0]).toMatch(/слабый вариант/);
-    }
-  });
-
-  it('анти-AB противоречит анти-A/анти-B', () => {
-    const onlyAB = run({ antiA: NEG, antiB: NEG, antiAB: POS });
-    expect(onlyAB.abo).toBe('Не определена');
-    expect(onlyAB.warnings[0]).toMatch(/только с анти-AB/);
-
-    const noAB = run({ antiA: POS, antiB: NEG, antiAB: NEG });
-    expect(noAB.abo).toBe('Не определена');
-    expect(noAB.warnings[0]).toMatch(/противоречат/);
-  });
-});
-
-describe('резус (анти-D IgM)', () => {
-  it('положительный и отрицательный', () => {
-    expect(run({ antiD: POS }).rh).toBe('Rh(+) положительный');
-    expect(run({ antiD: NEG }).rh).toBe('Rh(−) отрицательный');
-    expect(run({ antiD: NEG }).anyResult).toBe(true);
-  });
-
-  it('при неподтверждённом AB (IV) положительный анти-D под вопросом', () => {
-    expect(run({ antiA: POS, antiB: POS, antiAB: POS, antiD: POS }).rh).toBe('Rh(+)?');
-    expect(run({ antiA: POS, antiB: POS, antiAB: POS, antiD: POS, control: NEG }).rh).toBe(
-      'Rh(+) положительный',
-    );
-  });
-
-  it('слабая реакция — вариант D, до уточнения как резус-отрицательный', () => {
-    const r = run({ antiD: WEAK });
-    expect(r.rh).toBe('Не определён');
-    expect(r.warnings[0]).toMatch(/вариант D/);
-    expect(r.warnings[0]).toMatch(/резус-отрицательным/);
-  });
-
-  it('не отмечен', () => {
-    expect(run({}).rh).toBe(NOT_SET);
-  });
-});
-
-describe('помощники экрана', () => {
-  it('isDoubtful', () => {
-    expect(isDoubtful('AB (IV)?')).toBe(true);
-    expect(isDoubtful('Rh(+)?')).toBe(true);
-    expect(isDoubtful('Не определена')).toBe(true);
-    expect(isDoubtful('Не определён')).toBe(true);
-    expect(isDoubtful('A (II)')).toBe(false);
-    expect(isDoubtful(NOT_SET)).toBe(false);
-    expect(isDoubtful(undefined)).toBe(false);
-  });
-
-  it('resultLevel: уровень всегда со словом', () => {
-    expect(resultLevel(run({}))).toBeNull();
-    expect(resultLevel(run({ antiA: POS, antiB: NEG, antiAB: POS, antiD: POS }))).toEqual({
-      level: 'info',
-      label: 'Первичный результат',
+describe('таблица AB0 (цоликлоны анти-А, анти-В, анти-АВ)', () => {
+  it('четыре группы с классическими реакциями', () => {
+    const map = Object.fromEntries(AB0_ROWS.map((r) => [r.label, pattern(r, AB0_REAGENTS)]));
+    expect(map).toEqual({
+      '0(I)': `${NEG}${NEG}${NEG}`,
+      'A(II)': `${POS}${NEG}${POS}`,
+      'B(III)': `${NEG}${POS}${POS}`,
+      'AB(IV)': `${POS}${POS}${POS}`,
     });
-    expect(resultLevel(run({ antiA: POS, antiB: POS })).level).toBe('warning');
-    expect(resultLevel(run({ antiD: WEAK })).label).toBe('Требует уточнения');
   });
 
-  it('pendingHints', () => {
-    expect(pendingHints(run({}))[0]).toMatch(/анти-A и анти-B .* анти-D/);
-    expect(pendingHints(run({ antiD: POS }))).toEqual(['Для группы AB0 отметьте анти-A и анти-B.']);
-    expect(pendingHints(run({ antiA: NEG, antiB: NEG }))).toEqual([
-      'Для резуса отметьте реакцию с анти-D.',
-    ]);
-    expect(pendingHints(run({ antiA: NEG, antiB: NEG, antiD: NEG }))).toEqual([]);
+  it('анти-АВ «+» ровно тогда, когда «+» с анти-А или анти-В', () => {
+    AB0_ROWS.forEach((r) => {
+      expect(r.antiAB === POS).toBe(r.antiA === POS || r.antiB === POS);
+    });
   });
 
-  it('resultSummary — текст для диктора без «—» и «?»', () => {
-    expect(resultSummary(run({}))).toBe('');
-    const s = resultSummary(run({ antiA: POS, antiB: NEG, antiAB: POS, antiD: NEG }));
-    expect(s).toBe(
-      'Группа AB0: A (II). Резус: Rh(−) отрицательный. Нужно подтверждение в лаборатории.',
+  it('сочетания реакций в строках не повторяются', () => {
+    const patterns = AB0_ROWS.map((r) => pattern(r, AB0_REAGENTS));
+    expect(new Set(patterns).size).toBe(patterns.length);
+  });
+
+  it('контроль с 0,9% NaCl нужен только для AB(IV)', () => {
+    expect(AB0_ROWS.filter((r) => r.needsControl).map((r) => r.key)).toEqual(['AB']);
+  });
+
+  it('в таблицах только «+» и «−», без сомнительных реакций', () => {
+    AB0_ROWS.forEach((r) => AB0_REAGENTS.forEach((g) => expect([POS, NEG]).toContain(r[g.key])));
+    RH_ROWS.forEach((r) => RH_REAGENTS.forEach((g) => expect([POS, NEG]).toContain(r[g.key])));
+  });
+});
+
+describe('таблица резуса (анти-D супер)', () => {
+  it('агглютинация — Rh(+), нет — Rh(−)', () => {
+    const pos = RH_ROWS.find((r) => r.antiD === POS);
+    const neg = RH_ROWS.find((r) => r.antiD === NEG);
+    expect(pos.label).toBe('Rh(+)');
+    expect(pos.text).toBe('резус-положительная');
+    expect(neg.label).toBe('Rh(−)');
+    expect(neg.text).toBe('резус-отрицательная');
+  });
+});
+
+describe('bloodGroupResult', () => {
+  it('ничего не выбрано — null; неизвестный ключ — как не выбран', () => {
+    expect(bloodGroupResult(null, null)).toBeNull();
+    expect(bloodGroupResult('X', 'Y')).toBeNull();
+  });
+
+  it('группа и резус', () => {
+    const r = bloodGroupResult('A', 'pos');
+    expect(r.headline).toBe('A(II) Rh(+)');
+    expect(r.text).toBe('Группа A(II), резус-положительная');
+    expect(r.spokenValue).toBe('группа А, вторая, резус-положительная');
+    expect(r.spoken).toBe(
+      'Результат: группа А, вторая, резус-положительная. Результат первичный, нужно подтверждение в лаборатории',
     );
-    const pending = resultSummary(run({ antiA: POS, antiB: POS, antiD: POS }));
-    expect(pending).toMatch(/AB \(IV\), под вопросом/);
-    expect(pending).toMatch(/Rh\(\+\), под вопросом/);
-    expect(pending).toMatch(/Есть предупреждение/);
-    expect(pending).not.toMatch(/\?/);
-    expect(resultSummary(run({ antiD: POS }))).toMatch(/Группа AB0: не отмечено/);
+    expect(r.needsControl).toBe(false);
+    expect(r.missing).toBeNull();
+    expect(r.notes).toEqual([]);
   });
 
-  it('reactionWord и варианты ответа', () => {
-    expect(reactionWord(NEG)).toBe('агглютинации нет');
-    expect(reactionWord(POS)).toBe('агглютинация есть');
-    expect(reactionWord(WEAK)).toMatch(/слабая/);
-    expect(reactionWord(null)).toBe('не отмечено');
-    expect(REACTION_OPTIONS.map((o) => o.value)).toEqual([NEG, WEAK, POS]);
-    // у каждого варианта есть слово, а не только знак
-    REACTION_OPTIONS.forEach((o) => expect(o.label).toMatch(/[а-я]/));
+  it('каждая строка даёт свою группу', () => {
+    AB0_ROWS.forEach((row) => {
+      const r = bloodGroupResult(row.key, 'neg');
+      expect(r.headline).toBe(`${row.label} Rh(−)`);
+      expect(r.abo).toBe(row);
+    });
   });
 
-  it('лунки: все ключи реакций описаны', () => {
-    expect(REAGENTS.map((r) => r.key).sort()).toEqual(Object.keys(EMPTY_REACTIONS).sort());
+  it('только группа — подсказка выбрать резус', () => {
+    const r = bloodGroupResult('O', null);
+    expect(r.headline).toBe('0(I)');
+    expect(r.text).toBe('Группа 0(I)');
+    expect(r.missing).toBe('Выберите резус');
+    expect(r.spoken).toContain('Выберите резус');
+  });
+
+  it('только резус — подсказка выбрать группу', () => {
+    const r = bloodGroupResult(null, 'neg');
+    expect(r.headline).toBe('Rh(−)');
+    expect(r.text).toBe('Резус-отрицательная');
+    expect(r.missing).toBe('Выберите строку в таблице группы');
+  });
+
+  it('AB(IV) — предупреждение о контроле с 0,9% NaCl, в том числе для диктора', () => {
+    const r = bloodGroupResult('AB', 'pos');
+    expect(r.notes).toEqual([CONTROL_NOTE]);
+    expect(r.needsControl).toBe(true);
+    // При агглютинации в контроле недостоверны и группа, и резус
+    expect(CONTROL_NOTE).toMatch(/группу и резус не устанавливают/);
+    expect(CONTROL_NOTE).toContain('0,9% NaCl');
+    expect(r.spoken).toContain('нужен контроль с физраствором');
+  });
+});
+
+describe('подписи для диктора', () => {
+  it('реакция словами', () => {
+    expect(reactionWord(POS)).toBe('агглютинация');
+    expect(reactionWord(NEG)).toBe('нет агглютинации');
+  });
+
+  it('строка таблицы читается целиком, «В» — как «Бэ»', () => {
+    const a = AB0_ROWS.find((r) => r.key === 'A');
+    expect(rowA11yLabel(a, AB0_REAGENTS, 'Группа')).toBe(
+      'Группа А, вторая: Анти-А — агглютинация, Анти-Бэ — нет агглютинации, Анти-А-Бэ — агглютинация',
+    );
+    expect(rowA11yLabel(RH_ROWS[0], RH_REAGENTS)).toBe(
+      'резус-положительная: Анти-Дэ супер — агглютинация',
+    );
   });
 });

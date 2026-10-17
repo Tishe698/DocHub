@@ -1,234 +1,159 @@
-// bloodGroupLogic.js — интерпретация первичного определения группы крови AB0 и резуса
-// цоликлонами на плоскости. Чистые функции без React (тесты: __tests__/bloodGroupLogic.test.js).
-// Логика и формулировки перенесены из blood_group_screen.js без изменения клинических правил
-// (ветка fix/clinical-audit).
+// bloodGroupLogic.js — первичное определение группы крови AB0 и резуса цоликлонами на плоскости
+// по классической таблице учёта: на экране выбирают строку, где капли выглядят так же, как на
+// планшете, и получают группу и резус. Чистые функции без React
+// (тесты: __tests__/bloodGroupLogic.test.js).
 //
 // Источники:
 //  - Приказ МЗ РФ от 20.10.2020 №1134н, п. 6 (первичное определение AB0 и резуса),
-//    п. 11 (подтверждение в лаборатории), п. 19 (контрольная проверка перед трансфузией),
-//    приложение (совместимость при вариантах D). Действует до 01.01.2027 (п. 2) —
-//    после замены приказа (сообщается о №730н от 17.08.2026) ссылки пересмотреть.
-//  - Приказ МЗ РФ от 25.11.2002 №363 «Инструкция по применению компонентов крови»,
-//    разд. «Определение группы крови AB0» и «Определение резус-принадлежности»
-//    (учёт через 3 мин; при агглютинации со всеми реагентами — контроль с 0,9% NaCl,
-//    AB(IV) только при его отрицательном результате). Методика совпадает с инструкциями
-//    производителей цоликлонов анти-A, анти-B, анти-AB, анти-D.
+//    п. 11 (подтверждение в лаборатории), п. 19 (контрольная проверка перед трансфузией).
+//    Действует до 01.01.2027 (п. 2) — после замены приказа (сообщается о №730н от 17.08.2026)
+//    ссылки пересмотреть.
+//  - Приказ МЗ РФ от 25.11.2002 №363 «Инструкция по применению компонентов крови», табл. 1
+//    (оценка реакций с цоликлонами анти-А, анти-В, анти-АВ; учёт через 3 мин; при агглютинации
+//    с анти-А и анти-В — контроль с 0,9% NaCl, AB(IV) только при его отрицательном результате),
+//    раздел «Определение резус-принадлежности» (цоликлон анти-D супер на плоскости).
+//    Методика совпадает с инструкциями производителей цоликлонов.
 
-// Значения реакции: null — не отмечено, 0 — нет агглютинации,
-// 1 — агглютинация, 2 — слабая / сомнительная.
-export const NEG = 0;
-export const POS = 1;
-export const WEAK = 2;
+// Реакция в лунке: «+» — агглютинация, «−» — агглютинации нет
+export const POS = '+';
+export const NEG = '−';
 
-// Варианты ответа для каждой лунки (символ + слово: смысл не передаётся только знаком)
-export const REACTION_OPTIONS = [
-  { value: NEG, symbol: '−', label: '− нет', a11y: 'агглютинации нет' },
-  { value: WEAK, symbol: '±', label: '± слабая', a11y: 'слабая или сомнительная агглютинация' },
-  { value: POS, symbol: '+', label: '+ есть', a11y: 'агглютинация есть' },
+// Цоликлоны таблицы AB0. tone — цвет подписи, как на флаконах и в учебной таблице
+// (анти-А — красный, анти-В — синий); spoken — как подпись читает диктор
+// (кириллическая «В» иначе звучит как «вэ», а «АВ» — как одно слово).
+export const AB0_REAGENTS = [
+  { key: 'antiA', label: 'Анти-А', spoken: 'Анти-А', tone: 'danger' },
+  { key: 'antiB', label: 'Анти-В', spoken: 'Анти-Бэ', tone: 'primary' },
+  { key: 'antiAB', label: 'Анти-АВ', spoken: 'Анти-А-Бэ', tone: 'success' },
 ];
 
-// Подпись реакции словами: для лунки и для диктора
-export function reactionWord(value) {
-  const opt = REACTION_OPTIONS.find((o) => o.value === value);
-  return opt ? opt.a11y : 'не отмечено';
+export const RH_REAGENTS = [{ key: 'antiD', label: 'Анти-D супер', spoken: 'Анти-Дэ супер' }];
+
+// Таблица учёта AB0 (приказ №363, табл. 1): реакции → «кровь принадлежит к группе»
+export const AB0_ROWS = [
+  {
+    key: 'O',
+    label: '0(I)',
+    spoken: 'ноль, первая',
+    tone: 'text',
+    antiA: NEG,
+    antiB: NEG,
+    antiAB: NEG,
+  },
+  {
+    key: 'A',
+    label: 'A(II)',
+    spoken: 'А, вторая',
+    tone: 'danger',
+    antiA: POS,
+    antiB: NEG,
+    antiAB: POS,
+  },
+  {
+    key: 'B',
+    label: 'B(III)',
+    spoken: 'Бэ, третья',
+    tone: 'primary',
+    antiA: NEG,
+    antiB: POS,
+    antiAB: POS,
+  },
+  {
+    key: 'AB',
+    label: 'AB(IV)',
+    spoken: 'А-Бэ, четвёртая',
+    tone: 'success',
+    antiA: POS,
+    antiB: POS,
+    antiAB: POS,
+    // AB(IV) устанавливают только при отсутствии агглютинации в контроле с 0,9% NaCl
+    needsControl: true,
+  },
+];
+
+// Резус-принадлежность: цоликлон анти-D супер на плоскости, учёт через 3 мин
+export const RH_ROWS = [
+  {
+    key: 'pos',
+    label: 'Rh(+)',
+    text: 'резус-положительная',
+    spoken: 'резус-положительная',
+    tone: 'text',
+    antiD: POS,
+  },
+  {
+    key: 'neg',
+    label: 'Rh(−)',
+    text: 'резус-отрицательная',
+    spoken: 'резус-отрицательная',
+    tone: 'text',
+    antiD: NEG,
+  },
+];
+
+// Агглютинация в контроле — неспецифическая (аутоагглютинация, холодовые антитела): тогда
+// недостоверны и группа, и резус (приказ №363, 2002)
+export const CONTROL_NOTE =
+  'AB(IV) ставят, только если в контроле (капля крови + капля 0,9% NaCl) агглютинации нет. ' +
+  'Если в контроле есть агглютинация — она неспецифическая: группу и резус не устанавливают, ' +
+  'кровь направляют в лабораторию.';
+
+export const LAB_NOTE = 'Результат первичный: нужно подтверждение в лаборатории.';
+// То же для диктора: итог озвучивается без карточки, первичность нужно назвать и голосом
+const LAB_SPOKEN = 'Результат первичный, нужно подтверждение в лаборатории';
+
+const byKey = (rows, key) => rows.find((r) => r.key === key) || null;
+
+// Слово реакции для диктора
+export const reactionWord = (value) => (value === POS ? 'агглютинация' : 'нет агглютинации');
+
+// Подпись строки таблицы для диктора: «Группа А, вторая: Анти-А — агглютинация, …»
+export function rowA11yLabel(row, reagents, prefix = '') {
+  const cells = reagents.map((r) => `${r.spoken} — ${reactionWord(row[r.key])}`).join(', ');
+  return `${prefix ? `${prefix} ` : ''}${row.spoken}: ${cells}`;
 }
 
-// Лунки на экране: порядок, подписи и подсказки
-export const REAGENTS = [
-  {
-    key: 'antiA',
-    section: 'abo',
-    title: 'Анти-A',
-    reagent: 'Анти-A',
-    hint: 'Агглютинация → есть антиген A',
-  },
-  {
-    key: 'antiB',
-    section: 'abo',
-    title: 'Анти-B',
-    reagent: 'Анти-B',
-    hint: 'Агглютинация → есть антиген B',
-  },
-  {
-    key: 'antiAB',
-    section: 'abo',
-    title: 'Анти-AB',
-    reagent: 'Анти-AB',
-    hint: 'Входит в стандартный набор: «+» при A, B, AB; «−» при 0 (I). Выявляет слабые A и B.',
-  },
-  {
-    key: 'control',
-    section: 'abo',
-    title: 'Контроль: эритроциты + 0,9% NaCl',
-    reagent: 'Контроль NaCl',
-    hint: 'Обязателен при агглютинации с анти-A и анти-B. Агглютинации быть не должно.',
-  },
-  {
-    key: 'antiD',
-    section: 'rh',
-    title: 'Анти-D (IgM)',
-    reagent: 'Анти-D',
-    hint: 'Агглютинация → резус-положительный; нет → резус-отрицательный',
-  },
-];
+// Итог по выбранным строкам. null — ничего не выбрано.
+//   headline — крупно («A(II) Rh(+)»), text — словами, spokenValue — то же для диктора,
+//   spoken — озвучка итога целиком, needsControl — выбрана AB(IV) (нужен контроль с 0,9% NaCl),
+//   notes — предупреждения, missing — что ещё выбрать.
+export function bloodGroupResult(aboKey, rhKey) {
+  const abo = byKey(AB0_ROWS, aboKey);
+  const rh = byKey(RH_ROWS, rhKey);
+  if (!abo && !rh) return null;
 
-export const EMPTY_REACTIONS = {
-  antiA: null,
-  antiB: null,
-  antiAB: null,
-  control: null,
-  antiD: null,
-};
-
-export const NOT_SET = '—';
-const UNDET_ABO = 'Не определена';
-const UNDET_RH = 'Не определён';
-const LAB = 'Направьте образец в лабораторию.';
-
-// Интерпретация реакций. Возвращает группу AB0, резус и предупреждения.
-// Таблица AB0 (анти-A / анти-B / анти-AB): 0(I) − − −; A(II) + − +; B(III) − + +;
-// AB(IV) + + + — приказ МЗ РФ №363 (2002), табл. 1; инструкции к цоликлонам.
-export function interpretBloodGroup({ antiA, antiB, antiAB = null, antiD = null, control = null }) {
-  const warnings = [];
-  const infos = [];
-
-  const aSet = antiA !== null && antiA !== undefined;
-  const bSet = antiB !== null && antiB !== undefined;
-  const aboReady = aSet && bSet;
-
-  // Агглютинация в контроле (эритроциты + 0,9% NaCl) — неспецифическая
-  // (аутоагглютинация, холодовые антитела, полиагглютинация): любые положительные
-  // реакции недостоверны (приказ №363, 2002).
-  const controlPos = control === POS || control === WEAK;
-
-  let abo = NOT_SET;
-  let aboPending = false; // AB(IV) до выполнения контроля
-
-  if (controlPos) {
-    abo = UNDET_ABO;
-    warnings.push(
-      'Агглютинация в контроле с 0,9% NaCl — неспецифическая (аутоагглютинация, холодовые антитела). ' +
-        'Группа и резус не определяются. ' +
-        LAB,
-    );
-  } else if (aboReady) {
-    if (antiA === WEAK || antiB === WEAK || antiAB === WEAK) {
-      // Слабые варианты A/B агглютинируют позже и слабее (инструкции к цоликлонам)
-      abo = UNDET_ABO;
-      warnings.push(
-        'Слабая или сомнительная реакция: возможен слабый вариант антигена A или B. ' + LAB,
-      );
-    } else {
-      const aPos = antiA === POS;
-      const bPos = antiB === POS;
-      let base;
-      if (!aPos && !bPos) base = '0 (I)';
-      else if (aPos && !bPos) base = 'A (II)';
-      else if (!aPos && bPos) base = 'B (III)';
-      else base = 'AB (IV)';
-
-      // Согласованность с анти-AB: должен быть «+» при A или B и «−» при 0(I)
-      const abExpected = aPos || bPos ? POS : NEG;
-      if (antiAB !== null && antiAB !== undefined && antiAB !== abExpected) {
-        abo = UNDET_ABO;
-        warnings.push(
-          antiAB === POS
-            ? 'Агглютинация только с анти-AB: возможен слабый вариант A или B. ' + LAB
-            : 'Нет агглютинации с анти-AB при агглютинации с анти-A/анти-B — реакции противоречат друг другу. ' +
-                LAB,
-        );
-      } else if (base === 'AB (IV)' && control !== NEG) {
-        // AB(IV) устанавливают только при отсутствии агглютинации в контроле
-        // с 0,9% NaCl (приказ №363, 2002)
-        abo = 'AB (IV)?';
-        aboPending = true;
-        warnings.push(
-          'Агглютинация с анти-A и анти-B: выполните контроль — капля эритроцитов + капля 0,9% NaCl. ' +
-            'AB (IV) — только если в контроле агглютинации нет.',
-        );
-      } else {
-        abo = base;
-        if (base === '0 (I)' && (antiAB === null || antiAB === undefined)) {
-          // Анти-AB входит в стандартный набор и выявляет слабые A/B
-          infos.push('Для 0 (I) подтвердите цоликлоном анти-AB: агглютинации быть не должно.');
-        }
-      }
-    }
+  const headline = [abo && abo.label, rh && rh.label].filter(Boolean).join(' ');
+  const textParts = [];
+  const spokenParts = [];
+  if (abo) {
+    textParts.push(`группа ${abo.label}`);
+    spokenParts.push(`группа ${abo.spoken}`);
   }
-
-  // Резус-принадлежность: анти-D (IgM) на плоскости, учёт через 3 мин
-  // (приказ №363, 2002; 1134н п. 6, 11)
-  let rh = NOT_SET;
-  if (controlPos) {
-    rh = UNDET_RH;
-  } else if (antiD === POS) {
-    // При неисключённой неспецифической агглютинации (все реакции «+», контроль
-    // не выполнен) положительный анти-D тоже может быть ложным
-    rh = aboPending ? 'Rh(+)?' : 'Rh(+) положительный';
-  } else if (antiD === NEG) {
-    rh = 'Rh(−) отрицательный';
-  } else if (antiD === WEAK) {
-    rh = UNDET_RH;
-    // Вариант D уточняют в лаборатории анти-D IgG (1134н п. 11). До уточнения —
-    // как резус-отрицательный: D-отрицательные компоненты совместимы и при слабом,
-    // и при парциальном D (1134н, приложение) — наиболее безопасный вариант.
-    warnings.push(
-      'Слабая или сомнительная реакция с анти-D: возможен вариант D. ' +
-        LAB +
-        ' До уточнения считать резус-отрицательным (безопасно при любом варианте D).',
-    );
+  if (rh) {
+    textParts.push(rh.text);
+    spokenParts.push(rh.spoken);
   }
-
-  const anyResult = aboReady || (antiD !== null && antiD !== undefined) || controlPos;
+  const text = textParts.join(', ');
+  const missing = !abo ? 'Выберите строку в таблице группы' : !rh ? 'Выберите резус' : null;
+  const needsControl = !!(abo && abo.needsControl);
+  const spokenValue = spokenParts.join(', ');
 
   return {
     abo,
     rh,
-    aboReady,
-    anyResult,
-    warnings,
-    infos,
+    headline,
+    text: text.charAt(0).toUpperCase() + text.slice(1),
+    spokenValue,
+    spoken: [
+      `Результат: ${spokenValue}`,
+      needsControl ? 'нужен контроль с физраствором' : null,
+      missing,
+      LAB_SPOKEN,
+    ]
+      .filter(Boolean)
+      .join('. '),
+    needsControl,
+    notes: needsControl ? [CONTROL_NOTE] : [],
+    missing,
   };
-}
-
-// Неокончательный результат: «?» (ждёт контроля) или «Не определена/Не определён»
-export function isDoubtful(value) {
-  const s = String(value || '');
-  return s.includes('?') || s.startsWith('Не ');
-}
-
-// Итоговый уровень для карточки результата: цвет всегда дублируется словом (levelLabel)
-export function resultLevel(result) {
-  if (!result || !result.anyResult) return null;
-  if (result.warnings.length || isDoubtful(result.abo) || isDoubtful(result.rh)) {
-    return { level: 'warning', label: 'Требует уточнения' };
-  }
-  return { level: 'info', label: 'Первичный результат' };
-}
-
-// Подсказки «что ещё отметить» под результатом
-export function pendingHints(result) {
-  if (!result.anyResult) {
-    return ['Отметьте реакции с анти-A и анти-B для группы и с анти-D для резуса.'];
-  }
-  const out = [];
-  if (result.abo === NOT_SET) out.push('Для группы AB0 отметьте анти-A и анти-B.');
-  if (result.rh === NOT_SET) out.push('Для резуса отметьте реакцию с анти-D.');
-  return out;
-}
-
-// Текст для озвучки результата (без «—» и символов, которые диктор читает плохо)
-export function resultSummary(result) {
-  if (!result || !result.anyResult) return '';
-  const spoken = (v) => (v === NOT_SET ? 'не отмечено' : v.replace('?', ', под вопросом'));
-  const parts = [`Группа AB0: ${spoken(result.abo)}`, `Резус: ${spoken(result.rh)}`];
-  if (result.warnings.length) {
-    parts.push(
-      result.warnings.length === 1
-        ? 'Есть предупреждение'
-        : `Предупреждений: ${result.warnings.length}`,
-    );
-  }
-  parts.push('Нужно подтверждение в лаборатории');
-  return `${parts.join('. ')}.`;
 }
