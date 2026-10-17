@@ -12,6 +12,7 @@ import ThemeProvider, {
 } from './ThemeProvider';
 import palette from './palette';
 import broselowColors from './broselow';
+import bloodDropColors from './bloodDrop';
 import { spacing, radius, typography, fontScaling, MIN_TOUCH } from './tokens';
 
 // Текущая тема: { scheme, mode, setMode, colors, spacing, radius, typography, isDark, ... }
@@ -54,6 +55,7 @@ export {
   buildTheme,
   palette,
   broselowColors,
+  bloodDropColors,
   spacing,
   radius,
   typography,

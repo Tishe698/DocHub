@@ -1,140 +1,80 @@
 // blood_group_screen.js
 // Первичное определение группы крови AB0 и резус-принадлежности цоликлонами на плоскости.
-// Интерфейс; интерпретация реакций и источники — в bloodGroupLogic.js.
-import React, { useCallback, useMemo, useState } from 'react';
+// Две таблицы учёта с рисунками капель: нажмите строку, где капли выглядят так же, как на
+// планшете, — внизу появятся группа и резус. Данные таблиц и источники — в bloodGroupLogic.js.
+import React, { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { announce, hideFromA11y } from '../components/a11y';
-import { Button, Card, ChoiceChips, Note, ResultCard, Section } from '../components/ui';
+import { Button, Note, ResultCard, Section } from '../components/ui';
 import { useThemedStyles } from '../theme/index';
+import BloodDrop from './BloodDrop';
+import ReactionTable from './ReactionTable';
 import {
-  EMPTY_REACTIONS,
-  NOT_SET,
+  AB0_REAGENTS,
+  AB0_ROWS,
+  LAB_NOTE,
+  NEG,
   POS,
-  REACTION_OPTIONS,
-  REAGENTS,
-  WEAK,
-  interpretBloodGroup,
-  isDoubtful,
-  pendingHints,
-  reactionWord,
-  resultLevel,
-  resultSummary,
+  RH_REAGENTS,
+  RH_ROWS,
+  bloodGroupResult,
 } from './bloodGroupLogic';
 
-// Совместимость: функция раньше экспортировалась из экрана
-export { interpretBloodGroup };
-
-// «Лунка»: пустая / с крупными агглютинатами / со слабой агглютинацией.
-// Рисунок декоративный (скрыт от диктора); смысл дублируется словом под лункой.
-const Well = ({ reagent, value }) => {
+// Как выглядит реакция: рисунок + слово
+const Legend = () => {
   const styles = useThemedStyles(makeStyles);
-  const pos = value === POS;
-  const weak = value === WEAK;
-  const dots = pos ? [0, 1, 2, 3, 4] : weak ? [0, 1, 2] : [];
   return (
-    <View style={styles.wellRow} {...hideFromA11y}>
-      <View
-        style={[styles.wellCircle, pos && styles.wellCircleActive, weak && styles.wellCircleWeak]}
-      >
-        <View style={styles.dotsWrap}>
-          {dots.map((d) => (
-            <View key={d} style={[styles.dot, pos ? styles.dotPos : styles.dotWeak]} />
-          ))}
-        </View>
-      </View>
-      <Text variant="caption" color="textSecondary" style={styles.wellLabel}>
-        {value === null || value === undefined
-          ? `${reagent}: не отмечено`
-          : `${reagent}: ${reactionWord(value)}`}
-      </Text>
-    </View>
-  );
-};
-
-// Выбор реакции − / ± / + для одной лунки
-const ReactionPicker = ({ title, reagent, hint, value, onChange, testID }) => {
-  const styles = useThemedStyles(makeStyles);
-  const options = useMemo(
-    () =>
-      REACTION_OPTIONS.map((o) => ({
-        value: o.value,
-        label: o.label,
-        accessibilityLabel: `${reagent}: ${o.a11y}`,
-      })),
-    [reagent],
-  );
-  return (
-    <Card>
-      <ChoiceChips
-        label={title}
-        options={options}
-        value={value}
-        onChange={onChange}
-        testID={testID}
-      />
-      {hint ? (
-        <Text variant="caption" color="textSecondary" style={styles.hint}>
-          {hint}
+    <View style={styles.legend}>
+      <View style={styles.legendRow}>
+        <BloodDrop value={NEG} size={22} />
+        <Text variant="caption" color="textSecondary" style={styles.legendText}>
+          «−» ровная красная капля — агглютинации нет
         </Text>
-      ) : null}
-      <Well reagent={reagent} value={value} />
-    </Card>
-  );
-};
-
-// Строка результата; неокончательное значение — цветом предупреждения и словом
-// («Не определена», «?» → «под вопросом» для диктора)
-const ResultRow = ({ label, value }) => {
-  const styles = useThemedStyles(makeStyles);
-  const doubtful = isDoubtful(value);
-  const notSet = value === NOT_SET;
-  const spoken = notSet ? 'не отмечено' : value.replace('?', ', под вопросом');
-  return (
-    <View style={styles.rowLine} accessible accessibilityLabel={`${label}: ${spoken}`}>
-      <Text variant="body" color="textSecondary" style={styles.rowLabel}>
-        {label}
-      </Text>
-      <Text
-        variant="bodyStrong"
-        color={notSet ? 'textMuted' : doubtful ? 'warning' : 'success'}
-        style={styles.rowValue}
-      >
-        {value}
-      </Text>
+      </View>
+      <View style={styles.legendRow}>
+        <BloodDrop value={POS} size={22} />
+        <Text variant="caption" color="textSecondary" style={styles.legendText}>
+          «+» красные хлопья на светлом фоне — агглютинация
+        </Text>
+      </View>
     </View>
   );
 };
+
+// В выбранной строке подпись цветом onPrimarySoft: цвет группы на подсвеченном фоне
+// в тёмной теме не даёт контраста 4,5:1
+const renderGroup = (row, selected) => (
+  <Text variant="heading" color={selected ? 'onPrimarySoft' : row.tone}>
+    {row.label}
+    {/* U+2060 — «*» не отрывается от AB(IV) при переносе */}
+    {row.needsControl ? '\u2060*' : ''}
+  </Text>
+);
+
+const renderRh = (row, selected) => (
+  <>
+    <Text variant="heading" color={selected ? 'onPrimarySoft' : row.tone}>
+      {row.label}
+    </Text>
+    <Text variant="caption" color="textSecondary" style={{ textAlign: 'center' }}>
+      {row.text}
+    </Text>
+  </>
+);
 
 export default function BloodGroupScreen() {
   const styles = useThemedStyles(makeStyles);
-  const [reactions, setReactions] = useState(EMPTY_REACTIONS);
+  const [aboKey, setAboKey] = useState(null);
+  const [rhKey, setRhKey] = useState(null);
+  const result = bloodGroupResult(aboKey, rhKey);
 
-  const result = useMemo(() => interpretBloodGroup(reactions), [reactions]);
-  const level = resultLevel(result);
-  const hints = pendingHints(result);
-
-  const setReaction = useCallback((key, value) => {
-    setReactions((prev) => ({ ...prev, [key]: value }));
+  const reset = useCallback(() => {
+    setAboKey(null);
+    setRhKey(null);
+    announce('Выбор сброшен');
   }, []);
-
-  const resetAll = useCallback(() => {
-    setReactions(EMPTY_REACTIONS);
-    announce('Все реакции сброшены');
-  }, []);
-
-  const renderPicker = (r) => (
-    <ReactionPicker
-      key={r.key}
-      title={r.title}
-      reagent={r.reagent}
-      hint={r.hint}
-      value={reactions[r.key]}
-      onChange={(v) => setReaction(r.key, v)}
-      testID={`blood-${r.key}`}
-    />
-  );
 
   return (
     <Screen scroll>
@@ -143,144 +83,121 @@ export default function BloodGroupScreen() {
           Определение группы крови
         </Text>
         <Text variant="body" color="textSecondary" style={styles.subtitle}>
-          Первичное определение AB0 и резуса цоликлонами на плоскости
+          Первичное определение цоликлонами на плоскости — группа AB0 и резус
         </Text>
       </View>
 
       {/* Методика: приказ №363 (2002); инструкции к цоликлонам */}
-      <Note level="info" title="Методика">
+      <Note level="info" title="Как определить">
         <Text variant="body" style={styles.noteText}>
-          Капля реагента 0,1 мл + рядом капля крови 0,01–0,03 мл, перемешать, покачивать при 15–25
-          °C. Результат учитывать через 3 мин: слабые варианты A и B агглютинируют позже.
-        </Text>
-        <Text variant="body" style={styles.noteText}>
-          − нет агглютинации · ± слабая / сомнительная · + агглютинация
+          Капля цоликлона 0,1 мл + рядом капля крови 0,01–0,03 мл, перемешать, покачивать при
+          комнатной температуре (15–25 °C). Смотреть через 3 минуты. Затем нажмите строку таблицы,
+          где капли выглядят так же.
         </Text>
       </Note>
 
-      <Section title="Группа AB0">
-        {REAGENTS.filter((r) => r.section === 'abo').map(renderPicker)}
+      <Section title="1. Группа крови">
+        <ReactionTable
+          reagents={AB0_REAGENTS}
+          rows={AB0_ROWS}
+          selectedKey={aboKey}
+          onSelect={setAboKey}
+          resultHeader="Группа"
+          a11yPrefix="Группа"
+          renderResult={renderGroup}
+          resultFlex={1.5}
+          testID="blood-abo"
+        />
+        <Text variant="caption" color="textSecondary" style={styles.footnote}>
+          * AB(IV) — только если в контроле (капля крови + капля 0,9% NaCl) агглютинации нет.
+        </Text>
+        <Legend />
       </Section>
 
-      <Section title="Резус-принадлежность">
-        {REAGENTS.filter((r) => r.section === 'rh').map(renderPicker)}
+      <Section title="2. Резус-фактор">
+        <ReactionTable
+          reagents={RH_REAGENTS}
+          rows={RH_ROWS}
+          selectedKey={rhKey}
+          onSelect={setRhKey}
+          resultHeader="Резус"
+          renderResult={renderRh}
+          resultFlex={1.6}
+          testID="blood-rh"
+        />
       </Section>
 
       <ResultCard
         title="Результат"
-        level={level ? level.level : undefined}
-        levelLabel={level ? level.label : undefined}
-        announceText={resultSummary(result)}
-        announceEnabled={result.anyResult}
+        value={result ? result.headline : undefined}
+        valueAccessibilityLabel={result ? result.spokenValue : undefined}
+        level={result && result.needsControl ? 'warning' : undefined}
+        levelLabel={result && result.needsControl ? 'Нужен контроль с 0,9% NaCl' : undefined}
+        announceText={result ? result.spoken : ''}
+        announceEnabled={!!result}
         testID="blood-result"
       >
-        <ResultRow label="Группа AB0" value={result.abo} />
-        <ResultRow label="Резус (D)" value={result.rh} />
-        {hints.map((h) => (
-          <Text key={h} variant="caption" color="textSecondary" style={styles.resultText}>
-            {h}
+        {result ? (
+          <>
+            {/* Значение итога диктор уже прочитал (valueAccessibilityLabel) — без повтора */}
+            <Text variant="bodyStrong" testID="blood-result-text" {...hideFromA11y}>
+              {result.text}
+            </Text>
+            {result.missing ? (
+              <Text variant="caption" color="textSecondary" style={styles.resultText}>
+                {result.missing}.
+              </Text>
+            ) : null}
+            {result.notes.map((n) => (
+              <Note key={n} level="warning" style={styles.resultNote}>
+                {n}
+              </Note>
+            ))}
+            <Text variant="caption" color="textSecondary" style={styles.resultText}>
+              {LAB_NOTE}
+            </Text>
+          </>
+        ) : (
+          <Text variant="body" color="textSecondary">
+            Выберите строки в таблицах — здесь появятся группа и резус.
           </Text>
-        ))}
-        {result.warnings.map((w) => (
-          <Note key={w} level="warning" style={styles.resultNote}>
-            {w}
-          </Note>
-        ))}
-        {result.infos.map((t) => (
-          <Note key={t} level="info" style={styles.resultNote}>
-            {t}
-          </Note>
-        ))}
-        {result.anyResult ? (
-          <Text variant="bodyStrong" style={styles.resultText}>
-            Результат первичный: нужно подтверждение в лаборатории.
-          </Text>
-        ) : null}
+        )}
       </ResultCard>
 
+      {/* Кнопка всегда в дереве (без выбора — недоступна): фокус диктора не теряется при сбросе */}
       <View style={styles.actions}>
         <Button
           title="Сбросить"
           variant="secondary"
           icon="refresh"
-          onPress={resetAll}
-          accessibilityLabel="Сбросить все реакции"
+          onPress={reset}
+          disabled={!result}
+          accessibilityLabel="Сбросить выбор"
           testID="blood-reset"
         />
       </View>
 
       {/* Приказ МЗ РФ №1134н (2020), п. 6, 11, 19 */}
       <Text variant="caption" color="textSecondary" style={styles.disclaimer}>
-        Первичное определение (приказ МЗ РФ №1134н, п. 6). Группу AB0 и резус подтверждает
-        лаборатория медицинской организации (п. 11). Перед трансфузией обязательны контрольная
-        проверка AB0 и резуса реципиента и донора и проба на совместимость (п. 19). Результат этого
-        экрана не основание для выбора компонента крови.
+        Первичное определение (приказ МЗ РФ №1134н, п. 6). Если реакция неясная или ни одна строка
+        не подходит — группу и резус не устанавливают, кровь направляют в лабораторию. Группу и
+        резус подтверждает лаборатория (п. 11). Перед трансфузией обязательны контрольная проверка
+        группы и резуса реципиента и донора и проба на совместимость (п. 19).
       </Text>
     </Screen>
   );
 }
 
-const WELL = 60;
-const DOT = 8;
-
-const makeStyles = ({ colors, spacing, radius }) => ({
+const makeStyles = ({ spacing }) => ({
   header: { marginBottom: spacing.lg },
   subtitle: { marginTop: spacing.xs },
   noteText: { marginTop: spacing.xs },
-  hint: { marginTop: 0 },
+  footnote: { marginTop: spacing.sm },
 
-  wellRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginTop: spacing.md,
-  },
-  // Кружок без текста внутри — фиксированный размер допустим
-  wellCircle: {
-    width: WELL,
-    height: WELL,
-    borderRadius: WELL / 2,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 3,
-    borderColor: colors.borderStrong,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  wellCircleActive: {
-    backgroundColor: colors.dangerSoft,
-    borderColor: colors.danger,
-  },
-  wellCircleWeak: {
-    backgroundColor: colors.warningSoft,
-    borderColor: colors.warning,
-    borderStyle: 'dashed',
-  },
-  dotsWrap: {
-    width: WELL - 20,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dot: { margin: 2, borderRadius: DOT / 2 },
-  dotPos: { width: DOT + 2, height: DOT + 2, backgroundColor: colors.danger },
-  dotWeak: { width: DOT - 3, height: DOT - 3, backgroundColor: colors.warning },
-  wellLabel: { flex: 1, minWidth: 120 },
+  legend: { marginTop: spacing.sm },
+  legendRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
+  legendText: { flex: 1, marginLeft: spacing.sm },
 
-  rowLine: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
-  },
-  rowLabel: { marginRight: spacing.sm },
-  rowValue: { flexShrink: 1, textAlign: 'right' },
   resultText: { marginTop: spacing.sm },
   resultNote: { marginTop: spacing.sm, marginBottom: 0 },
 
