@@ -1,0 +1,7 @@
+node_modules
+dist
+.expo
+coverage
+package-lock.json
+mkb10/mkb_data.json
+*.md
