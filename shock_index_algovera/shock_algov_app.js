@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Switch, Pressable, ScrollView, Platform } from 'react-native';
 import { Text, TextInput } from '../components/AppText';
-import calculateShockIndex from './calculateShockIndex';
+import calculateShockIndex, { fmt } from './calculateShockIndex';
 
 const theme = {
   bg: '#111827',
@@ -73,17 +73,32 @@ const CalcShockIndexScreen = () => {
   const [sbp, setSbp] = useState('');
   const [hr, setHr] = useState('');
   const [ageYears, setAgeYears] = useState('');
+  const [ageMonths, setAgeMonths] = useState('');
   const [pregnant, setPregnant] = useState(false);
   const [trauma, setTrauma] = useState(false);
   const [res, setRes] = useState(null);
   const [err, setErr] = useState(null);
 
-  const subtitle = useMemo(() => 'Индекс Альговера (SI = Пульс / САД). EMS: взрослые, SIPA, беременность, травма.', []);
+  const subtitle = useMemo(() => 'Индекс Альговера (SI = пульс / САД): взрослые, дети (SIPA), беременность, травма.', []);
 
   const parse = (s) => {
     if (!s) return undefined;
     const v = parseFloat(String(s).replace(',', '.'));
     return Number.isFinite(v) ? v : undefined;
+  };
+
+  // Возраст = лет + мес / 12 (аудит M5-11: «6 мес» не должен читаться как 6 лет).
+  // Оба поля пусты → возраст не указан (взрослая шкала с пометкой).
+  const parseAge = () => {
+    const hasY = String(ageYears).trim() !== '';
+    const hasM = String(ageMonths).trim() !== '';
+    if (!hasY && !hasM) return undefined;
+    const y = hasY ? parse(ageYears) : 0;
+    const m = hasM ? parse(ageMonths) : 0;
+    if (y === undefined || y < 0) throw new Error('Недопустимый возраст (лет).');
+    if (m === undefined || m < 0) throw new Error('Недопустимый возраст (мес).');
+    if (hasY && hasM && m >= 12) throw new Error('Месяцев должно быть 0–11, если указаны годы.');
+    return y + m / 12;
   };
 
   const doCalc = () => {
@@ -92,7 +107,7 @@ const CalcShockIndexScreen = () => {
       const out = calculateShockIndex({
         sbp: parse(sbp),
         hr: parse(hr),
-        ageYears: parse(ageYears),
+        ageYears: parseAge(),
         pregnant,
         trauma,
       });
@@ -107,6 +122,7 @@ const CalcShockIndexScreen = () => {
     setSbp('');
     setHr('');
     setAgeYears('');
+    setAgeMonths('');
     setPregnant(false);
     setTrauma(false);
     setRes(null);
@@ -126,14 +142,18 @@ const CalcShockIndexScreen = () => {
           <View style={{ height: 12 }} />
 
           <Row>
-            <Input value={ageYears} onChangeText={setAgeYears} placeholder="Возраст (лет, опц.)" />
+            <Input value={ageYears} onChangeText={setAgeYears} placeholder="Возраст, лет" />
+            <Input value={ageMonths} onChangeText={setAgeMonths} placeholder="+ мес" />
           </Row>
+          <Text style={{ color: theme.sub, fontSize: 12, marginTop: 6 }}>
+            Для ребёнка возраст обязателен (до 1 года — в мес). Пусто — взрослая шкала.
+          </Text>
 
           <View style={{ height: 12 }} />
 
           <Row>
             <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ color: theme.sub }}>Беременность</Text>
+              <Text style={{ color: theme.sub, flexShrink: 1 }}>Беременность / после родов</Text>
               <Switch
                 value={pregnant}
                 onValueChange={setPregnant}
@@ -174,7 +194,7 @@ const CalcShockIndexScreen = () => {
           <Section title="Результат">
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <Text style={{ color: theme.sub }}>SI = Пульс / САД</Text>
-              <Chip label={`SI = ${res.si.toFixed(2)}`} color={res.category.color} />
+              <Chip label={`SI = ${fmt(res.si, 2)}`} color={res.category.color} />
             </View>
 
             <View style={{ height: 8 }} />
@@ -186,14 +206,24 @@ const CalcShockIndexScreen = () => {
 
             {res.pediatric && (
               <View style={{ marginBottom: 10 }}>
-                <Text style={{ color: theme.sub }}>SIPA-порог для возраста: ≤ {res.pediatric.cutoff}</Text>
+                <Text style={{ color: theme.sub }}>Порог SIPA для возраста: превышен при SI {'>'} {fmt(res.pediatric.cutoff)}</Text>
               </View>
             )}
 
+            {res.warnings.map((w, i) => (
+              <Text key={`w${i}`} style={{ color: theme.danger, fontWeight: '700', marginBottom: 6 }}>⚠ {w}</Text>
+            ))}
+
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-              <Chip label={`Потеря крови: ${res.bloodLossHint}`} color="#64748B" />
-              {res.flags.pregnancyConcern && <Chip label="Беременность: SI ≥ 1" color={theme.danger} />}
-              {res.flags.traumaHighRisk && <Chip label="Травма: SI ≥ 0.9" color={theme.warn} />}
+              {!!res.bloodLossHint && (
+                <Chip
+                  label={`${res.mode === 'pregnancy' ? 'Кровопотеря' : 'Кровопотеря (ориент., взрослые)'}: ${res.bloodLossHint}`}
+                  color="#64748B"
+                />
+              )}
+              {res.flags.hypotension && <Chip label="Гипотензия для возраста" color={theme.danger} />}
+              {res.flags.pregnancyConcern && <Chip label="Беременность: SI ≥ 1,0" color={theme.danger} />}
+              {res.flags.traumaHighRisk && <Chip label={res.traumaLabel} color={theme.warn} />}
             </View>
 
             <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 12 }}>

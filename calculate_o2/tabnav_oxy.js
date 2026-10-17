@@ -20,7 +20,7 @@ const Tabnav_oxy = ({ navigation }) => {
 
                 {/* Описание */}
                 <Text style={styles.subtitle}>
-                    Выберите необходимый тип расчета для проведения кислородной терапии
+                    Выберите расчёт
                 </Text>
                 {/* Кнопки с иконками */}
                 <View style={styles.buttonGroup}>
@@ -31,8 +31,8 @@ const Tabnav_oxy = ({ navigation }) => {
                         <View style={styles.buttonContent}>
                             <Text style={styles.buttonIcon}>⏱️</Text>
                             <View style={styles.buttonTextContainer}>
-                                <Text style={styles.buttonText}>Максимальное время ингаляции</Text>
-                                <Text style={styles.buttonSubtext}>Расчет продолжительности кислородотерапии</Text>
+                                <Text style={styles.buttonText}>Время работы баллона</Text>
+                                <Text style={styles.buttonSubtext}>По объёму, давлению и потоку — до резерва давления</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -45,7 +45,7 @@ const Tabnav_oxy = ({ navigation }) => {
                             <Text style={styles.buttonIcon}>📊</Text>
                             <View style={styles.buttonTextContainer}>
                                 <Text style={styles.buttonText}>Формула Дарбиняна</Text>
-                                <Text style={styles.buttonSubtext}>Расчет по классической методике</Text>
+                                <Text style={styles.buttonSubtext}>Минутный объём дыхания по массе тела</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -58,7 +58,7 @@ const Tabnav_oxy = ({ navigation }) => {
                             <Text style={styles.buttonIcon}>🏥</Text>
                             <View style={styles.buttonTextContainer}>
                                 <Text style={styles.buttonText}>Аппаратная ИВЛ</Text>
-                                <Text style={styles.buttonSubtext}>Расчет параметров искусственной вентиляции</Text>
+                                <Text style={styles.buttonSubtext}>Стартовые параметры: MEDUMAT, А-ИВЛ/ВВЛ/ВЧп-4/40</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -67,8 +67,8 @@ const Tabnav_oxy = ({ navigation }) => {
                 {/* Дополнительная информация внизу */}
                 <View style={styles.footerInfo}>
                     <Text style={styles.footerText}>
-                        ⚠️ Все расчеты носят рекомендательный характер.{'\n'}
-                        Обратитесь к врачу для точной диагностики.
+                        ⚠️ Расчёты справочные.{'\n'}
+                        Перед применением проверьте их по состоянию пациента и инструкции к аппарату.
                     </Text>
                 </View>
 
