@@ -1,6 +1,6 @@
 // Card — поверхность-карточка. В светлой теме — с мягкой тенью, в тёмной — с границей
 // и surfaceRaised (тени не используются). С onPress становится кнопкой.
-// accent — цвет полоски слева (например, theme.colors.section.drugs).
+// Цветной полоски слева нет: акцент раздела показывает значок внутри карточки.
 import React from 'react';
 import { Pressable, View } from 'react-native';
 import { useTheme, useThemedStyles } from '../../theme/index';
@@ -8,7 +8,6 @@ import { useTheme, useThemedStyles } from '../../theme/index';
 export default function Card({
   children,
   onPress,
-  accent,
   padded = true,
   accessibilityLabel,
   accessibilityHint,
@@ -18,11 +17,7 @@ export default function Card({
 }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
-  const base = [
-    styles.card,
-    padded && styles.padded,
-    accent ? { borderLeftWidth: 4, borderLeftColor: accent } : null,
-  ];
+  const base = [styles.card, padded && styles.padded];
 
   if (!onPress) {
     return (
