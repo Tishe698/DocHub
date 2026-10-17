@@ -31,6 +31,505 @@ import * as Clipboard from "expo-clipboard";
 
 const { height: screenHeight } = Dimensions.get("window");
 
+/** ======================= Движок расчёта: чистые функции (без React) ======================= **/
+
+// Число в тексте подсказок — с запятой: 0.3 → «0,3»
+const ru = (n) => String(n).replace(".", ",");
+
+// Поле со свободным текстом (путь введения и т.п.), остальные — числовые
+const getInputType = (inputName, inputLabel) => {
+  const lowerName = (inputName || "").toLowerCase();
+  const lowerLabel = (inputLabel || "").toLowerCase();
+  if (
+    lowerName.includes("route") ||
+    lowerName.includes("маршрут") ||
+    lowerName.includes("путь") ||
+    lowerLabel.includes("route") ||
+    lowerLabel.includes("маршрут") ||
+    lowerLabel.includes("путь") ||
+    lowerLabel.includes("введение") ||
+    lowerLabel.includes("метод")
+  ) {
+    return "text";
+  }
+  return "numeric";
+};
+
+// Единица поля — из последних скобок подписи: «Вес (кг)» → «кг», «Возраст (мес)» → «мес»,
+// «Скорость (мкг/кг/мин)» → «мкг/кг/мин». Подстроки («рост» в «скорость») больше не ищем.
+const unitFromLabel = (label) => {
+  const all = String(label || "").match(/\(([^()]+)\)/g);
+  if (!all || !all.length) return null;
+  return all[all.length - 1].slice(1, -1).trim() || null;
+};
+
+// Подпись поля без единицы: «Вес (кг)» → «Вес»
+const labelBase = (label) => String(label || "").replace(/\s*\([^()]*\)\s*$/, "").trim();
+
+// Пределы правдоподобия ввода — защита от опечаток, а не клинические границы.
+// Вес 0,3–250 кг: от глубоко недоношенного новорождённого до морбидного ожирения;
+// возраст 0–120 лет (0 — новорождённый, допустим). Скорость, масса препарата и объём — заведомо
+// недостижимые на практике значения. Запись может сузить пределы полем inputLimits: { key: { min, max, warnMin, warnMax } }.
+const FIELD_RULES = {
+  weight: { min: 0.3, max: 250 },
+  ageYears: { min: 0, max: 120, allowZero: true },
+  ageMonths: { min: 0, max: 1440, allowZero: true },
+  rate: { max: 50 },
+  drugMg: { max: 2000 },
+  volume: { max: 5000 },
+};
+// Те же правила по единице из скобок — для новых полей с другими ключами
+const UNIT_RULES = {
+  "кг": FIELD_RULES.weight,
+  "лет": FIELD_RULES.ageYears,
+  "мес": FIELD_RULES.ageMonths,
+  "мкг/кг/мин": FIELD_RULES.rate,
+  "мл": FIELD_RULES.volume,
+};
+
+const getFieldRule = (key, label, formula) => {
+  const unit = unitFromLabel(label);
+  const base = FIELD_RULES[key] || UNIT_RULES[unit] || {};
+  const own = (formula && formula.inputLimits && formula.inputLimits[key]) || {};
+  return { ...base, ...own, unit };
+};
+
+// Проверка одного поля: { value } или { error }, плюс необязательное мягкое предупреждение { warning }
+const validateField = (key, label, raw, formula) => {
+  const type = getInputType(key, label);
+  if (type === "text") {
+    const s = raw === undefined || raw === null ? "" : String(raw).trim();
+    return s ? { value: s } : { error: `${label}: заполните поле` };
+  }
+  const n = parseNum(raw);
+  const rule = getFieldRule(key, label, formula);
+  const u = rule.unit ? ` ${rule.unit}` : "";
+  if (n === undefined) return { error: `${label}: введите число` };
+  if (n < 0) return { error: `${label}: не может быть отрицательным` };
+  if (n === 0 && !rule.allowZero) return { error: `${label}: должно быть больше 0` };
+  const rangeText =
+    Number.isFinite(rule.min) && Number.isFinite(rule.max)
+      ? `допустимо ${ru(rule.min)}–${ru(rule.max)}${u}`
+      : Number.isFinite(rule.max)
+        ? `допустимо не более ${ru(rule.max)}${u}`
+        : `допустимо не менее ${ru(rule.min)}${u}`;
+  if (Number.isFinite(rule.min) && n < rule.min) return { error: `${label}: ${rangeText} — проверьте ввод` };
+  if (Number.isFinite(rule.max) && n > rule.max) return { error: `${label}: ${rangeText} — проверьте ввод` };
+  let warning;
+  if (Number.isFinite(rule.warnMax) && n > rule.warnMax)
+    warning = `${labelBase(label)} ${ru(n)}${u} — выше обычного предела ${ru(rule.warnMax)}${u}. Проверьте ввод.`;
+  else if (Number.isFinite(rule.warnMin) && n < rule.warnMin)
+    warning = `${labelBase(label)} ${ru(n)}${u} — ниже обычного предела ${ru(rule.warnMin)}${u}. Проверьте ввод.`;
+  return { value: n, warning };
+};
+
+// Ожидаемая масса по возрасту — APLS 2011 (единая формула для приложения):
+// 0–12 мес: 0,5 × мес + 4; 1–5 лет: 2 × лет + 8; 6–12 лет: 3 × лет + 7. Старше 12 лет — не оцениваем.
+const expectedWeightApls = (months) => {
+  if (!Number.isFinite(months) || months < 0) return undefined;
+  if (months < 12) return 0.5 * months + 4;
+  const years = Math.floor(months / 12);
+  if (years <= 5) return 2 * years + 8;
+  if (years <= 12) return 3 * years + 7;
+  return undefined;
+};
+
+// Возраст в месяцах из полей формулы (ageYears, ageMonths или оба: «полных лет + месяцев»)
+const ageMonthsFromClean = (clean, inputsMap) => {
+  const hasY = "ageYears" in inputsMap && Number.isFinite(clean.ageYears);
+  const hasM = "ageMonths" in inputsMap && Number.isFinite(clean.ageMonths);
+  if (hasY && hasM) return clean.ageYears * 12 + clean.ageMonths;
+  if (hasY) return clean.ageYears * 12;
+  if (hasM) return clean.ageMonths;
+  return undefined;
+};
+
+// Мягкая проверка «вес ↔ возраст»: ловит ошибку в разряде (7 → 70 кг), которую диапазон 0,3–250 кг не видит.
+// Порог ×2 / ×0,4 от массы по APLS — только предупреждение, расчёт не блокируется.
+// Нижний порог — с 1 года: у недоношенных младенцев масса законно бывает вдвое ниже формулы.
+const ageWeightWarning = (clean, inputsMap) => {
+  if (!("weight" in inputsMap) || !Number.isFinite(clean.weight)) return null;
+  const months = ageMonthsFromClean(clean, inputsMap);
+  const exp = expectedWeightApls(months);
+  if (!exp) return null;
+  const ratio = clean.weight / exp;
+  if (ratio <= 2 && (months < 12 || ratio >= 0.4)) return null;
+  const ageText = months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : `${Math.floor(months / 12)} лет`;
+  return `Вес ${ru(clean.weight)} кг необычен для возраста ${ageText} (ожидаемо около ${ru(Math.round(exp))} кг по APLS). Проверьте ввод — нет ли ошибки в разряде.`;
+};
+
+// Проверка всех полей записи: { ok, errors, clean, notes }
+const validateAll = (formula, rawInputs) => {
+  const errors = [];
+  const clean = {};
+  const notes = [];
+  const map = formula.inputs || {};
+  Object.keys(map).forEach((key) => {
+    const label = map[key] || key;
+    const r = validateField(key, label, rawInputs[key], formula);
+    if (r.error) errors.push(r.error);
+    else {
+      clean[key] = r.value;
+      if (r.warning) notes.push(r.warning);
+    }
+  });
+  if (!errors.length) {
+    const w = ageWeightWarning(clean, map);
+    if (w) notes.push(w);
+  }
+  return { ok: errors.length === 0, errors, clean, notes };
+};
+
+// Формат числа: убрать хвостовые нули дробной части («12.50» → «12.5», «20.0» → «20»)
+const trimZeros = (s) => (s.includes(".") ? s.replace(/\.?0+$/, "") : s);
+// toFixed, который не превращает ненулевое значение в «0.00»: тогда 2 значащие цифры
+const fixedNZ = (v, d) => {
+  const s = v.toFixed(d);
+  return Number(s) === 0 && v !== 0 ? String(Number(v.toPrecision(2))) : s;
+};
+
+const RATE_UNITS = ["мкг/мин", "мкг/ч", "мг/ч", "мл/ч", "МЕ/ч", "ЕД/ч", "мкг/мл", "мг/мл", "мкг/кг/мин", "мг/кг/ч"];
+
+// Округление на экране (контракт движка):
+// мг/мкг/ЕД/МЕ: < 10 — 2 знака; 10–100 — 1 знак (чтобы доза совпадала с объёмом: 12.5 мг ↔ 0.25 мл);
+//   ≥ 100 — целые; мг < 0,1 — 3 знака (0.035 мг); мг < 0,01 — в мкг («5 мкг (0.005 мг)»).
+// мл: < 0,01 — 2 значащие цифры (0.0025 мл); < 0,1 — 3 знака (0.015 мл); < 1 — 2 знака; иначе 1 знак.
+// г и скорости: 2/1/0 знаков, меньше 0,1 — 2 значащие цифры.
+// Ненулевое значение никогда не выводится как «0.00».
+const fmtValue = (v, unit) => {
+  if (unit === "таб") {
+    const quarters = Math.round(v * 4 + Number.EPSILON) / 4;
+    if (quarters === 0 && v > 0) return `${String(Number(v.toPrecision(2)))} ${unit} (меньше 1/4)`;
+    return `${quarters} ${unit}`;
+  }
+  if (unit === "кап") {
+    const r = Math.round(v);
+    return r === 0 && v > 0 ? `меньше 1 ${unit}` : `${r} ${unit}`;
+  }
+  if (unit === "мл") {
+    if (v < 0.01) return `${String(Number(v.toPrecision(2)))} ${unit}`;
+    if (v < 0.1) return `${trimZeros(v.toFixed(3))} ${unit}`;
+    return v < 1 ? `${v.toFixed(2)} ${unit}` : `${v.toFixed(1)} ${unit}`;
+  }
+  if (unit === "мг" && v > 0 && v < 0.01) {
+    // Доза меньше 0,01 мг — в мкг, иначе на экране было бы «0.00 мг»
+    return `${fmtValue(v * 1000, "мкг")} (${String(Number(v.toPrecision(2)))} мг)`;
+  }
+  if (unit === "мкг" || unit === "мг" || unit === "ЕД" || unit === "МЕ") {
+    if (v < 0.1) return `${unit === "мг" ? trimZeros(fixedNZ(v, 3)) : String(Number(v.toPrecision(2)))} ${unit}`;
+    if (v < 10) return `${v.toFixed(2)} ${unit}`;
+    if (v < 100) return `${trimZeros(v.toFixed(1))} ${unit}`;
+    return `${v.toFixed(0)} ${unit}`;
+  }
+  // Граммы и скорости инфузии: до сотых, на десятках — до десятых, чтобы не терять точность;
+  // меньше 0,1 — 2 значащие цифры (0.005 мкг/мин, а не «0.01»)
+  if (unit === "г" || RATE_UNITS.includes(unit)) {
+    if (v < 0.1) return `${String(Number(v.toPrecision(2)))} ${unit}`;
+    return v < 10 ? `${v.toFixed(2)} ${unit}` : v < 100 ? `${v.toFixed(1)} ${unit}` : `${v.toFixed(0)} ${unit}`;
+  }
+  // Прочие единицы: убираем «хвост» плавающей точки (0.30000000000000004 → 0.3), единицу не теряем
+  const s = String(Number(v.toPrecision(4)));
+  return unit ? `${s} ${unit}` : s;
+};
+
+// Ключи результатов по порядку номера: result1, result2, …, result10
+const resultKeys = (raw) =>
+  Object.keys(raw || {})
+    .filter((k) => /^result\d+$/.test(k))
+    .sort((a, b) => Number(a.slice(6)) - Number(b.slice(6)));
+
+// Статус значения относительно limits: ok | high (выше макс.) | atmax (= предел) | low (ниже мин.)
+const limitStatus = (val, lim) => {
+  if (!lim) return "ok";
+  if (Number.isFinite(lim.max)) {
+    const eps = Math.max(1e-9, Math.abs(lim.max) * 1e-6);
+    if (val > lim.max + eps) return "high";
+    if (Math.abs(val - lim.max) <= eps) return "atmax";
+  }
+  if (Number.isFinite(lim.min)) {
+    const eps = Math.max(1e-9, Math.abs(lim.min) * 1e-6);
+    if (val < lim.min - eps) return "low";
+  }
+  return "ok";
+};
+
+// Сборка строк результата из ответа формулы
+const buildItems = (raw, formula, clean) => {
+  const units = formula.units || {};
+  const labels = formula.labels || {};
+  let limits = {};
+  try {
+    limits = (typeof formula.limits === "function" ? formula.limits(clean) : formula.limits) || {};
+  } catch {
+    limits = {};
+  }
+  const items = [];
+  resultKeys(raw).forEach((key) => {
+    const val = raw[key];
+    if (typeof val === "number") {
+      const unit = units[key];
+      const name =
+        labels[key] || (unit ? (unit === "мл" ? "Объём" : "Доза") : `Результат ${key.replace("result", "")}`);
+      if (!Number.isFinite(val) || val <= 0) {
+        // Нулевая/отрицательная/нечисловая доза — не результат: явно говорим, что не определена
+        items.push({ key, name, unit, value: null, text: "—", status: "zero", badge: "не определена для введённых данных" });
+        return;
+      }
+      const lim = limits[key] || {};
+      const status = limitStatus(val, lim);
+      const badge =
+        status === "high"
+          ? `↑ выше макс. ${fmtValue(lim.max, unit)}`
+          : status === "atmax"
+            ? `= предел ${fmtValue(lim.max, unit)}`
+            : status === "low"
+              ? `↓ ниже мин. ${fmtValue(lim.min, unit)}`
+              : null;
+      items.push({ key, name, unit, value: val, text: fmtValue(val, unit), status, badge });
+    } else if (typeof val === "string" && val.trim()) {
+      items.push({ key, name: labels[key] || "Примечание", unit: "", value: null, text: val.trim(), status: "info", badge: null });
+    }
+  });
+
+  // Объём < 0,1 мл точно не набрать без разведения — напоминаем, если формула сама об этом не сказала
+  // (ни в примечании, ни в подписи разведённого объёма). Меньше 0,05 мл не набрать даже шприцем 1 мл:
+  // при делении 0,01 мл ошибка 20% и больше — только разведение.
+  const smallest = items
+    .filter((i) => i.unit === "мл" && i.value !== null && i.value < 0.1 && !/развед/i.test(i.name))
+    .reduce((m, i) => Math.min(m, i.value), Infinity);
+  const said = items.some(
+    (i) => (i.status === "info" && /0[,.]1\s*мл|развед|развест/i.test(i.text)) || (i.unit === "мл" && /развед/i.test(i.name))
+  );
+  if (smallest < 0.1 && !said) {
+    items.push({
+      key: "engine-small-volume",
+      name: "Малый объём",
+      unit: "",
+      value: null,
+      text:
+        smallest < 0.05
+          ? "Объём меньше 0,05 мл точно не набрать: развести (например, 1:10 — 1 мл препарата + 9 мл 0,9% NaCl) и пересчитать объём на разведённый раствор."
+          : "Объём меньше 0,1 мл: набирать шприцем 1 мл с делением 0,01 мл; точнее — развести и пересчитать объём на разведённый раствор.",
+      status: "info",
+      badge: null,
+    });
+  }
+  return items;
+};
+
+// Введённые данные одной строкой: «Вес — 20 кг · Возраст — 5 лет»
+const inputsSummary = (formula, clean) =>
+  Object.keys(formula.inputs || {})
+    .filter((k) => clean[k] !== undefined)
+    .map((k) => {
+      const label = formula.inputs[k] || k;
+      const unit = unitFromLabel(label);
+      return `${labelBase(label) || k} — ${ru(clean[k])}${unit ? ` ${unit}` : ""}`;
+    })
+    .join(" · ");
+
+// Время расчёта «ЧЧ:ММ» — без зависимости от локали устройства
+const nowText = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+// Полный расчёт записи: результат для экрана (ошибка ввода | «расчёт не выполняется» | успех)
+const computeResult = (formula, rawInputs) => {
+  const { ok, errors, clean, notes } = validateAll(formula, rawInputs || {});
+  if (!ok) {
+    return { error: true, type: "validation", message: errors.join("\n") };
+  }
+  try {
+    const raw = formula.formula(clean) || {};
+    const items = buildItems(raw, formula, clean);
+    const base = {
+      formula: formula.name,
+      description: formula.description || "",
+      inputsText: inputsSummary(formula, clean),
+      notes,
+      warnings: formula.warnings || [],
+      timestamp: nowText(),
+    };
+    // Формула вернула {} — расчёт для этих данных не предусмотрен: показываем предупреждения записи, а не «ошибку»
+    if (!items.length) return { ...base, info: true, message: "Для введённых данных расчёт не выполняется. См. указания ниже." };
+    return { ...base, success: true, items };
+  } catch (error) {
+    return {
+      error: true,
+      type: "calculation",
+      message: `Ошибка при выполнении расчёта: ${error.message}.`,
+    };
+  }
+};
+
+// Справочная запись: нет полей ввода и формула ничего не возвращает
+const isReferenceOnly = (formula) => {
+  if (!formula) return false;
+  if (typeof formula.formula !== "function") return true;
+  if (Object.keys(formula.inputs || {}).length > 0) return false;
+  try {
+    return resultKeys(formula.formula({}) || {}).length === 0;
+  } catch {
+    return true;
+  }
+};
+
+// Текст для копирования: препарат, форма выпуска, введённые данные, результат, предупреждения, время
+const buildCopyText = (results) => {
+  const lines = [`📝 ${results.formula}`];
+  if (results.description) lines.push(`Форма выпуска: ${results.description}`);
+  if (results.inputsText) lines.push(`Данные: ${results.inputsText}`);
+  (results.notes || []).forEach((n) => lines.push(`⚠️ ${n}`));
+  if (results.info) lines.push(results.message);
+  (results.items || []).forEach((i) => lines.push(`${i.name}: ${i.text}${i.badge ? ` (${i.badge})` : ""}`));
+  (results.warnings || []).forEach((w) => lines.push(`⚠️ ${w}`));
+  lines.push(`Рассчитано: ${results.timestamp}. Расчёт справочный — сверьте с инструкцией к препарату.`);
+  return lines.join("\n");
+};
+
+/** ------------------------------ Поиск ------------------------------ **/
+
+// Нормализация: нижний регистр, ё → е
+const norm = (s) => String(s || "").toLowerCase().replace(/ё/g, "е").trim();
+const splitWords = (s) => norm(s).split(/[\s\-()/+,;:«»"'—–.]+/).filter(Boolean);
+
+// Торговые и привычные в СМП РФ названия → начало МНН в названии записи.
+// Запись может добавить свои синонимы полем synonyms: ['…'].
+const SYNONYMS = [
+  ["метамизол", ["анальгин", "баралгин"]],
+  ["дифенгидрамин", ["димедрол"]],
+  ["хлоропирамин", ["супрастин"]],
+  ["диазепам", ["реланиум", "релиум", "сибазон", "седуксен", "валиум"]],
+  ["мидазолам", ["дормикум", "фулсед"]],
+  ["флумазенил", ["анексат"]],
+  ["дротаверин", ["но-шпа", "ношпа"]],
+  ["амиодарон", ["кордарон"]],
+  ["верапамил", ["изоптин", "финоптин"]],
+  ["магния сульфат", ["магнезия", "магний", "кормагнезин"]],
+  ["норэпинефрин", ["норадреналин"]],
+  ["эпинефрин", ["адреналин"]],
+  ["допамин", ["дофамин"]],
+  ["добутамин", ["добутрекс"]],
+  ["метоклопрамид", ["церукал", "реглан"]],
+  ["хлорпромазин", ["аминазин"]],
+  ["кальция глюконат", ["кальций"]],
+  ["калия хлорид + натрия ацетат", ["ацесоль", "калий"]],
+  ["калия хлорид + кальция хлорид", ["рингер", "раствор рингера", "калий"]],
+  ["натрия хлорид 0", ["физраствор", "физиологический раствор"]],
+  ["глюкоза", ["декстроза"]],
+  ["кеторолак", ["кеторол", "кетанов"]],
+  ["трамадол", ["трамал"]],
+  ["пропофол", ["диприван"]],
+  ["кетамин", ["калипсол"]],
+  ["суксаметони", ["дитилин", "листенон"]],
+  ["пипекурони", ["ардуан"]],
+  ["транексамов", ["транексам", "тхк"]],
+  ["этамзилат", ["дицинон"]],
+  ["ацетилцистеин", ["ацц", "флуимуцил"]],
+  ["активированный уголь", ["уголь", "карболен"]],
+  ["сальбутамол", ["вентолин"]],
+  ["ипратропия бромид + фенотерол", ["беродуал"]],
+  ["будесонид", ["пульмикорт"]],
+  ["меглюмина натрия сукцинат", ["реамберин"]],
+  ["вальпроев", ["депакин", "конвулекс"]],
+  ["хлорамфеникол", ["левомицетин"]],
+  ["цефтриаксон", ["роцефин"]],
+  ["налоксон", ["наркан"]],
+  ["эналаприлат", ["энап-р"]],
+  ["нифедипин", ["коринфар", "кордафлекс"]],
+  ["пропранолол", ["анаприлин", "обзидан"]],
+  ["каптоприл", ["капотен"]],
+  ["моксонидин", ["физиотенз"]],
+  ["клонидин", ["клофелин"]],
+  ["урапидил", ["эбрантил"]],
+  ["эноксапарин", ["клексан"]],
+  ["эсмолол", ["бревиблок"]],
+  ["метопролол", ["беталок", "эгилок"]],
+  ["клопидогрел", ["плавикс"]],
+  ["изосорбида динитрат", ["изокет"]],
+  ["инозин + никотинамид", ["цитофлавин"]],
+  ["сульфацетамид", ["альбуцид"]],
+  ["этилметилгидроксипиридина", ["мексидол"]],
+  ["натрия гидрокарбонат", ["сода"]],
+  ["гэк", ["волювен", "гидроксиэтилкрахмал"]],
+  ["фильтрум", ["лигнин"]],
+  ["пиридоксин", ["витамин в6", "витамин b6"]],
+  ["тиамин", ["витамин в1", "витамин b1"]],
+];
+
+// МНН ищем по началу слова, а не подстрокой: «эпинефрин» не должен цеплять «норэпинефрин»
+const synonymsOf = (formula) => {
+  const name = ` ${splitWords(formula.name).join(" ")}`;
+  const own = Array.isArray(formula.synonyms) ? formula.synonyms.map(norm) : [];
+  const dict = SYNONYMS.filter(([mnn]) => name.includes(` ${splitWords(mnn).join(" ")}`)).flatMap(([, list]) => list.map(norm));
+  return [...new Set([...own, ...dict])];
+};
+
+// Служебные токены запроса (дозы, единицы, проценты) в пословном сравнении не участвуют
+const SERVICE_TOKENS = new Set(["мл", "мг", "мкг", "г", "ед", "ме", "р-р", "раствор", "амп", "ампула", "%"]);
+const queryTokens = (term) => {
+  const all = norm(term).split(/[\s,;]+/).filter(Boolean);
+  const sig = all.filter((t) => t.length >= 2 && !SERVICE_TOKENS.has(t) && !/^[\d.,]+%?$/.test(t));
+  return sig.length ? sig : all;
+};
+
+// Совпадение слова запроса со словом названия: начало слова; основа (без 2 последних букв) для падежей
+// у слов от 6 букв («магний» → «магния»); слово запроса длиннее слова названия («адреналина»).
+const wordHit = (token, words) =>
+  words.some(
+    (w) =>
+      w.startsWith(token) ||
+      (token.length >= 6 && w.startsWith(token.slice(0, -2))) ||
+      (w.length >= 4 && token.startsWith(w))
+  );
+
+// Ранжирование: точное название → начало названия → начало слова названия → синоним →
+// все слова запроса в названии/синонимах → подстрока названия → описание. При равенстве — порядок списка.
+const scoreFormula = (formula, q, tokens) => {
+  const name = norm(formula.name);
+  const desc = norm(formula.description);
+  const syns = synonymsOf(formula);
+  const nameWords = splitWords(formula.name);
+  const synWords = syns.flatMap(splitWords);
+  if (name === q) return { score: 100 };
+  if (name.startsWith(q)) return { score: 90 };
+  if (nameWords.some((w) => w.startsWith(q))) return { score: 85 };
+  const syn = syns.find((s) => s === q || s.startsWith(q));
+  if (syn && q.length >= 2) return { score: 80, synonym: syn };
+  if (tokens.every((t) => wordHit(t, nameWords) || wordHit(t, synWords))) {
+    const viaSyn = !tokens.every((t) => wordHit(t, nameWords));
+    return { score: 70, synonym: viaSyn ? syns.find((s) => tokens.some((t) => wordHit(t, splitWords(s)))) : undefined };
+  }
+  // Запрос из 1–2 букв — только по началу слов, иначе подстрока «ам»/«мл» находит полсписка
+  if (q.length < 3) return { score: 0 };
+  if (name.includes(q)) return { score: 60 };
+  const descWords = splitWords(formula.description);
+  if (tokens.every((t) => name.includes(t) || wordHit(t, nameWords) || wordHit(t, synWords) || wordHit(t, descWords)))
+    return { score: 40 };
+  if (desc.includes(q)) return { score: 30 };
+  return { score: 0 };
+};
+
+// Поиск: [{ formula, synonym }] по убыванию релевантности
+const searchFormulas = (list, term) => {
+  const q = norm(term);
+  if (!q) return list.map((formula) => ({ formula }));
+  const tokens = queryTokens(term);
+  return list
+    .map((formula, index) => ({ formula, index, ...scoreFormula(formula, q, tokens) }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .map(({ formula, synonym }) => ({ formula, synonym }));
+};
+
+// Слова для подсветки: вся фраза и каждое значимое слово запроса
+const highlightTerms = (term) => {
+  const q = norm(term);
+  if (!q) return [];
+  return [...new Set([q, ...queryTokens(term).filter((t) => t.length >= 2)])].sort((a, b) => b.length - a.length);
+};
+
 /** ===================== Настройки масштабирования шрифтов ===================== **/
 const FONT_LIMIT = {
   h1: 1.25,   // большие заголовки
@@ -228,14 +727,13 @@ const WelcomeScreen = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const scrollRef = useRef(null);
 
-  const hasFormulaToCalculate = !!selectedFormula?.formula;
+  // Справочная запись (нет полей и формула ничего не возвращает) — кнопки «Рассчитать» нет
+  const referenceOnly = isReferenceOnly(selectedFormula);
+  const hasFormulaToCalculate = !!selectedFormula && typeof selectedFormula.formula === "function" && !referenceOnly;
 
-  // Динамические цифры
+  // Динамические цифры: всего записей и записей с расчётом (справочные не считаются)
   const totalDrugs = formulas.length;
-  const totalCalcs = React.useMemo(
-    () => formulas.filter((f) => typeof f.formula === "function").length,
-    []
-  );
+  const totalCalcs = React.useMemo(() => formulas.filter((f) => !isReferenceOnly(f)).length, []);
 
   /** ============================== UI-хелперы ============================== **/
   const showModal = (formula) => {
@@ -253,28 +751,12 @@ const WelcomeScreen = () => {
     setSearchTerm("");
   };
 
-  const getInputType = (inputName, inputLabel) => {
-    const lowerName = (inputName || "").toLowerCase();
-    const lowerLabel = (inputLabel || "").toLowerCase();
-    if (
-      lowerName.includes("route") ||
-      lowerName.includes("маршрут") ||
-      lowerName.includes("путь") ||
-      lowerLabel.includes("route") ||
-      lowerLabel.includes("маршрут") ||
-      lowerLabel.includes("путь") ||
-      lowerLabel.includes("введение") ||
-      lowerLabel.includes("метод")
-    ) {
-      return "text";
-    }
-    return "numeric";
-  };
-
   const highlightSearchTerm = (text, term) => {
-    if (!term.trim()) return <Text allowFontScaling maxFontSizeMultiplier={FONT_LIMIT.body}>{text}</Text>;
-    const safe = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const re = new RegExp(`(${safe})`, "i"); // без 'g'
+    const terms = highlightTerms(term);
+    if (!terms.length) return <Text allowFontScaling maxFontSizeMultiplier={FONT_LIMIT.body}>{text}</Text>;
+    // Подсвечиваем и всю фразу, и каждое слово запроса
+    const safe = terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
+    const re = new RegExp(`(${safe})`, "i");
     const parts = String(text).split(re);
     return parts.map((part, i) =>
       i % 2 === 1 ? (
@@ -298,66 +780,18 @@ const WelcomeScreen = () => {
     );
   };
 
+  // Любое изменение ввода делает прежний результат неактуальным — сбрасываем его,
+  // чтобы на экране и в буфере не осталась доза для старого веса
   const handleInputChange = (name, value) => {
     setInputs((prev) => ({ ...prev, [name]: value }));
+    setResults((prev) => (Object.keys(prev).length ? {} : prev));
   };
 
-  /** ============================== Валидация и расчёты ============================== **/
-  const validateInputs = (formula) => {
-    const errors = [];
-    const clean = {};
-    const map = formula.inputs || {};
-
-    Object.keys(map).forEach((key) => {
-      const label = map[key] || key;
-      const type = getInputType(key, label);
-      const raw = inputs[key];
-
-      if (type === "text") {
-        if (!raw || String(raw).trim() === "") errors.push(label);
-        else clean[key] = String(raw).trim();
-        return;
-      }
-
-      const n = parseNum(raw);
-      if (n === undefined || n <= 0) errors.push(label);
-      else clean[key] = n;
-    });
-
-    return { ok: errors.length === 0, errors, clean };
-  };
-
-  const fmtValue = (v, unit) => {
-    if (unit === "таб") {
-      const quarters = Math.round(v * 4 + Number.EPSILON) / 4;
-      return `${quarters} ${unit}`;
-    }
-    if (unit === "кап") return `${Math.round(v)} ${unit}`;
-    if (unit === "мл") return v < 1 ? `${v.toFixed(2)} ${unit}` : `${v.toFixed(1)} ${unit}`;
-    if (unit === "мкг" || unit === "мг" || unit === "ЕД")
-      return v < 10 ? `${v.toFixed(2)} ${unit}` : `${v.toFixed(0)} ${unit}`;
-    // Граммы и скорости инфузии: до сотых, на десятках — до десятых, чтобы не терять точность
-    if (unit === "г" || unit === "мкг/мин" || unit === "мкг/ч" || unit === "мг/ч")
-      return v < 10
-        ? `${v.toFixed(2)} ${unit}`
-        : v < 100
-          ? `${v.toFixed(1)} ${unit}`
-          : `${v.toFixed(0)} ${unit}`;
-    // Прочие единицы: убираем «хвост» плавающей точки (0.30000000000000004 → 0.3), единицу не теряем
-    const s = String(Number(v.toPrecision(4)));
-    return unit ? `${s} ${unit}` : s;
-  };
-
+  /** ============================== Расчёт и копирование ============================== **/
   const copyResults = async () => {
     try {
-      if (!results?.success) return;
-      const lines = [
-        `📝 ${results.formula}`,
-        ...results.items.map(
-          (i) => `${i.name}: ${i.text}${i.status === "high" ? " (↑)" : i.status === "low" ? " (↓)" : ""}`
-        ),
-      ];
-      await Clipboard.setStringAsync(lines.join("\n")); // ✅ корректный метод
+      if (!results?.success && !results?.info) return;
+      await Clipboard.setStringAsync(buildCopyText(results)); // ✅ корректный метод
       Alert.alert("Скопировано", "Результаты скопированы в буфер обмена");
     } catch {
       Alert.alert("Ошибка", "Не удалось скопировать результаты");
@@ -366,123 +800,11 @@ const WelcomeScreen = () => {
 
   const calculateResult = () => {
     if (!selectedFormula) return;
-
-    const { ok, errors, clean } = validateInputs(selectedFormula);
-    if (!ok) {
-      setResults({
-        error: true,
-        type: "validation",
-        message: `Пожалуйста, заполните корректно: ${errors.join(", ")}`,
-      });
-      return;
-    }
-
-    try {
-      const raw = selectedFormula.formula(clean) || {};
-      const units = selectedFormula.units || {};
-      const labels = selectedFormula.labels || {};
-      const limits = selectedFormula.limits || {}; // { result1: {min, max}, ... }
-
-      const items = [];
-      const pushItem = (key) => {
-        if (!(key in raw)) return;
-        const val = raw[key];
-
-        if (typeof val === "number" && Number.isFinite(val)) {
-          const unit = units[key];
-          const label =
-            labels[key] ||
-            (unit ? (unit === "мл" ? "Объём" : "Доза") : `Результат ${key.replace("result", "")}`);
-
-          const lim = limits[key] || {};
-          let status = "ok";
-          if (Number.isFinite(lim.min) && val < lim.min) status = "low";
-          if (Number.isFinite(lim.max) && val > lim.max) status = "high";
-
-          items.push({
-            name: label,
-            unit,
-            value: val,
-            text: fmtValue(val, unit),
-            status, // ok | low | high
-          });
-        } else if (typeof val === "string" && val.trim()) {
-          items.push({
-            name: labels[key] || "Примечание",
-            unit: "",
-            value: null,
-            text: val,
-            status: "info",
-          });
-        }
-      };
-
-      ["result1", "result2", "result3", "result4"].forEach(pushItem);
-      if (!items.length) throw new Error("Формула не вернула результатов");
-
-      setResults({
-        success: true,
-        items,
-        formula: selectedFormula.name,
-        timestamp: new Date().toLocaleTimeString(),
-      });
-    } catch (error) {
-      setResults({
-        error: true,
-        type: "calculation",
-        message: `Ошибка при выполнении расчёта: ${error.message}. Проверьте введённые данные.`,
-      });
-    }
+    setResults(computeResult(selectedFormula, inputs));
   };
 
   /** ============================== Поиск ============================== **/
-  const getFilteredFormulas = () => {
-    if (!searchTerm.trim()) return formulas;
-
-    const searchLower = searchTerm.toLowerCase().trim();
-    return formulas
-      .filter((formula) => {
-        const nameLower = formula.name.toLowerCase();
-        const descLower = formula.description ? formula.description.toLowerCase() : "";
-
-        if (nameLower.includes(searchLower)) return true;
-        if (descLower.includes(searchLower)) return true;
-
-        const searchWords = searchLower.split(/\s+/);
-        const nameWords = nameLower.split(/[\s\-]+/);
-
-        for (const searchWord of searchWords) {
-          if (searchWord.length < 2) continue;
-          for (const nameWord of nameWords) {
-            if (nameWord.startsWith(searchWord) || searchWord.startsWith(nameWord)) return true;
-          }
-        }
-
-        const abbreviations = {
-          ан: "анальгин",
-          ад: "адреналин",
-          ам: "амиодарон",
-          ли: "лидокаин",
-          па: "парацетамол",
-          иб: "ибупрофен",
-          ас: "аскорбин",
-          ин: "инсулин",
-          гл: "глюкоза",
-        };
-        for (const [abbr, full] of Object.entries(abbreviations)) {
-          if (searchLower === abbr && (nameLower.includes(full) || descLower.includes(full))) return true;
-        }
-
-        return false;
-      })
-      .sort((a, b) => {
-        const aNameMatch = a.name.toLowerCase().includes(searchLower);
-        const bNameMatch = b.name.toLowerCase().includes(searchLower);
-        if (aNameMatch && !bNameMatch) return -1;
-        if (!aNameMatch && bNameMatch) return 1;
-        return a.name.length - b.name.length;
-      });
-  };
+  const filtered = React.useMemo(() => searchFormulas(formulas, searchTerm), [searchTerm]);
 
   /** ============================== Рендер ============================== **/
   return (
@@ -583,7 +905,7 @@ const WelcomeScreen = () => {
                 {/* Карта 2 */}
                 <View
                   style={{
-                    backgroundColor: 'rgb(59, 130, 246)', // Синий фон для блока Мгновенный результат
+                    backgroundColor: 'rgb(59, 130, 246)', // Синий фон для блока «С расчётом»
                     borderRadius: borderRadius.lg,
                     padding: spacing.sm,
                     alignItems: "center",
@@ -596,7 +918,7 @@ const WelcomeScreen = () => {
                   }}
                 >
                   <Text allowFontScaling={false} maxFontSizeMultiplier={FONT_LIMIT.emoji} style={{ fontSize: 20, marginBottom: spacing.xs }}>
-                    ⚡
+                    🧮
                   </Text>
                   <Text
                     style={{
@@ -608,7 +930,7 @@ const WelcomeScreen = () => {
                     maxFontSizeMultiplier={FONT_LIMIT.small}
                     numberOfLines={1}
                   >
-                    Мгновенный
+                    С расчётом дозы
                   </Text>
                   <Text
                     style={{
@@ -620,7 +942,7 @@ const WelcomeScreen = () => {
                     maxFontSizeMultiplier={FONT_LIMIT.h2}
                     numberOfLines={1}
                   >
-                    Результат
+                    {totalCalcs}
                   </Text>
                 </View>
               </View>
@@ -850,8 +1172,36 @@ const WelcomeScreen = () => {
                     maxFontSizeMultiplier={FONT_LIMIT.body}
                     numberOfLines={2}
                   >
-                    🩺 Введите необходимые значения
+                    {referenceOnly
+                      ? "📖 Справочная запись: расчёт не предусмотрен"
+                      : Object.keys(selectedFormula.inputs || {}).length
+                        ? "🩺 Введите необходимые значения"
+                        : "🩺 Фиксированная доза: нажмите «Рассчитать»"}
                   </Text>
+                  {/* Форма выпуска и концентрация, на которую считается объём — полностью, без обрезки */}
+                  {!!selectedFormula.description && (
+                    <View
+                      style={{
+                        marginTop: spacing.sm,
+                        padding: spacing.sm,
+                        borderRadius: borderRadius.md,
+                        backgroundColor: '#eff6ff', // Светло-голубой фон для формы выпуска
+                        borderWidth: 1,
+                        borderColor: '#bfdbfe',
+                        alignSelf: "stretch",
+                      }}
+                    >
+                      <Text
+                        style={{ fontSize: 14, color: '#1e3a8a', lineHeight: 20 }}
+                        allowFontScaling
+                        maxFontSizeMultiplier={FONT_LIMIT.body}
+                        accessibilityLabel={`Форма выпуска: ${selectedFormula.description}`}
+                      >
+                        <Text style={{ fontWeight: "700" }}>💉 Форма выпуска: </Text>
+                        {selectedFormula.description}
+                      </Text>
+                    </View>
+                  )}
                 </>
               ) : (
                 <>
@@ -910,7 +1260,7 @@ const WelcomeScreen = () => {
             {/* Список формул */}
             {!selectedFormula && (
               <View style={[modalStyles.listContainer, isDark && modalStyles.listContainer_dark]}>
-                {getFilteredFormulas().length === 0 && searchTerm.trim() !== "" && (
+                {filtered.length === 0 && searchTerm.trim() !== "" && (
                   <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingVertical: spacing.xl }}>
                     <Text
                       style={{
@@ -945,7 +1295,7 @@ const WelcomeScreen = () => {
                       maxFontSizeMultiplier={FONT_LIMIT.small}
                       numberOfLines={1}
                     >
-                      🔍 Найдено: {getFilteredFormulas().length} из {formulas.length}
+                      🔍 Найдено: {filtered.length} из {formulas.length}
                     </Text>
                     <TouchableOpacity
                       onPress={() => setSearchTerm("")}
@@ -971,8 +1321,8 @@ const WelcomeScreen = () => {
                   </Animated.View>
                 )}
 
-                {getFilteredFormulas().length > 0 &&
-                  getFilteredFormulas().map((formula, index) => (
+                {filtered.length > 0 &&
+                  filtered.map(({ formula, synonym }, index) => (
                     <Animated.View key={formula.name} entering={FadeInUp.delay(index * 50).duration(animation.fast)}>
                       <TouchableOpacity
                         onPress={() => showModal(formula)}
@@ -1010,6 +1360,17 @@ const WelcomeScreen = () => {
                                 numberOfLines={2}
                               >
                                 {highlightSearchTerm(formula.description, searchTerm)}
+                              </Text>
+                            )}
+                            {/* Найдено по торговому/привычному названию — показываем, по какому */}
+                            {!!synonym && (
+                              <Text
+                                style={{ marginTop: 2, fontSize: 12, color: '#1e40af', fontWeight: "600" }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.small}
+                                numberOfLines={1}
+                              >
+                                🔁 Найдено по названию: {synonym}
                               </Text>
                             )}
                           </View>
@@ -1055,16 +1416,19 @@ const WelcomeScreen = () => {
                     const label = selectedFormula.inputs[inputName] || inputName;
                     const type = getInputType(inputName, label);
                     const raw = inputs[inputName];
-                    const num = type === "numeric" ? parseNum(raw) : undefined;
 
                     const hasValue = type === "text" ? !!(raw && String(raw).trim() !== "") : raw !== undefined && String(raw) !== "";
-                    const isValid = type === "text" ? hasValue : num !== undefined && num > 0;
+                    // Та же проверка, что и перед расчётом: диапазон правдоподобия, 0 допустим для возраста
+                    const check = hasValue ? validateField(inputName, label, raw, selectedFormula) : {};
+                    const isValid = hasValue && !check.error;
 
-                    const labelText = (label || "").toLowerCase();
-                    const unitHint =
-                      labelText.includes("вес") ? "кг" :
-                      labelText.includes("возраст") ? "лет" :
-                      labelText.includes("рост") ? "см" : null;
+                    // Единица — из скобок подписи: «(кг)», «(лет)», «(мес)», «(мкг/кг/мин)», «(мл)»
+                    const unitHint = unitFromLabel(label);
+                    // Подсказка для возраста в годах без отдельного поля месяцев
+                    const ageHint =
+                      unitHint === "лет" && !("ageMonths" in (selectedFormula.inputs || {}))
+                        ? "Новорождённый — 0; до 1 года — дробью (6 мес = 0,5)"
+                        : null;
 
                     return (
                       <Animated.View key={inputName} entering={FadeInUp.delay(index * 100).duration(animation.normal)} style={{ marginBottom: spacing.md }}>
@@ -1088,7 +1452,7 @@ const WelcomeScreen = () => {
                               backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                               borderRadius: borderRadius.lg,
                               padding: spacing.md,
-                              paddingRight: spacing.xxxl,
+                              paddingRight: Math.max(spacing.xxxl, 24 + (unitHint ? unitHint.length * 8 : 0)),
                               fontSize: 16,
                               color: '#1f2937', // Темно-серый для основного текста на белом фоне
                               borderWidth: 2,
@@ -1160,6 +1524,30 @@ const WelcomeScreen = () => {
                             </View>
                           )}
                         </View>
+
+                        {/* Ошибка или предупреждение по полю — сразу под ним */}
+                        {hasValue && (check.error || check.warning) ? (
+                          <Text
+                            style={{
+                              marginTop: 4,
+                              fontSize: 12,
+                              fontWeight: "600",
+                              color: check.error ? colors.light.danger : '#B45309', // Красный — ошибка, янтарный — предупреждение
+                            }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.small}
+                          >
+                            {check.error ? `⛔ ${check.error}` : `⚠️ ${check.warning}`}
+                          </Text>
+                        ) : ageHint ? (
+                          <Text
+                            style={{ marginTop: 4, fontSize: 12, color: '#64748b' }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.small}
+                          >
+                            {ageHint}
+                          </Text>
+                        ) : null}
                       </Animated.View>
                     );
                   })}
@@ -1253,7 +1641,7 @@ const WelcomeScreen = () => {
                           maxFontSizeMultiplier={FONT_LIMIT.h2}
                           numberOfLines={1}
                         >
-                          ⚠️ {results.type === "validation" ? "Необходимо заполнить" : "Ошибка расчёта"}
+                          ⚠️ {results.type === "validation" ? "Проверьте введённые данные" : "Ошибка расчёта"}
                         </Text>
                         <Text
                           style={{ fontSize: 14, color: isDark ? "#FCA5A5" : "#DC2626", textAlign: "center", lineHeight: 20 }}
@@ -1265,8 +1653,8 @@ const WelcomeScreen = () => {
                       </Animated.View>
                     )}
 
-                    {/* Успех */}
-                    {results.success && (
+                    {/* Успех или «расчёт не выполняется» */}
+                    {(results.success || results.info) && (
                       <Animated.View
                         entering={FadeInUp.duration(animation.normal)}
                         style={[modalStyles.resultsContainer, isDark && modalStyles.resultsContainer_dark]}
@@ -1274,12 +1662,12 @@ const WelcomeScreen = () => {
                         {/* Header */}
                         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: spacing.md }}>
                           <Text
-                            style={{ fontSize: 18, fontWeight: "700", color: isDark ? colors.dark.primary : colors.light.primary }}
+                            style={{ flexShrink: 1, fontSize: 18, fontWeight: "700", color: isDark ? colors.dark.primary : colors.light.primary }}
                             allowFontScaling
                             maxFontSizeMultiplier={FONT_LIMIT.h2}
                             numberOfLines={1}
                           >
-                            🧮 Результат расчёта
+                            {results.info ? "ℹ️ Расчёт не выполняется" : "🧮 Результат расчёта"}
                           </Text>
 
                           <View style={{ flexDirection: "row" }}>
@@ -1292,6 +1680,8 @@ const WelcomeScreen = () => {
                                 borderRadius: borderRadius.md,
                                 marginRight: spacing.xs,
                               }}
+                              accessibilityRole="button"
+                              accessibilityLabel="Копировать результат"
                             >
                               <Text
                                 style={{
@@ -1315,6 +1705,8 @@ const WelcomeScreen = () => {
                                 backgroundColor: isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)",
                                 borderRadius: borderRadius.md,
                               }}
+                              accessibilityRole="button"
+                              accessibilityLabel="Сбросить результат"
                             >
                               <Text
                                 style={{
@@ -1332,46 +1724,106 @@ const WelcomeScreen = () => {
                           </View>
                         </View>
 
-                        {/* Инфо о формуле */}
+                        {/* Инфо о расчёте: препарат, форма выпуска, введённые данные, время */}
                         <Text
                           style={{
                             fontSize: 14,
-                            color: '#64748b', // Темно-серый для хорошей видимости на белом фоне
-                            marginBottom: spacing.md,
+                            color: '#475569', // Темно-серый для хорошей видимости на белом фоне
+                            marginBottom: spacing.xs,
                             fontStyle: "italic",
                           }}
                           allowFontScaling
                           maxFontSizeMultiplier={FONT_LIMIT.small}
-                          numberOfLines={2}
                         >
-                          📝 Препарат: {results.formula}
+                          📝 {results.formula}
+                          {results.description ? `\n💉 ${results.description}` : ""}
+                        </Text>
+                        {!!results.inputsText && (
+                          <Text
+                            style={{ fontSize: 14, fontWeight: "600", color: '#1f2937', marginBottom: spacing.xs }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.small}
+                          >
+                            📥 Рассчитано для: {results.inputsText}
+                          </Text>
+                        )}
+                        <Text
+                          style={{ fontSize: 12, color: '#64748b', marginBottom: spacing.md }}
+                          allowFontScaling
+                          maxFontSizeMultiplier={FONT_LIMIT.small}
+                          numberOfLines={1}
+                        >
+                          🕒 {results.timestamp}
                         </Text>
 
+                        {/* Мягкие предупреждения по вводу (вес не по возрасту и т.п.) */}
+                        {(results.notes || []).map((note, index) => (
+                          <Text
+                            key={`note-${index}`}
+                            style={{
+                              fontSize: 14,
+                              fontWeight: "600",
+                              color: '#B45309', // Янтарный — предупреждение
+                              backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                              borderRadius: borderRadius.md,
+                              padding: spacing.sm,
+                              marginBottom: spacing.sm,
+                            }}
+                            allowFontScaling
+                            maxFontSizeMultiplier={FONT_LIMIT.body}
+                          >
+                            ⚠️ {note}
+                          </Text>
+                        ))}
+
+                        {/* Формула вернула {} — показываем указания записи вместо «ошибки» */}
+                        {results.info && (
+                          <View style={{ marginBottom: spacing.sm }}>
+                            <Text
+                              style={{ fontSize: 15, fontWeight: "600", color: '#1f2937', marginBottom: spacing.xs }}
+                              allowFontScaling
+                              maxFontSizeMultiplier={FONT_LIMIT.body}
+                            >
+                              {results.message}
+                            </Text>
+                            {(results.warnings || []).map((w, index) => (
+                              <Text
+                                key={`info-w-${index}`}
+                                style={{ fontSize: 14, color: '#1f2937', lineHeight: 20, marginBottom: 4 }}
+                                allowFontScaling
+                                maxFontSizeMultiplier={FONT_LIMIT.body}
+                              >
+                                • {w}
+                              </Text>
+                            ))}
+                          </View>
+                        )}
+
                         {/* Строки результатов */}
-                        {results.items.map((row, index) => {
-                          const border =
-                            row.status === "high"
-                              ? (isDark ? "#F87171" : "#DC2626")
-                              : row.status === "low"
-                              ? (isDark ? "#FBBF24" : "#D97706")
-                              : (isDark ? colors.dark.border : colors.light.border);
+                        {(results.items || []).map((row, index) => {
+                          const alert = row.status === "high" || row.status === "zero";
+                          const amber = row.status === "low" || row.status === "atmax";
+                          const border = alert
+                            ? (isDark ? "#F87171" : "#DC2626")
+                            : amber
+                            ? (isDark ? "#FBBF24" : "#D97706")
+                            : (isDark ? colors.dark.border : colors.light.border);
 
-                          const valueColor =
-                            row.status === "high"
-                              ? (isDark ? "#F87171" : "#DC2626")
-                              : row.status === "low"
-                              ? (isDark ? "#FBBF24" : "#D97706")
-                              : (isDark ? colors.dark.primary : colors.light.primary);
+                          const valueColor = alert
+                            ? (isDark ? "#F87171" : "#DC2626")
+                            : amber
+                            ? (isDark ? "#FBBF24" : "#D97706")
+                            : (isDark ? colors.dark.primary : colors.light.primary);
 
-                          const badge = row.status === "high" ? "↑ выше макс." : row.status === "low" ? "↓ ниже мин." : null;
+                          const isNote = row.status === "info";
 
                           return (
                             <Animated.View
-                              key={`${row.name}-${index}`}
+                              key={`${row.key || row.name}-${index}`}
                               entering={FadeInUp.delay(index * 80).duration(animation.fast)}
                               style={{
-                                flexDirection: "row",
-                                alignItems: "center",
+                                flexDirection: isNote ? "column" : "row",
+                                alignItems: isNote ? "stretch" : "center",
                                 justifyContent: "space-between",
                                 backgroundColor: '#f8fafc', // Светло-серый фон для кнопок
                                 borderRadius: borderRadius.lg,
@@ -1382,36 +1834,42 @@ const WelcomeScreen = () => {
                                 ...shadows.sm,
                               }}
                             >
-                              <View style={{ flex: 1, paddingRight: spacing.sm }}>
+                              <View style={isNote ? { marginBottom: 4 } : { flex: 1, paddingRight: spacing.sm }}>
                                 <Text
-                                  style={{ fontSize: 16, fontWeight: "600", color: isDark ? colors.dark.text.primary : colors.light.text.primary }}
+                                  style={{ fontSize: isNote ? 14 : 16, fontWeight: "600", color: isDark ? colors.dark.text.primary : colors.light.text.primary }}
                                   allowFontScaling
                                   maxFontSizeMultiplier={FONT_LIMIT.body}
-                                  numberOfLines={2}
-                                  {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
                                 >
                                   {row.name}
                                 </Text>
-                                {!!badge && (
+                                {!!row.badge && (
                                   <Text
                                     style={{ marginTop: 4, fontSize: 12, fontWeight: "600", color: valueColor }}
                                     allowFontScaling
                                     maxFontSizeMultiplier={FONT_LIMIT.small}
-                                    numberOfLines={1}
                                   >
-                                    {badge}
+                                    {row.badge}
                                   </Text>
                                 )}
                               </View>
-                              <Text
-                                style={{ fontSize: 18, fontWeight: "700", color: valueColor, textAlign: "right" }}
-                                allowFontScaling
-                                maxFontSizeMultiplier={FONT_LIMIT.h2}
-                                numberOfLines={1}
-                                {...(Platform.OS === "ios" ? { adjustsFontSizeToFit: true } : {})}
-                              >
-                                {row.text}
-                              </Text>
+                              {/* Примечание — обычным текстом во всю ширину, без сжатия в одну строку */}
+                              {isNote ? (
+                                <Text
+                                  style={{ fontSize: 14, lineHeight: 20, color: '#1f2937' }}
+                                  allowFontScaling
+                                  maxFontSizeMultiplier={FONT_LIMIT.body}
+                                >
+                                  {row.text}
+                                </Text>
+                              ) : (
+                                <Text
+                                  style={{ flexShrink: 0, maxWidth: "55%", fontSize: 18, fontWeight: "700", color: valueColor, textAlign: "right" }}
+                                  allowFontScaling
+                                  maxFontSizeMultiplier={FONT_LIMIT.h2}
+                                >
+                                  {row.text}
+                                </Text>
+                              )}
                             </Animated.View>
                           );
                         })}

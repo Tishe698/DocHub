@@ -11,6 +11,8 @@ import {
 import { Text } from '../components/AppText';
 
 // --- Модель шкалы ШОКС (варианты и баллы) ---
+// Формулировки и баллы — КР МЗ РФ «Хроническая сердечная недостаточность» 2024,
+// Приложение Г1 (ШОКС, модификация Мареева В.Ю., 2000); Пузин С.Н. и соавт., 2014.
 const QUESTIONS = [
   {
     key: 'dyspnea',
@@ -24,9 +26,11 @@ const QUESTIONS = [
   {
     key: 'weight',
     title: 'Изменился ли за последнюю неделю вес',
+    // балл только за прибавку веса; снижение (напр., на диуретиках) = 0
+    // (КР «ХСН» 2024, Прил. Г1: «0 — нет, 1 — увеличился»)
     options: [
-      { id: '0', label: 'Нет', pts: 0 },
-      { id: '1', label: 'Да', pts: 1 },
+      { id: '0', label: 'Нет или снизился', pts: 0 },
+      { id: '1', label: 'Увеличился', pts: 1 },
     ],
   },
   {
@@ -42,8 +46,10 @@ const QUESTIONS = [
     title: 'В каком положении находится в постели',
     options: [
       { id: '0', label: 'Горизонтально', pts: 0 },
-      { id: '1', label: 'Приподнятое изголовье (≈2 подушки)', pts: 1 },
-      { id: '2', label: 'Приподнятое, просыпается от удушья', pts: 2 },
+      // КР «ХСН» 2024, Прил. Г1: «с приподнятым головным концом (две и более подушки)»,
+      // «плюс просыпается от удушья»
+      { id: '1', label: 'С приподнятым изголовьем (2 и более подушки)', pts: 1 },
+      { id: '2', label: 'То же + просыпается от удушья', pts: 2 },
       { id: '3', label: 'Сидя', pts: 3 },
     ],
   },
@@ -76,7 +82,9 @@ const QUESTIONS = [
   },
   {
     key: 'liver',
-    title: 'Печень',
+    // точка отсчёта в КР не указана (только «до 5 см / >5 см»); пояснение —
+    // общепринятая пропедевтика: выступание края печени из-под рёберной дуги
+    title: 'Печень (выступание из-под края рёберной дуги)',
     options: [
       { id: '0', label: 'Не увеличена', pts: 0 },
       { id: '1', label: 'Увеличена до 5 см', pts: 1 },
@@ -104,16 +112,28 @@ const QUESTIONS = [
   },
 ];
 
+// Максимум шкалы — 20 баллов (сумма максимальных баллов всех 10 пунктов)
+const MAX_SCORE = QUESTIONS.reduce(
+  (acc, q) => acc + Math.max(...q.options.map(o => o.pts)),
+  0,
+);
+
 // интерпретация по сумме баллов (класс СН)
+// КР «ХСН» 2024, Прил. Г1: 0 — нет признаков; ≤3 — I ФК; 4–6 — II ФК; 7–9 — III ФК; >9 — IV ФК.
+// Пузин С.Н. и соавт., 2014: максимум (20 баллов) соответствует терминальной ХСН — это IV ФК.
 const interpret = (sum) => {
   if (sum === 0) return { cls: 'нет признаков СН', band: '0 баллов', color: '#10B981' };
   if (sum <= 3) return { cls: 'I функциональный класс', band: '≤ 3', color: '#22C55E' };
   if (sum <= 6) return { cls: 'II функциональный класс', band: '4–6', color: '#F59E0B' };
   if (sum <= 9) return { cls: 'III функциональный класс', band: '7–9', color: '#F97316' };
-  if (sum >= 20) return { cls: 'Терминальная СН', band: '≈20', color: '#EF4444' };
+  if (sum >= MAX_SCORE) {
+    return { cls: 'IV ФК — терминальная ХСН', band: `${MAX_SCORE} (максимум)`, color: '#EF4444' };
+  }
   // >9 и <20
   return { cls: 'IV функциональный класс', band: '> 9', color: '#EF4444' };
 };
+
+const emptyAnswers = () => Object.fromEntries(QUESTIONS.map(q => [q.key, null]));
 
 const Chip = ({ active, onPress, label, pts }) => (
   <TouchableOpacity
@@ -136,22 +156,28 @@ const Card = ({ title, children }) => (
 );
 
 export default function SHOKSScreen() {
-  // по умолчанию везде «0» (первый вариант)
-  const [answers, setAnswers] = useState(
-    Object.fromEntries(QUESTIONS.map(q => [q.key, q.options[0].id])),
-  );
+  // по умолчанию ничего не выбрано: итог имеет смысл только после оценки всех
+  // 10 пунктов (Пузин С.Н. и соавт., 2014; КР «ХСН» 2024, Прил. Г1)
+  const [answers, setAnswers] = useState(emptyAnswers);
 
-  const total = useMemo(() => {
+  const { total, answered } = useMemo(() => {
     return QUESTIONS.reduce((acc, q) => {
       const opt = q.options.find(o => o.id === answers[q.key]);
-      return acc + (opt?.pts ?? 0);
-    }, 0);
+      if (!opt) return acc;
+      return { total: acc.total + opt.pts, answered: acc.answered + 1 };
+    }, { total: 0, answered: 0 });
   }, [answers]);
 
-  const info = interpret(total);
+  const complete = answered === QUESTIONS.length;
+  const info = complete
+    ? interpret(total)
+    : {
+        cls: `ответьте на все пункты (${answered}/${QUESTIONS.length})`,
+        band: answered > 0 ? 'Предварительно' : 'Нет данных',
+        color: '#94A3B8',
+      };
 
-  const reset = () =>
-    setAnswers(Object.fromEntries(QUESTIONS.map(q => [q.key, q.options[0].id])));
+  const reset = () => setAnswers(emptyAnswers());
 
   return (
     <KeyboardAvoidingView
@@ -165,13 +191,18 @@ export default function SHOKSScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.title}>❤️ Шкала ШОКС</Text>
-        <Text style={styles.subtitle}>Шкала оценки клинической симптоматики при сердечной недостаточности</Text>
+        {/* официальное название — КР «ХСН» 2024, Прил. Г1 */}
+        <Text style={styles.subtitle}>
+          Шкала оценки клинического состояния пациента с ХСН (Мареев В.Ю., 2000)
+        </Text>
 
         {/* Итоговая панель */}
         <View style={[styles.summary, { borderColor: info.color }]}>
           <View style={styles.sumLeft}>
-            <Text style={styles.sumValue}>{total}</Text>
-            <Text style={styles.sumLabel}>сумма баллов</Text>
+            <Text style={styles.sumValue}>{answered > 0 ? total : '—'}</Text>
+            <Text style={styles.sumLabel}>
+              {complete ? 'сумма баллов' : `из ${QUESTIONS.length} пунктов: ${answered}`}
+            </Text>
           </View>
           <View style={styles.sumRight}>
             <Text style={[styles.sumBadge, { color: info.color }]}>
@@ -211,7 +242,15 @@ export default function SHOKSScreen() {
           <Text style={styles.noteTitle}>Критерии интерпретации</Text>
           <Text style={styles.noteLine}>0 — отсутствуют клинические признаки СН</Text>
           <Text style={styles.noteLine}>≤3 — I ФК, 4–6 — II ФК, 7–9 — III ФК, &gt;9 — IV ФК</Text>
-          <Text style={styles.noteLine}>≈20 — терминальная сердечная недостаточность</Text>
+          <Text style={styles.noteLine}>20 (максимум) — терминальная ХСН (IV ФК)</Text>
+          {/* назначение шкалы — КР «ХСН» 2024, Прил. Г1 */}
+          <Text style={styles.noteLine}>
+            Только для пациентов с установленной ХСН: тяжесть и динамика лечения.
+            Не для диагностики СН и не для оценки острой СН.
+          </Text>
+          <Text style={styles.noteLine}>
+            Источник: КР МЗ РФ «Хроническая сердечная недостаточность», 2024, Приложение Г1.
+          </Text>
         </View>
 
         <View style={{ height: 24 }} />
