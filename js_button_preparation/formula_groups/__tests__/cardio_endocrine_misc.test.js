@@ -55,12 +55,21 @@ describe('контракт записей группы', () => {
     expect(furo.inputs.route.choices.map((c) => c.value)).toEqual(['iv', 'im']);
     expect(glucagon.inputs.route.choices.map((c) => c.value)).toEqual(['im', 'sc']);
     glucagon.inputs.route.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
-    expect(lido.inputs.indication.choices.map((c) => c.value)).toEqual(['vt-iv', 'cpr-iv', 'cpr-io', 'local']);
-    expect(ond.inputs.indication.choices.map((c) => c.value)).toEqual(['nausea-iv', 'nausea-im', 'gastro-po']);
+    expect(lido.inputs.indication.choices.map((c) => c.value)).toEqual([
+      'vt-iv',
+      'cpr-iv',
+      'cpr-io',
+      'local',
+    ]);
+    expect(ond.inputs.indication.choices.map((c) => c.value)).toEqual([
+      'nausea-iv',
+      'nausea-im',
+      'gastro-po',
+    ]);
     [lido, ond].forEach((f) =>
       f.inputs.indication.choices
         .filter((c) => c.value.includes('-'))
-        .forEach((c) => expect(c.label.endsWith(`— ${ROUTES[c.value.split('-')[1]]}`)).toBe(true))
+        .forEach((c) => expect(c.label.endsWith(`— ${ROUTES[c.value.split('-')[1]]}`)).toBe(true)),
     );
   });
 
@@ -71,7 +80,9 @@ describe('контракт записей группы', () => {
   });
 
   test('нулевой вес — расчёт не выполняется', () => {
-    [lido, furo, insulin, glucagon, ond].forEach((f) => expect(f.formula({ weight: 0, ageYears: 30 })).toEqual({}));
+    [lido, furo, insulin, glucagon, ond].forEach((f) =>
+      expect(f.formula({ weight: 0, ageYears: 30 })).toEqual({}),
+    );
   });
 
   test('синонимы для поиска', () => {
@@ -87,7 +98,8 @@ describe('контракт записей группы', () => {
 });
 
 describe('Лидокаин — антиаритмик', () => {
-  const run = (weight, ageYears, indication = 'vt-iv') => lido.formula({ indication, weight, ageYears });
+  const run = (weight, ageYears, indication = 'vt-iv') =>
+    lido.formula({ indication, weight, ageYears });
 
   test('ребёнок 20 кг, 5 лет: 1 мг/кг, инфузия 20–30 мкг/кг/мин', () => {
     const r = run(20, 5);
@@ -151,7 +163,9 @@ describe('Лидокаин — антиаритмик', () => {
   test('подросток 16 лет, 150 кг, ЖТ: инфузия не выше взрослой 240 мг/ч (n32)', () => {
     const r = run(150, 16);
     expect(r.result4).toMatch(/= 180–240 мг\/ч/);
-    expect(r.result4).toMatch(/ограничено взрослой скоростью 4 мг\/мин = 240 мг\/ч \(расчёт 270 мг\/ч\)/);
+    expect(r.result4).toMatch(
+      /ограничено взрослой скоростью 4 мг\/мин = 240 мг\/ч \(расчёт 270 мг\/ч\)/,
+    );
     expect(r.result4).not.toMatch(/270 мг\/ч \(/);
     const huge = run(250, 17, 'cpr-iv');
     expect(huge.result4).toMatch(/= 240 мг\/ч \(/);
@@ -230,7 +244,10 @@ describe('Ацетилсалициловая кислота — ОКС', () => {
   });
 
   test('100 мг кишечнорастворимая: 2 таблетки = 200 мг; 150 мг — 1 таблетка', () => {
-    expect(asa.formula({ tablet: '100', ageYears: 55 })).toMatchObject({ result1: 200, result2: 2 });
+    expect(asa.formula({ tablet: '100', ageYears: 55 })).toMatchObject({
+      result1: 200,
+      result2: 2,
+    });
     const r = asa.formula({ tablet: '150', ageYears: 55 });
     expect(r).toMatchObject({ result1: 150, result2: 1 });
     expect(r.result4).toMatch(/2 таблетки/);
@@ -331,7 +348,9 @@ describe('Инсулин короткого действия — ДКА', () => 
   });
 
   test('описание: смесь для насоса с альбумином или кровью, как в Алгоритмах 2023 (n31)', () => {
-    expect(insulin.description).toMatch(/50 ЕД \(0,5 мл\) \+ 2 мл 20% альбумина \(или 1 мл крови пациента\) \+ NaCl 0,9% до 50 мл = 1 ЕД\/мл/);
+    expect(insulin.description).toMatch(
+      /50 ЕД \(0,5 мл\) \+ 2 мл 20% альбумина \(или 1 мл крови пациента\) \+ NaCl 0,9% до 50 мл = 1 ЕД\/мл/,
+    );
   });
 
   test('граница 18 лет: болюс только взрослым', () => {
@@ -368,7 +387,8 @@ describe('Глюкагон', () => {
 });
 
 describe('Ондансетрон', () => {
-  const run = (weight, ageYears, indication = 'nausea-iv') => ond.formula({ indication, weight, ageYears });
+  const run = (weight, ageYears, indication = 'nausea-iv') =>
+    ond.formula({ indication, weight, ageYears });
 
   test('ребёнок 20 кг в/в: 0,1 мг/кг = 2 мг = 1 мл', () => {
     const r = run(20, 5);
@@ -430,7 +450,11 @@ describe('Ондансетрон', () => {
 
 describe('через движок', () => {
   test('лидокаин, местная анестезия: строки с подписями «Максимальная…»', () => {
-    const res = computeResult(lido, { indication: 'local', weight: '20' }, { age: { years: '5', months: '' } });
+    const res = computeResult(
+      lido,
+      { indication: 'local', weight: '20' },
+      { age: { years: '5', months: '' } },
+    );
     expect(res.success).toBe(true);
     const names = res.items.map((i) => i.name);
     expect(names).toContain('Максимальная доза (местная анестезия)');
@@ -446,7 +470,11 @@ describe('через движок', () => {
   });
 
   test('глюкагон взрослому: на пределе 1 мг, текст копии с формой выпуска', () => {
-    const res = computeResult(glucagon, { route: 'im', weight: '70' }, { now: new Date(2026, 0, 1, 9, 5) });
+    const res = computeResult(
+      glucagon,
+      { route: 'im', weight: '70' },
+      { now: new Date(2026, 0, 1, 9, 5) },
+    );
     expect(res.success).toBe(true);
     expect(res.items[0].status).toBe('atmax');
     const copy = buildCopyText(res);
@@ -456,18 +484,25 @@ describe('через движок', () => {
   });
 
   test('инсулин: единицы ЕД/ч и мл/ч форматируются', () => {
-    const res = computeResult(insulin, { rate: '0.1', weight: '20' }, { age: { years: '5', months: '' } });
+    const res = computeResult(
+      insulin,
+      { rate: '0.1', weight: '20' },
+      { age: { years: '5', months: '' } },
+    );
     expect(res.success).toBe(true);
     expect(res.items.find((i) => i.key === 'result2').text).toBe('2.00 ЕД/ч');
     expect(res.items.find((i) => i.key === 'result3').text).toBe('2.00 мл/ч');
   });
 
-  test.each(group.map((f) => [f.name, f]))('%s: типичный взрослый считается без ошибок', (_n, f) => {
-    const res = computeResult(f, { weight: '70' }, { age: { years: '40', months: '' } });
-    expect(res.error).toBeUndefined();
-    expect(res.success).toBe(true);
-    res.items.filter((i) => i.unit).forEach((i) => expect(i.status).not.toBe('high'));
-  });
+  test.each(group.map((f) => [f.name, f]))(
+    '%s: типичный взрослый считается без ошибок',
+    (_n, f) => {
+      const res = computeResult(f, { weight: '70' }, { age: { years: '40', months: '' } });
+      expect(res.error).toBeUndefined();
+      expect(res.success).toBe(true);
+      res.items.filter((i) => i.unit).forEach((i) => expect(i.status).not.toBe('high'));
+    },
+  );
 
   test('числовые результаты конечны и положительны на сетке входов', () => {
     const weights = [3, 8, 15, 25, 40, 70, 150];
@@ -483,8 +518,8 @@ describe('через движок', () => {
               expect(Number.isFinite(r[k])).toBe(true);
               expect(r[k]).toBeGreaterThan(0);
             });
-          })
-        )
+          }),
+        ),
       );
     });
   });

@@ -6,7 +6,16 @@ import { View } from 'react-native';
 import { Text } from '../../components/AppText';
 import Screen from '../../components/Screen';
 import { a11yLabel } from '../../components/a11y';
-import { Button, ChoiceChips, NumberField, Note, ResultCard, Section, SwitchRow, Card } from '../../components/ui';
+import {
+  Button,
+  ChoiceChips,
+  NumberField,
+  Note,
+  ResultCard,
+  Section,
+  SwitchRow,
+  Card,
+} from '../../components/ui';
 import PatientBar from '../../patient/PatientBar';
 import BroselowPicker from '../../patient/BroselowPicker';
 import { usePatient, usePatientAge, usePatientNumber } from '../../patient/PatientContext';
@@ -67,7 +76,8 @@ const IntubationTubeCalculation = () => {
     greySubzone: greySubzone || undefined,
   });
 
-  const pickedZone = patient.weightSource === 'broselow' ? patientZoneByKey(patient.broselowZone) : null;
+  const pickedZone =
+    patient.weightSource === 'broselow' ? patientZoneByKey(patient.broselowZone) : null;
   const isNeonate = patient.ageMonths === 0;
   const depths = depthRows(result, opts.route);
 
@@ -145,7 +155,10 @@ const IntubationTubeCalculation = () => {
         {greyPicked ? (
           <ChoiceChips
             label="Подзона серой зоны (масса на ленте)"
-            options={GREY_SUBZONES.map((s) => ({ ...s, accessibilityLabel: `Серая зона, ${s.label}` }))}
+            options={GREY_SUBZONES.map((s) => ({
+              ...s,
+              accessibilityLabel: `Серая зона, ${s.label}`,
+            }))}
             value={greySubzone}
             onChange={(v) => update({ greySubzone: v })}
             hint="От подзоны зависят глубина и возможность трубки с манжетой"
@@ -156,7 +169,9 @@ const IntubationTubeCalculation = () => {
       <Section title="Трубка">
         <SwitchRow
           label="Трубка с манжетой"
-          description={opts.cuffed ? 'Размер для трубки с манжетой' : 'Размер для трубки без манжеты'}
+          description={
+            opts.cuffed ? 'Размер для трубки с манжетой' : 'Размер для трубки без манжеты'
+          }
           value={opts.cuffed}
           onValueChange={(v) => update({ cuffed: v })}
         />
@@ -178,8 +193,8 @@ const IntubationTubeCalculation = () => {
 
         {needsGreySubzone ? (
           <Note level="info" title="Выберите подзону серой зоны">
-            Серая зона ленты разделена на 3, 4 и 5 кг. Диаметр во всех подзонах — 3,5 мм без манжеты;
-            глубина (8,5 / 9 / 10,5 см) и возможность трубки с манжетой зависят от подзоны.
+            Серая зона ленты разделена на 3, 4 и 5 кг. Диаметр во всех подзонах — 3,5 мм без
+            манжеты; глубина (8,5 / 9 / 10,5 см) и возможность трубки с манжетой зависят от подзоны.
           </Note>
         ) : null}
 
@@ -200,26 +215,39 @@ const IntubationTubeCalculation = () => {
               announceText={intubationAnnouncement(result, opts.route)}
             >
               {depths.map((d) => (
-                <InfoRow key={d.key} label={d.label} value={`${fmtCm(d.value)} см`} styles={styles} />
+                <InfoRow
+                  key={d.key}
+                  label={d.label}
+                  value={`${fmtCm(d.value)} см`}
+                  styles={styles}
+                />
               ))}
               <InfoRow
                 label="Альтернативы"
                 value={`${result.alternativesMm.map(fmtMm).join(' / ')} мм`}
                 styles={styles}
               />
-              <InfoRow label="Метод" value={METHOD_LABELS[result.method] || result.method} styles={styles} />
+              <InfoRow
+                label="Метод"
+                value={METHOD_LABELS[result.method] || result.method}
+                styles={styles}
+              />
               {result.method === 'broselowZone' && pickedZone ? (
                 <InfoRow
                   label="Зона ленты"
                   value={a11yLabel(
                     pickedZone.name,
                     greySubzone ? GREY_SUBZONES.find((s) => s.value === greySubzone)?.label : null,
-                    `${fmtCm(pickedZone.lengthMinCm)}–${fmtCm(pickedZone.lengthMaxCm)} см`
+                    `${fmtCm(pickedZone.lengthMinCm)}–${fmtCm(pickedZone.lengthMaxCm)} см`,
                   )}
                   styles={styles}
                 />
               ) : result.broselowZone ? (
-                <InfoRow label="Зона Broselow" value={`${result.broselowZone}, ${result.zoneRange}`} styles={styles} />
+                <InfoRow
+                  label="Зона Broselow"
+                  value={`${result.broselowZone}, ${result.zoneRange}`}
+                  styles={styles}
+                />
               ) : null}
               {result.approxWeightKg ? (
                 <InfoRow label="Масса зоны" value={`${result.approxWeightKg} кг`} styles={styles} />

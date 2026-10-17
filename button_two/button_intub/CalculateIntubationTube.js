@@ -35,17 +35,121 @@ const fmtMm = (x) => x.toFixed(1).replace('.', ',');
 //   (меньше риск интубации бронха); 3 × ID показан для сверки.
 // Глубина не зависит от манжеты: она определяется ребёнком, а не выбором трубки.
 const BROSELOW_ZONES = [
-  { key: 'grey3',  name: 'серая (3 кг)', minCm: 46.8,  maxCm: 51.9,  w: '3',     idU: 3.5, idC: null, oral: 8.5,  nasal: 9.5 },
-  { key: 'grey4',  name: 'серая (4 кг)', minCm: 51.9,  maxCm: 55.0,  w: '4',     idU: 3.5, idC: 3.0,  oral: 9.0,  nasal: 10.0 },
-  { key: 'grey5',  name: 'серая (5 кг)', minCm: 55.0,  maxCm: 59.2,  w: '5',     idU: 3.5, idC: 3.0,  oral: 10.5, nasal: 11.5 },
-  { key: 'pink',   name: 'розовая',      minCm: 59.2,  maxCm: 66.9,  w: '6–7',   idU: 3.5, idC: 3.0,  oral: 10.5, nasal: 11.5 },
-  { key: 'red',    name: 'красная',      minCm: 66.9,  maxCm: 74.2,  w: '8–9',   idU: 3.5, idC: 3.0,  oral: 10.5, nasal: 11.5 },
-  { key: 'purple', name: 'фиолетовая',   minCm: 74.2,  maxCm: 83.8,  w: '10–11', idU: 4.0, idC: 3.5,  age: 1 },
-  { key: 'yellow', name: 'жёлтая',       minCm: 83.8,  maxCm: 95.4,  w: '12–14', idU: 4.5, idC: 4.0,  age: 2 },
-  { key: 'white',  name: 'белая',        minCm: 95.4,  maxCm: 108.3, w: '15–18', idU: 5.0, idC: 4.5,  age: 4 },
-  { key: 'blue',   name: 'синяя',        minCm: 108.3, maxCm: 121.5, w: '19–23', idU: 5.5, idC: 5.0,  age: 6 },
-  { key: 'orange', name: 'оранжевая',    minCm: 121.5, maxCm: 130.7, w: '24–29', idU: 6.0, idC: 5.5,  age: 8 },
-  { key: 'green',  name: 'зелёная',      minCm: 130.7, maxCm: 143.3, w: '30–36', idU: 6.5, idC: 6.0,  age: 10 },
+  {
+    key: 'grey3',
+    name: 'серая (3 кг)',
+    minCm: 46.8,
+    maxCm: 51.9,
+    w: '3',
+    idU: 3.5,
+    idC: null,
+    oral: 8.5,
+    nasal: 9.5,
+  },
+  {
+    key: 'grey4',
+    name: 'серая (4 кг)',
+    minCm: 51.9,
+    maxCm: 55.0,
+    w: '4',
+    idU: 3.5,
+    idC: 3.0,
+    oral: 9.0,
+    nasal: 10.0,
+  },
+  {
+    key: 'grey5',
+    name: 'серая (5 кг)',
+    minCm: 55.0,
+    maxCm: 59.2,
+    w: '5',
+    idU: 3.5,
+    idC: 3.0,
+    oral: 10.5,
+    nasal: 11.5,
+  },
+  {
+    key: 'pink',
+    name: 'розовая',
+    minCm: 59.2,
+    maxCm: 66.9,
+    w: '6–7',
+    idU: 3.5,
+    idC: 3.0,
+    oral: 10.5,
+    nasal: 11.5,
+  },
+  {
+    key: 'red',
+    name: 'красная',
+    minCm: 66.9,
+    maxCm: 74.2,
+    w: '8–9',
+    idU: 3.5,
+    idC: 3.0,
+    oral: 10.5,
+    nasal: 11.5,
+  },
+  {
+    key: 'purple',
+    name: 'фиолетовая',
+    minCm: 74.2,
+    maxCm: 83.8,
+    w: '10–11',
+    idU: 4.0,
+    idC: 3.5,
+    age: 1,
+  },
+  {
+    key: 'yellow',
+    name: 'жёлтая',
+    minCm: 83.8,
+    maxCm: 95.4,
+    w: '12–14',
+    idU: 4.5,
+    idC: 4.0,
+    age: 2,
+  },
+  {
+    key: 'white',
+    name: 'белая',
+    minCm: 95.4,
+    maxCm: 108.3,
+    w: '15–18',
+    idU: 5.0,
+    idC: 4.5,
+    age: 4,
+  },
+  {
+    key: 'blue',
+    name: 'синяя',
+    minCm: 108.3,
+    maxCm: 121.5,
+    w: '19–23',
+    idU: 5.5,
+    idC: 5.0,
+    age: 6,
+  },
+  {
+    key: 'orange',
+    name: 'оранжевая',
+    minCm: 121.5,
+    maxCm: 130.7,
+    w: '24–29',
+    idU: 6.0,
+    idC: 5.5,
+    age: 8,
+  },
+  {
+    key: 'green',
+    name: 'зелёная',
+    minCm: 130.7,
+    maxCm: 143.3,
+    w: '30–36',
+    idU: 6.5,
+    idC: 6.0,
+    age: 10,
+  },
 ].map((z) => (z.age === undefined ? z : { ...z, oral: z.age / 2 + 12, nasal: z.age / 2 + 15 }));
 const TAPE_MIN_CM = 46.8;
 const TAPE_MAX_CM = 143.3;
@@ -68,7 +172,9 @@ const WEIGHT_TAPE_MAX_KG = 37; // зелёная зона 30–36 кг
 
 const zoneByKey = (key) => BROSELOW_ZONES.find((z) => z.key === key);
 const zoneByHeight = (h) =>
-  BROSELOW_ZONES.find((z, i) => h >= z.minCm && (h < z.maxCm || (i === BROSELOW_ZONES.length - 1 && h <= z.maxCm)));
+  BROSELOW_ZONES.find(
+    (z, i) => h >= z.minCm && (h < z.maxCm || (i === BROSELOW_ZONES.length - 1 && h <= z.maxCm)),
+  );
 const zoneByWeight = (w) => {
   const row = WEIGHT_ZONE_UPPER.find((r) => w < r.maxKg);
   return row ? zoneByKey(row.key) : null;
@@ -116,7 +222,7 @@ function buildResult({ method, tubeID, cuffedUsed, oral, nasal, route, extra = {
     alternativesMm: alternatives(tubeID),
     depthOralCm: oral,
     depthNasalCm: nasal,
-    recommendedDepthCm: route === 'oral' ? oral : (route === 'nasal' ? nasal : undefined),
+    recommendedDepthCm: route === 'oral' ? oral : route === 'nasal' ? nasal : undefined,
     ...extra,
   };
 }
@@ -142,17 +248,22 @@ function calculateForNeonate({ weightKg, cuffed = false, route = 'both' }) {
       cuffedUsed = true;
       notes.push(CUFF_TYPE_NOTE);
     } else {
-      warnings.push('Трубки с манжетой при массе ≤3,5 кг не применяются — показан размер без манжеты.');
+      warnings.push(
+        'Трубки с манжетой при массе ≤3,5 кг не применяются — показан размер без манжеты.',
+      );
     }
   }
 
-  const row = NEONATAL_DEPTH.find((r) => weightKg < r.maxKg) || NEONATAL_DEPTH[NEONATAL_DEPTH.length - 1];
+  const row =
+    NEONATAL_DEPTH.find((r) => weightKg < r.maxKg) || NEONATAL_DEPTH[NEONATAL_DEPTH.length - 1];
   const oral = row.oral;
   // Назальная у новорождённых и младенцев на 1 см глубже оральной (Lau 2006: масса/2 + 9 против масса/2 + 8).
   const nasal = roundToHalf(oral + 1);
 
   if (weightKg < 0.5) {
-    warnings.push('Масса <0,5 кг ниже неонатальной таблицы: показана глубина для 0,5–0,6 кг, обязателен рентген-контроль.');
+    warnings.push(
+      'Масса <0,5 кг ниже неонатальной таблицы: показана глубина для 0,5–0,6 кг, обязателен рентген-контроль.',
+    );
   } else if (weightKg < 0.75) {
     // Peterson 2006 (J Perinatol): у детей <750 г формулы по массе дают избыточную глубину.
     warnings.push('Масса <750 г: глубина может быть избыточной — обязателен рентген-контроль.');
@@ -186,27 +297,35 @@ function calculateByZone(zone, { cuffed, route, method }) {
       notes.push(CUFF_TYPE_NOTE);
       if (zone.key === 'orange' || zone.key === 'green') {
         notes.push(
-          `На ленте Broselow для этой зоны указано ${fmtMm(zone.idU)} мм с манжетой; выбран меньший размер (PALS: возраст/4 + 3,5), ${fmtMm(zone.idU)} мм — в альтернативах.`
+          `На ленте Broselow для этой зоны указано ${fmtMm(zone.idU)} мм с манжетой; выбран меньший размер (PALS: возраст/4 + 3,5), ${fmtMm(zone.idU)} мм — в альтернативах.`,
         );
       }
     } else {
-      warnings.push('Трубки с манжетой при массе ≤3,5 кг не применяются — показан размер без манжеты.');
+      warnings.push(
+        'Трубки с манжетой при массе ≤3,5 кг не применяются — показан размер без манжеты.',
+      );
     }
   }
   const oral = zone.oral;
   const nasal = zone.nasal;
   if (zone.key === 'grey3' || zone.key === 'grey4') {
-    notes.push('Глубина — по неонатальной таблице по массе (NRP / Kempley 2008); назальная на 1 см глубже.');
+    notes.push(
+      'Глубина — по неонатальной таблице по массе (NRP / Kempley 2008); назальная на 1 см глубже.',
+    );
   } else if (zone.age === undefined) {
-    notes.push('Глубина через рот = 3 × ID без манжеты (PALS); назальная на 1 см глубже (Lau 2006).');
+    notes.push(
+      'Глубина через рот = 3 × ID без манжеты (PALS); назальная на 1 см глубже (Lau 2006).',
+    );
   } else {
     notes.push(
-      `Глубина по APLS для типичного возраста зоны (${zone.age} ${zone.age === 1 ? 'год' : (zone.age < 5 ? 'года' : 'лет')}): через рот возраст/2 + 12, назально возраст/2 + 15.`,
-      `Сверка: 3 × ID = ${fmt(roundToHalf(3 * zone.idU))} см (PALS).`
+      `Глубина по APLS для типичного возраста зоны (${zone.age} ${zone.age === 1 ? 'год' : zone.age < 5 ? 'года' : 'лет'}): через рот возраст/2 + 12, назально возраст/2 + 15.`,
+      `Сверка: 3 × ID = ${fmt(roundToHalf(3 * zone.idU))} см (PALS).`,
     );
   }
   if (method === 'broselowWeight') {
-    notes.push('Расчёт по массе менее точен, чем по длине тела: при возможности измерьте рост (длину) ребёнка.');
+    notes.push(
+      'Расчёт по массе менее точен, чем по длине тела: при возможности измерьте рост (длину) ребёнка.',
+    );
   }
   notes.push(CONFIRM_NOTE);
 
@@ -247,11 +366,13 @@ function calculateByAge({ ageYears, cuffed = false, route = 'both' }) {
   if (ageYears < 2) {
     idU = 4.0;
     idC = 3.5;
-    formulaNote = '1–2 года: 4,0 мм без манжеты / 3,5 мм с манжетой (ERC 2021, AHA 2020); при необходимости — на 0,5 мм больше.';
+    formulaNote =
+      '1–2 года: 4,0 мм без манжеты / 3,5 мм с манжетой (ERC 2021, AHA 2020); при необходимости — на 0,5 мм больше.';
   } else {
     idU = roundToHalf(ageYears / 4 + 4.0);
     idC = roundToHalf(ageYears / 4 + 3.5);
-    formulaNote = 'Формула: без манжеты возраст/4 + 4 мм; с манжетой возраст/4 + 3,5 мм (PALS, ERC).';
+    formulaNote =
+      'Формула: без манжеты возраст/4 + 4 мм; с манжетой возраст/4 + 3,5 мм (PALS, ERC).';
   }
   const tubeID = cuffed ? idC : idU;
   const oral = roundToHalf(ageYears / 2 + 12);
@@ -263,7 +384,7 @@ function calculateByAge({ ageYears, cuffed = false, route = 'both' }) {
   notes.push(
     'Глубина: через рот возраст/2 + 12 см, назальная возраст/2 + 15 см (APLS).',
     `Сверка: 3 × ID = ${fmt(control)} см (PALS).`,
-    CONFIRM_NOTE
+    CONFIRM_NOTE,
   );
 
   return buildResult({
@@ -305,7 +426,7 @@ function calculateAdult({ sex, cuffed = false, route = 'both', reason }) {
   notes.push(
     'Невысоким пациентам чаще подходит меньшая альтернатива.',
     `Глубина у резцов ≈ ${oral} см (${female ? 'женщины' : 'мужчины'}).`,
-    CONFIRM_NOTE
+    CONFIRM_NOTE,
   );
   return buildResult({
     method: 'adult',
@@ -350,7 +471,9 @@ const TEEN_DEFAULT_AGE = 13; // без возраста при росте >143,3
  */
 function calculateTeen({ ageYears, heightCm, sex, cuffed = false, route = 'both', reason }) {
   if (sex !== 'female' && sex !== 'male') {
-    throw new Error(`${reason} Выберите пол — предельный размер трубки у подростков зависит от пола.`);
+    throw new Error(
+      `${reason} Выберите пол — предельный размер трубки у подростков зависит от пола.`,
+    );
   }
   const adult = ADULT[sex];
   const female = sex === 'female';
@@ -364,7 +487,9 @@ function calculateTeen({ ageYears, heightCm, sex, cuffed = false, route = 'both'
   const idRaw = roundToHalf(a / 4 + (cuffed ? 3.5 : 4.0));
   const tubeID = Math.min(idRaw, adult.id);
   if (idRaw > adult.id) {
-    limitNotes.push(`Диаметр ограничен взрослым размером: ${fmtMm(adult.id)} мм (${female ? 'женщины' : 'мужчины'}).`);
+    limitNotes.push(
+      `Диаметр ограничен взрослым размером: ${fmtMm(adult.id)} мм (${female ? 'женщины' : 'мужчины'}).`,
+    );
   }
 
   let oralRaw;
@@ -384,14 +509,16 @@ function calculateTeen({ ageYears, heightCm, sex, cuffed = false, route = 'both'
   }
 
   warnings.push(
-    `Подросток: взрослые размеры (${fmtMm(adult.id)} мм / ${adult.oral} см) могут быть велики — показаны ${fmtMm(tubeID)} мм и ${fmt(oral)} см у губ. Глубже — риск интубации бронха.`
+    `Подросток: взрослые размеры (${fmtMm(adult.id)} мм / ${adult.oral} см) могут быть велики — показаны ${fmtMm(tubeID)} мм и ${fmt(oral)} см у губ. Глубже — риск интубации бронха.`,
   );
   if (!ageKnown) {
-    warnings.push('Возраст не указан: диаметр — как для 13 лет. Укажите возраст: ребёнку до 12 лет — расчёт по возрасту, с 16 лет — взрослые размеры.');
+    warnings.push(
+      'Возраст не указан: диаметр — как для 13 лет. Укажите возраст: ребёнку до 12 лет — расчёт по возрасту, с 16 лет — взрослые размеры.',
+    );
   }
 
   notes.push(
-    `Диаметр: ${cuffed ? 'с манжетой возраст/4 + 3,5' : 'без манжеты возраст/4 + 4'} мм (PALS, ERC), не больше взрослого размера.`
+    `Диаметр: ${cuffed ? 'с манжетой возраст/4 + 3,5' : 'без манжеты возраст/4 + 4'} мм (PALS, ERC), не больше взрослого размера.`,
   );
   if (cuffed) notes.push(CUFF_TYPE_NOTE);
   else notes.push('Подросткам обычно применяют трубку с манжетой.');
@@ -402,7 +529,9 @@ function calculateTeen({ ageYears, heightCm, sex, cuffed = false, route = 'both'
   notes.push(...limitNotes, CONFIRM_NOTE);
 
   // Альтернативы: ±0,5 мм и взрослый размер для пола.
-  const alts = [...new Set([...alternatives(tubeID), adult.id])].filter((x) => x !== tubeID).sort((p, q) => p - q);
+  const alts = [...new Set([...alternatives(tubeID), adult.id])]
+    .filter((x) => x !== tubeID)
+    .sort((p, q) => p - q);
 
   return buildResult({
     method: 'teen',
@@ -431,8 +560,10 @@ function validate({ heightCm, ageYears, ageMonths, weightKg }) {
   }
   if (weightKg !== undefined) {
     if (!isNum(weightKg) || weightKg <= 0) throw new Error('Масса должна быть больше 0 кг.');
-    if (weightKg > 250) throw new Error('Масса больше 250 кг — похоже, введены граммы. Введите массу в килограммах.');
-    if (weightKg < 0.3) throw new Error('Масса меньше 0,3 кг — проверьте ввод (масса в килограммах).');
+    if (weightKg > 250)
+      throw new Error('Масса больше 250 кг — похоже, введены граммы. Введите массу в килограммах.');
+    if (weightKg < 0.3)
+      throw new Error('Масса меньше 0,3 кг — проверьте ввод (масса в килограммах).');
   }
   if (ageYears !== undefined && (!isNum(ageYears) || ageYears < 0 || ageYears > 120)) {
     throw new Error('Возраст (годы) должен быть от 0 до 120.');
@@ -513,7 +644,11 @@ export const calculateIntubationTubeLogic = (params) => {
   };
 
   // 1) Новорождённый (<1 мес) или масса ≤4,2 кг без возраста → неонатальная таблица по массе.
-  if (w !== undefined && w <= NEONATAL_MAX_KG && (isNeonate || age === undefined || (isInfant && !hInTape))) {
+  if (
+    w !== undefined &&
+    w <= NEONATAL_MAX_KG &&
+    (isNeonate || age === undefined || (isInfant && !hInTape))
+  ) {
     // Сверка роста с массой ≤4,2 кг: такой массе соответствует серая зона ленты Broselow
     // (3–5 кг ≈ 46,8–59,2 см, Wikipedia «Broselow tape»). Рост выше серой зоны — ошибка ввода
     // (например, 100 или 170 см при 4 кг). Как в шаге 2: расхождение на 2 зоны и больше
@@ -523,16 +658,17 @@ export const calculateIntubationTubeLogic = (params) => {
       const hz = zoneByHeight(h);
       if (!hz || zoneRank(hz) >= 2) {
         throw new Error(
-          `Рост ${fmt(h)} см не соответствует массе ${fmt(w)} кг (при массе ≤4,2 кг рост обычно до ≈59 см). Проверьте рост и массу; если рост не измерен — оставьте поле пустым.`
+          `Рост ${fmt(h)} см не соответствует массе ${fmt(w)} кг (при массе ≤4,2 кг рост обычно до ≈59 см). Проверьте рост и массу; если рост не измерен — оставьте поле пустым.`,
         );
       }
       extraWarnings.push(
-        `Рост ${fmt(h)} см больше ожидаемого для массы ${fmt(w)} кг (серая зона — до 59,2 см). Проверьте ввод; расчёт по массе.`
+        `Рост ${fmt(h)} см больше ожидаемого для массы ${fmt(w)} кг (серая зона — до 59,2 см). Проверьте ввод; расчёт по массе.`,
       );
     }
     used.push(`масса ${fmt(w)} кг`);
     if (age !== undefined) used.push(`возраст ${fmtAge(age)}`);
-    if (h !== undefined) ignored.push('рост (при известной массе новорождённого считается по массе)');
+    if (h !== undefined)
+      ignored.push('рост (при известной массе новорождённого считается по массе)');
     res = calculateForNeonate({ weightKg: w, cuffed, route });
     if (age === undefined) res.notes.unshift('Масса ≤4,2 кг: расчёт как для новорождённого.');
     return finish(res);
@@ -546,9 +682,13 @@ export const calculateIntubationTubeLogic = (params) => {
     if (w !== undefined) {
       const wz = w <= NEONATAL_MAX_KG ? zoneByKey('grey4') : zoneByWeight(w);
       if (!wz) {
-        extraWarnings.push(`Масса ${fmt(w)} кг больше зелёной зоны (36 кг) — проверьте рост и массу.`);
+        extraWarnings.push(
+          `Масса ${fmt(w)} кг больше зелёной зоны (36 кг) — проверьте рост и массу.`,
+        );
       } else if (Math.abs(zoneRank(wz) - zoneRank(zone)) >= 2) {
-        extraWarnings.push(`Масса ${fmt(w)} кг соответствует другой зоне (${wz.name}). Трубку выбирают по длине тела; проверьте ввод.`);
+        extraWarnings.push(
+          `Масса ${fmt(w)} кг соответствует другой зоне (${wz.name}). Трубку выбирают по длине тела; проверьте ввод.`,
+        );
       }
       ignored.push('масса (размер трубки выбирается по длине тела)');
     }
@@ -556,10 +696,13 @@ export const calculateIntubationTubeLogic = (params) => {
       if (isChild) {
         const byAge = calculateByAge({ ageYears: age, cuffed, route });
         if (Math.abs(byAge.tubeIDmm - res.tubeIDmm) > 0.5) {
-          extraWarnings.push(`По возрасту (${fmtAge(age)}) — ${fmtMm(byAge.tubeIDmm)} мм: расхождение с ростом больше 0,5 мм, проверьте ввод.`);
+          extraWarnings.push(
+            `По возрасту (${fmtAge(age)}) — ${fmtMm(byAge.tubeIDmm)} мм: расхождение с ростом больше 0,5 мм, проверьте ввод.`,
+          );
         }
       }
-      if (isTeenAdult) extraWarnings.push('Возраст ≥13 лет при росте в пределах ленты: размер по длине тела.');
+      if (isTeenAdult)
+        extraWarnings.push('Возраст ≥13 лет при росте в пределах ленты: размер по длине тела.');
       ignored.push('возраст (размер выбирается по длине тела)');
     }
     if (sex) ignored.push('пол');
@@ -567,7 +710,9 @@ export const calculateIntubationTubeLogic = (params) => {
   }
 
   if (h !== undefined && h < TAPE_MIN_CM) {
-    extraWarnings.push(`Рост ${fmt(h)} см меньше начала ленты Broselow (46,8 см) — рост не использован.`);
+    extraWarnings.push(
+      `Рост ${fmt(h)} см меньше начала ленты Broselow (46,8 см) — рост не использован.`,
+    );
     ignored.push('рост');
   }
 
@@ -603,7 +748,8 @@ export const calculateIntubationTubeLogic = (params) => {
     const reason = 'Возраст ≥16 лет: размеры как у взрослых.';
     used.push(`возраст ${fmtAge(age)}`);
     if (sex) used.push(sex === 'female' ? 'пол: женский' : 'пол: мужской');
-    if (h !== undefined && h > TAPE_MAX_CM) ignored.push('рост (у взрослых — стандартные размеры по полу)');
+    if (h !== undefined && h > TAPE_MAX_CM)
+      ignored.push('рост (у взрослых — стандартные размеры по полу)');
     if (w !== undefined) ignored.push('масса');
     res = calculateAdult({ sex, cuffed, route, reason });
     return finish(res);
@@ -628,7 +774,7 @@ export const calculateIntubationTubeLogic = (params) => {
       const diff = zoneRank(wz) - zoneRank(ez);
       if (diff >= 2) {
         extraWarnings.push(
-          `Масса ${fmt(w)} кг слишком велика для возраста ${fmtAge(age)} (ожидаемо ≈ ${fmt(estW)} кг по APLS) — проверьте ввод. Показан размер по возрасту (зона ${ez.name}), он меньше.`
+          `Масса ${fmt(w)} кг слишком велика для возраста ${fmtAge(age)} (ожидаемо ≈ ${fmt(estW)} кг по APLS) — проверьте ввод. Показан размер по возрасту (зона ${ez.name}), он меньше.`,
         );
         ignored.push('масса (не соответствует возрасту)');
         res = calculateByZone(ez, { cuffed, route, method: 'infantAge' });
@@ -637,7 +783,7 @@ export const calculateIntubationTubeLogic = (params) => {
       }
       if (diff <= -2) {
         extraWarnings.push(
-          `Масса ${fmt(w)} кг меньше ожидаемой для возраста ${fmtAge(age)} (≈ ${fmt(estW)} кг по APLS) — проверьте ввод. Расчёт по массе (меньшая трубка); при возможности измерьте рост.`
+          `Масса ${fmt(w)} кг меньше ожидаемой для возраста ${fmtAge(age)} (≈ ${fmt(estW)} кг по APLS) — проверьте ввод. Расчёт по массе (меньшая трубка); при возможности измерьте рост.`,
         );
       }
       used.push(`масса ${fmt(w)} кг`);
@@ -656,7 +802,9 @@ export const calculateIntubationTubeLogic = (params) => {
   if (w !== undefined) {
     if (sex) ignored.push('пол');
     if (w >= WEIGHT_TAPE_MAX_KG) {
-      throw new Error('Масса больше 36 кг — вне ленты Broselow. Укажите рост или возраст (для подростка/взрослого — и пол).');
+      throw new Error(
+        'Масса больше 36 кг — вне ленты Broselow. Укажите рост или возраст (для подростка/взрослого — и пол).',
+      );
     }
     used.push(`масса ${fmt(w)} кг`);
     res = calculateByZone(zoneByWeight(w), { cuffed, route, method: 'broselowWeight' });
@@ -679,7 +827,17 @@ export const calculateIntubationTubeLogic = (params) => {
 // глубиной (8,5 / 9,0 / 10,5 см) и допустимостью трубки с манжетой (только >3,5 кг, MSD Manual).
 // Поэтому подзону серой зоны выбирают явно; без неё расчёт не выдаётся (консервативно):
 // подставлять «середину» значило бы выдать глубину и манжету, верные только для 4 кг.
-export const PATIENT_ZONE_KEYS = ['grey', 'pink', 'red', 'purple', 'yellow', 'white', 'blue', 'orange', 'green'];
+export const PATIENT_ZONE_KEYS = [
+  'grey',
+  'pink',
+  'red',
+  'purple',
+  'yellow',
+  'white',
+  'blue',
+  'orange',
+  'green',
+];
 export const GREY_SUBZONES = [
   { value: 'grey3', label: '3 кг' },
   { value: 'grey4', label: '4 кг' },
@@ -701,12 +859,19 @@ export const patientZoneKeyOf = (tubeZoneKey) =>
  * @param {"oral"|"nasal"|"both"} [params.route="both"]
  */
 export const calculateIntubationTubeByZone = (params) => {
-  const { zoneKey, greySubzone, ageYears, ageMonths, cuffed = false, route = 'both' } = params || {};
+  const {
+    zoneKey,
+    greySubzone,
+    ageYears,
+    ageMonths,
+    cuffed = false,
+    route = 'both',
+  } = params || {};
   let key = zoneKey;
   if (key === 'grey') {
     if (!GREY_SUBZONES.some((s) => s.value === greySubzone)) {
       throw new Error(
-        'Серая зона разделена на 3, 4 и 5 кг: выберите подзону — от неё зависят глубина и возможность трубки с манжетой.'
+        'Серая зона разделена на 3, 4 и 5 кг: выберите подзону — от неё зависят глубина и возможность трубки с манжетой.',
       );
     }
     key = greySubzone;
@@ -747,23 +912,23 @@ export const calculateIntubationTubeByZone = (params) => {
     const diff = zoneRank(zone) - zoneRank(ez);
     if (zone.minCm > 100) {
       throw new Error(
-        `Зона ленты «${zone.name}» (${fmt(zone.minCm)}–${fmt(zone.maxCm)} см) не бывает у ребёнка до года — проверьте зону и возраст.`
+        `Зона ленты «${zone.name}» (${fmt(zone.minCm)}–${fmt(zone.maxCm)} см) не бывает у ребёнка до года — проверьте зону и возраст.`,
       );
     }
     if (age < 1 / 12) {
       if (diff >= 2) {
         throw new Error(
-          `Зона ленты «${zone.name}» не соответствует возрасту новорождённого (ожидается серая зона). Проверьте зону и возраст; если ребёнок в серой зоне — выберите её и подзону, либо укажите массу или рост.`
+          `Зона ленты «${zone.name}» не соответствует возрасту новорождённого (ожидается серая зона). Проверьте зону и возраст; если ребёнок в серой зоне — выберите её и подзону, либо укажите массу или рост.`,
         );
       }
       if (diff === 1) {
         extraWarnings.push(
-          `Для новорождённого ожидается серая зона ленты, выбрана «${zone.name}» — проверьте зону.`
+          `Для новорождённого ожидается серая зона ленты, выбрана «${zone.name}» — проверьте зону.`,
         );
       }
     } else if (diff >= 2) {
       extraWarnings.push(
-        `Зона ленты «${zone.name}» слишком велика для возраста ${ageText} (ожидаемо ≈ ${fmt(estW)} кг по APLS, зона ${ez.name}) — проверьте зону и возраст. Показан размер по возрасту (зона ${ez.name}), он меньше.`
+        `Зона ленты «${zone.name}» слишком велика для возраста ${ageText} (ожидаемо ≈ ${fmt(estW)} кг по APLS, зона ${ez.name}) — проверьте зону и возраст. Показан размер по возрасту (зона ${ez.name}), он меньше.`,
       );
       ignored.push('выбранная зона ленты (не соответствует возрасту)');
       calcZone = ez;
@@ -771,7 +936,7 @@ export const calculateIntubationTubeByZone = (params) => {
       ageZoneNote = `Масса оценена по возрасту (APLS: 0,5 × мес + 4) ≈ ${fmt(estW)} кг.`;
     } else if (diff <= -2) {
       extraWarnings.push(
-        `Зона ленты «${zone.name}» меньше ожидаемой для возраста ${ageText} (зона ${ez.name} по APLS) — проверьте зону и возраст. Расчёт по выбранной зоне (меньшая трубка).`
+        `Зона ленты «${zone.name}» меньше ожидаемой для возраста ${ageText} (зона ${ez.name} по APLS) — проверьте зону и возраст. Расчёт по выбранной зоне (меньшая трубка).`,
       );
     }
   }
@@ -779,17 +944,23 @@ export const calculateIntubationTubeByZone = (params) => {
   const res = calculateByZone(calcZone, { cuffed, route, method });
   if (ageZoneNote) res.notes.unshift(ageZoneNote);
   if (age !== undefined) {
-    if (age < 1) used.push(age < 1 / 12 ? 'возраст: новорождённый' : `возраст ${fmt(Math.round(age * 12 * 10) / 10)} мес`);
+    if (age < 1)
+      used.push(
+        age < 1 / 12
+          ? 'возраст: новорождённый'
+          : `возраст ${fmt(Math.round(age * 12 * 10) / 10)} мес`,
+      );
     if (age >= 1 && age < 13) {
       const byAge = calculateByAge({ ageYears: age, cuffed, route });
       if (Math.abs(byAge.tubeIDmm - res.tubeIDmm) > 0.5) {
         extraWarnings.push(
-          `По возрасту — ${fmtMm(byAge.tubeIDmm)} мм: расхождение с зоной ленты больше 0,5 мм, проверьте зону и возраст.`
+          `По возрасту — ${fmtMm(byAge.tubeIDmm)} мм: расхождение с зоной ленты больше 0,5 мм, проверьте зону и возраст.`,
         );
       }
     }
     // Как в расчёте по росту: лента рассчитана на детей до ≈12 лет (до 36 кг).
-    if (age >= 13) extraWarnings.push('Возраст ≥13 лет при выбранной зоне ленты: размер по длине тела.');
+    if (age >= 13)
+      extraWarnings.push('Возраст ≥13 лет при выбранной зоне ленты: размер по длине тела.');
     // До 1 года возраст участвует в сверке зоны (см. выше) и указан в «Учтено».
     if (age >= 1) ignored.push('возраст (размер выбирается по зоне ленты)');
   }

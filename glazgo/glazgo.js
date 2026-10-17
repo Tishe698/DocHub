@@ -26,7 +26,11 @@ const EMPTY_SEL = { eye: null, verbal: null, motor: null, pupils: PUPILS_NONE };
 // Вариант шкалы → вариант ChoiceChips: балл виден в подписи, диктор слышит «…, 4 балла».
 const toChoice = (opt) => {
   if (opt.nt) {
-    return { value: opt.id, label: `НО — ${opt.label}`, accessibilityLabel: `${opt.label}, не оценивается` };
+    return {
+      value: opt.id,
+      label: `НО — ${opt.label}`,
+      accessibilityLabel: `${opt.label}, не оценивается`,
+    };
   }
   if (opt.score === null) return { value: opt.id, label: opt.label };
   return {
@@ -74,7 +78,7 @@ export default function GCScreen() {
       M: opts.M.map(toChoice),
       P: opts.P.map(toChoice),
     }),
-    [opts]
+    [opts],
   );
 
   const result = useMemo(() => computeGcs({ mode, ...sel }), [mode, sel]);
@@ -207,8 +211,8 @@ export default function GCScreen() {
             ) : null}
             {result.commandsWarning ? (
               <Note level="warning" title="Выполняет команды (M6)" style={styles.noteInCard}>
-                Это не сопор и не кома. Низкая сумма за счёт E или V: проверьте, не мешают ли
-                оценке отёк век, интубация или афазия (отметьте «НО»).
+                Это не сопор и не кома. Низкая сумма за счёт E или V: проверьте, не мешают ли оценке
+                отёк век, интубация или афазия (отметьте «НО»).
               </Note>
             ) : null}
             <Text variant="caption" color="textSecondary" style={styles.line}>
@@ -223,7 +227,13 @@ export default function GCScreen() {
         )}
       </ResultCard>
 
-      <Button title="Сбросить" variant="secondary" icon="refresh" onPress={onReset} testID="gcs-reset" />
+      <Button
+        title="Сбросить"
+        variant="secondary"
+        icon="refresh"
+        onPress={onReset}
+        testID="gcs-reset"
+      />
     </Screen>
   );
 }

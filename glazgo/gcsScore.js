@@ -19,16 +19,40 @@ export const CHILD_SCALE_MAX_MONTHS = 48;
 
 // Режим шкалы. Взрослая ШКГ — у взрослых и детей от 4 лет; педиатрическая — младше 4 лет.
 export const MODES = [
-  { value: 'adult', label: 'Взрослые и дети ≥ 4 лет', accessibilityLabel: 'Взрослые и дети от 4 лет' },
+  {
+    value: 'adult',
+    label: 'Взрослые и дети ≥ 4 лет',
+    accessibilityLabel: 'Взрослые и дети от 4 лет',
+  },
   { value: 'child', label: 'Дети < 4 лет', accessibilityLabel: 'Дети младше 4 лет' },
 ];
 
 // Варианты «не оценивается» (NT): компонент нельзя оценить из-за местной причины.
 // Обозначения C (глаза закрыты) и T (интубация) — Teasdale 2014; сумма при NT не считается.
-const E_NT = { id: 'EC', nt: true, code: 'EC', label: 'Не оценить: глаза закрыты (отёк, повязка) — C' };
-const V_NT_TUBE = { id: 'VT', nt: true, code: 'VT', label: 'Не оценить: интубация, трахеостома — T' };
-const V_NT_OTHER = { id: 'VNT', nt: true, code: 'V-НО', label: 'Не оценить: афазия, глухота, языковой барьер' };
-const M_NT = { id: 'MNT', nt: true, code: 'M-НО', label: 'Не оценить: миорелаксанты, травма спинного мозга' };
+const E_NT = {
+  id: 'EC',
+  nt: true,
+  code: 'EC',
+  label: 'Не оценить: глаза закрыты (отёк, повязка) — C',
+};
+const V_NT_TUBE = {
+  id: 'VT',
+  nt: true,
+  code: 'VT',
+  label: 'Не оценить: интубация, трахеостома — T',
+};
+const V_NT_OTHER = {
+  id: 'VNT',
+  nt: true,
+  code: 'V-НО',
+  label: 'Не оценить: афазия, глухота, языковой барьер',
+};
+const M_NT = {
+  id: 'MNT',
+  nt: true,
+  code: 'M-НО',
+  label: 'Не оценить: миорелаксанты, травма спинного мозга',
+};
 
 // Открывание глаз — одинаково для обеих шкал (КР «ЧМТ у детей», 2025, прил. Г1/Г2).
 export const E_OPTIONS = [
@@ -76,7 +100,11 @@ export const M_OPTIONS_ADULT = [
 // (6 — выполнение инструкций, 5 — локализация боли); для доречевых детей эквиваленты
 // 6 и 5 — по Modified GCS for Infants (MSD Manual; James 1986).
 export const M_OPTIONS_CHILD = [
-  { id: 'M6', score: 6, label: 'Выполняет инструкции; младенец — спонтанные целенаправленные движения' },
+  {
+    id: 'M6',
+    score: 6,
+    label: 'Выполняет инструкции; младенец — спонтанные целенаправленные движения',
+  },
   { id: 'M5', score: 5, label: 'Локализует боль; младенец — отдёргивает при прикосновении' },
   { id: 'M4', score: 4, label: 'Отдёргивание на боль' },
   { id: 'M3', score: 3, label: 'Патол. сгибание (декортикация)' },
@@ -164,7 +192,13 @@ export function severityLevel(sum) {
 // Id, которого нет в вариантах текущего режима, считается невыбранным.
 // Сумма считается только когда оценены все три компонента и ни один не отмечен как
 // «не оценивается» (Teasdale 2014).
-export function computeGcs({ mode = 'adult', eye = null, verbal = null, motor = null, pupils = null } = {}) {
+export function computeGcs({
+  mode = 'adult',
+  eye = null,
+  verbal = null,
+  motor = null,
+  pupils = null,
+} = {}) {
   const opts = optionsFor(mode);
   const parts = [
     { key: 'E', opt: findOpt(opts.E, eye) },
@@ -184,7 +218,8 @@ export function computeGcs({ mode = 'adult', eye = null, verbal = null, motor = 
 
   // ШКГ-З = ШКГ − баллы зрачков, диапазон 1–15 (Brennan 2018). Только при полной сумме.
   const pupilsOpt = findOpt(opts.P, pupils);
-  const gcsPupils = sum === null || !pupilsOpt || !isNum(pupilsOpt.score) ? null : sum - pupilsOpt.score;
+  const gcsPupils =
+    sum === null || !pupilsOpt || !isNum(pupilsOpt.score) ? null : sum - pupilsOpt.score;
 
   let hint = null;
   if (!complete) hint = `Оценка неполная: выберите ${missing.join(', ')}`;

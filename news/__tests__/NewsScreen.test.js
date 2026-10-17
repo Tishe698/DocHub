@@ -4,7 +4,7 @@ import renderer, { act } from 'react-test-renderer';
 import NewsScreen from '../NewsScreen';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(() => Promise.resolve(true)) }));
 jest.mock('react-native-safe-area-context', () => {
@@ -13,7 +13,8 @@ jest.mock('react-native-safe-area-context', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
-const byTestID = (root, id) => root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
+const byTestID = (root, id) =>
+  root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
 
 const textOf = (node) =>
   node

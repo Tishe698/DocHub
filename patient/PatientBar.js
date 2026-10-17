@@ -20,7 +20,8 @@ const fmt = (n) => String(n).replace('.', ',');
 // Текст сводки (экспортируется для тестов и для скопированного текста расчёта)
 export function patientSummary(patient, derived) {
   const parts = [];
-  if (patient.weightKg !== null) parts.push(`${fmt(patient.weightKg)} кг${derived.weightIsEstimate ? ' (оценка)' : ''}`);
+  if (patient.weightKg !== null)
+    parts.push(`${fmt(patient.weightKg)} кг${derived.weightIsEstimate ? ' (оценка)' : ''}`);
   if (patient.ageMonths !== null) parts.push(formatAge(patient.ageMonths));
   if (patient.sex) parts.push(SEX_SHORT[patient.sex]);
   if (patient.heightCm !== null) parts.push(`${fmt(patient.heightCm)} см`);
@@ -48,14 +49,21 @@ export default function PatientBar({ style }) {
 
   return (
     <View style={[styles.bar, style]}>
-      <View style={styles.info} accessible accessibilityLabel={spoken + (zone ? `, зона Broselow ${zone.name}` : '')}>
+      <View
+        style={styles.info}
+        accessible
+        accessibilityLabel={spoken + (zone ? `, зона Broselow ${zone.name}` : '')}
+      >
         <Text variant="bodyStrong" style={styles.summary}>
           {summary}
         </Text>
         {zone ? (
           <View style={styles.zoneRow}>
             <View
-              style={[styles.swatch, { backgroundColor: broselow[zone.key].bg, borderColor: broselow[zone.key].border }]}
+              style={[
+                styles.swatch,
+                { backgroundColor: broselow[zone.key].bg, borderColor: broselow[zone.key].border },
+              ]}
               {...hideFromA11y}
             />
             <Text variant="caption" color="textSecondary">{`Зона Broselow: ${zone.name}`}</Text>
@@ -68,7 +76,9 @@ export default function PatientBar({ style }) {
           variant="secondary"
           icon="create-outline"
           onPress={() => setOpen(true)}
-          accessibilityLabel={derived.hasData ? 'Изменить данные пациента' : 'Указать данные пациента'}
+          accessibilityLabel={
+            derived.hasData ? 'Изменить данные пациента' : 'Указать данные пациента'
+          }
           style={styles.action}
         />
         {derived.hasData ? (

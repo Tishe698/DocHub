@@ -22,9 +22,13 @@ describe('intubationMode', () => {
   test('рост важнее зоны, зона важнее массы', () => {
     expect(intubationMode(EMPTY_PATIENT)).toBe('empty');
     expect(intubationMode(P({ heightCm: 90 }))).toBe('height');
-    expect(intubationMode(P({ broselowZone: 'white', weightKg: 16.5, weightSource: 'broselow' }))).toBe('zone');
     expect(
-      intubationMode(P({ broselowZone: 'white', weightKg: 16.5, weightSource: 'broselow', heightCm: 100 }))
+      intubationMode(P({ broselowZone: 'white', weightKg: 16.5, weightSource: 'broselow' })),
+    ).toBe('zone');
+    expect(
+      intubationMode(
+        P({ broselowZone: 'white', weightKg: 16.5, weightSource: 'broselow', heightCm: 100 }),
+      ),
     ).toBe('height');
     expect(intubationMode(P({ weightKg: 12 }))).toBe('data');
     expect(intubationMode(P({ ageMonths: 60 }))).toBe('data');
@@ -56,7 +60,7 @@ describe('computeIntubation', () => {
   test('зона по ленте: размер по зоне, масса середины зоны не используется', () => {
     const { mode, result } = computeIntubation(
       P({ broselowZone: 'blue', weightKg: 21, weightSource: 'broselow', ageMonths: 72 }),
-      { cuffed: true }
+      { cuffed: true },
     );
     expect(mode).toBe('zone');
     expect(result.method).toBe('broselowZone');
@@ -64,18 +68,23 @@ describe('computeIntubation', () => {
   });
 
   test('серая зона без подзоны — нужна подзона', () => {
-    const out = computeIntubation(P({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow' }));
+    const out = computeIntubation(
+      P({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow' }),
+    );
     expect(out.needsGreySubzone).toBe(true);
     expect(out.result).toBeNull();
-    const ok = computeIntubation(P({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow' }), {
-      greySubzone: 'grey5',
-    });
+    const ok = computeIntubation(
+      P({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow' }),
+      {
+        greySubzone: 'grey5',
+      },
+    );
     expect(ok.result.depthOralCm).toBe(10.5);
   });
 
   test('рост и выбранная зона расходятся — расчёт по росту с предупреждением', () => {
     const { result } = computeIntubation(
-      P({ broselowZone: 'green', weightKg: 33, weightSource: 'broselow', heightCm: 90 })
+      P({ broselowZone: 'green', weightKg: 33, weightSource: 'broselow', heightCm: 90 }),
     );
     expect(result.method).toBe('broselowHeight');
     expect(result.tubeIDmm).toBe(4.5);
@@ -84,14 +93,16 @@ describe('computeIntubation', () => {
 
   test('рост и выбранная зона совпадают — без предупреждения о зоне', () => {
     const { result } = computeIntubation(
-      P({ broselowZone: 'yellow', weightKg: 13, weightSource: 'broselow', heightCm: 90 })
+      P({ broselowZone: 'yellow', weightKg: 13, weightSource: 'broselow', heightCm: 90 }),
     );
     expect(result.warnings.some((w) => /не совпадает с ростом/.test(w))).toBe(false);
   });
 
   // n10: оценочная масса (по возрасту или по ленте) в логику не идёт.
   test('новорождённый с массой-оценкой по возрасту — нужна измеренная масса', () => {
-    const out = computeIntubation(P({ ageMonths: 0, weightKg: 4, weightSource: 'age' }), { cuffed: true });
+    const out = computeIntubation(P({ ageMonths: 0, weightKg: 4, weightSource: 'age' }), {
+      cuffed: true,
+    });
     expect(out.result).toBeNull();
     expect(out.error).toMatch(/Для новорождённого укажите массу/);
     expect(out.error).toMatch(/оценка по возрасту, для подбора трубки не используется/);
@@ -102,7 +113,9 @@ describe('computeIntubation', () => {
   test('младенец с массой-оценкой — расчёт по возрасту, оценка в «Не использовано»', () => {
     const { result } = computeIntubation(P({ ageMonths: 6, weightKg: 7, weightSource: 'age' }));
     expect(result.method).toBe('infantAge');
-    expect(result.ignored.some((s) => /масса 7 кг — оценка по возрасту, не измерена/.test(s))).toBe(true);
+    expect(result.ignored.some((s) => /масса 7 кг — оценка по возрасту, не измерена/.test(s))).toBe(
+      true,
+    );
   });
 
   test('только оценочная масса без возраста и роста — нет данных', () => {
@@ -112,28 +125,42 @@ describe('computeIntubation', () => {
   test.each([
     [50, 8.5],
     [57, 10.5],
-  ])('серая зона и рост %p см (новорождённый) — расчёт по росту, %p см, без ложного предупреждения', (h, oral) => {
-    for (const ageMonths of [0, null]) {
-      const { result } = computeIntubation(
-        P({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow', heightCm: h, ageMonths })
-      );
-      expect(result.method).toBe('broselowHeight');
-      expect(result.depthOralCm).toBe(oral);
-      expect(result.warnings.some((w) => /не совпадает с ростом/.test(w))).toBe(false);
-      expect(result.ignored.some((s) => /оценка по ленте Broselow/.test(s))).toBe(true);
-    }
-  });
+  ])(
+    'серая зона и рост %p см (новорождённый) — расчёт по росту, %p см, без ложного предупреждения',
+    (h, oral) => {
+      for (const ageMonths of [0, null]) {
+        const { result } = computeIntubation(
+          P({
+            broselowZone: 'grey',
+            weightKg: 4,
+            weightSource: 'broselow',
+            heightCm: h,
+            ageMonths,
+          }),
+        );
+        expect(result.method).toBe('broselowHeight');
+        expect(result.depthOralCm).toBe(oral);
+        expect(result.warnings.some((w) => /не совпадает с ростом/.test(w))).toBe(false);
+        expect(result.ignored.some((s) => /оценка по ленте Broselow/.test(s))).toBe(true);
+      }
+    },
+  );
 
   // n11: совпадение зоны с ростом — и по таблице ленты 2017 (как подсказка BroselowPicker).
   test.each([
     [74.05, 'purple', 'red'],
     [59.1, 'pink', 'grey5'],
-  ])('рост %p см и зона %s на границе — без предупреждения, примечание о границе', (h, zone, calcKey) => {
-    const { result } = computeIntubation(P({ broselowZone: zone, weightKg: 10.5, weightSource: 'broselow', heightCm: h }));
-    expect(result.broselowZoneKey).toBe(calcKey);
-    expect(result.warnings.some((w) => /не совпадает с ростом/.test(w))).toBe(false);
-    expect(result.notes[0]).toMatch(/на границе зон/);
-  });
+  ])(
+    'рост %p см и зона %s на границе — без предупреждения, примечание о границе',
+    (h, zone, calcKey) => {
+      const { result } = computeIntubation(
+        P({ broselowZone: zone, weightKg: 10.5, weightSource: 'broselow', heightCm: h }),
+      );
+      expect(result.broselowZoneKey).toBe(calcKey);
+      expect(result.warnings.some((w) => /не совпадает с ростом/.test(w))).toBe(false);
+      expect(result.notes[0]).toMatch(/на границе зон/);
+    },
+  );
 
   test('подросток: пол из пациента', () => {
     const { result } = computeIntubation(P({ ageMonths: 14 * 12, sex: 'female', heightCm: 160 }));
@@ -160,10 +187,12 @@ describe('depthRows и озвучка', () => {
 
   test('текст для диктора', () => {
     expect(intubationAnnouncement(result, 'oral')).toBe(
-      'Трубка 4,5 миллиметра, без манжеты, глубина через рот 13 сантиметра'
+      'Трубка 4,5 миллиметра, без манжеты, глубина через рот 13 сантиметра',
     );
     const warned = computeIntubation(P({ heightCm: 90, weightKg: 30 })).result;
-    expect(intubationAnnouncement(warned, 'nasal')).toMatch(/назальная глубина 16 сантиметра, есть предупреждение$/);
+    expect(intubationAnnouncement(warned, 'nasal')).toMatch(
+      /назальная глубина 16 сантиметра, есть предупреждение$/,
+    );
     expect(intubationAnnouncement(null)).toBe('');
   });
 });

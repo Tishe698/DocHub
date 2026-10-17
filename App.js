@@ -41,8 +41,16 @@ const ROUTES = [
   { name: 'Calc_max_time_o2', component: Calc_max_time_o2, title: 'Время работы баллона' },
   { name: 'Calc_dorbinyn', component: Calc_dorbinyn, title: 'Минутный объём дыхания' },
   { name: 'Calc_aparat_IVL', component: Calc_aparat_IVL, title: 'Настройка ИВЛ' },
-  { name: 'IntubationTubeCalculation', component: IntubationTubeCalculation, title: 'Эндотрахеальная трубка' },
-  { name: 'Button_Tube_Calculation', component: LaryngealTubeCalculation, title: 'Ларингеальная трубка' },
+  {
+    name: 'IntubationTubeCalculation',
+    component: IntubationTubeCalculation,
+    title: 'Эндотрахеальная трубка',
+  },
+  {
+    name: 'Button_Tube_Calculation',
+    component: LaryngealTubeCalculation,
+    title: 'Ларингеальная трубка',
+  },
   { name: 'MKBScreen', component: ICDSearchScreen, title: 'МКБ-10' },
   { name: 'PediatricNormsScreen', component: PediatricNormsScreen, title: 'Нормы в педиатрии' },
   { name: 'BloodGroupScreen', component: BloodGroupScreen, title: 'Группа крови' },
@@ -66,7 +74,7 @@ function AppNavigator() {
       headerBackButtonDisplayMode: 'minimal',
       contentStyle: { backgroundColor: colors.bg },
     }),
-    [colors]
+    [colors],
   );
 
   return (

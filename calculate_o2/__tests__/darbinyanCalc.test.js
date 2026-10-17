@@ -1,4 +1,11 @@
-import { WEIGHT_CHILD, WEIGHT_MAX, WEIGHT_MIN, computeDarbinyan, darbinyanFor, fmt } from '../darbinyanCalc';
+import {
+  WEIGHT_CHILD,
+  WEIGHT_MAX,
+  WEIGHT_MIN,
+  computeDarbinyan,
+  darbinyanFor,
+  fmt,
+} from '../darbinyanCalc';
 
 describe('computeDarbinyan: МОД = масса / 10 + 1', () => {
   test('75 кг → 8,5 л/мин; маска +2–3 → 10,5–11,5', () => {

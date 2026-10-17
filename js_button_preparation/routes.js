@@ -43,7 +43,9 @@ export function choiceInput(label, choices, defaultValue) {
   const seen = new Set();
   const normalized = choices.map((c) => {
     if (!c || typeof c.value !== 'string' || !c.value || typeof c.label !== 'string' || !c.label) {
-      throw new Error(`choiceInput «${label}»: вариант должен быть { value: string, label: string }`);
+      throw new Error(
+        `choiceInput «${label}»: вариант должен быть { value: string, label: string }`,
+      );
     }
     if (seen.has(c.value)) throw new Error(`choiceInput «${label}»: повтор значения «${c.value}»`);
     seen.add(c.value);
@@ -63,13 +65,15 @@ export function routeInput(codes, defaultCode, label = 'Путь введени�
   }
   for (const code of codes) {
     if (!isRouteCode(code)) {
-      throw new Error(`routeInput: неизвестный путь «${code}», допустимы: ${ROUTE_CODES.join(', ')}`);
+      throw new Error(
+        `routeInput: неизвестный путь «${code}», допустимы: ${ROUTE_CODES.join(', ')}`,
+      );
     }
   }
   return choiceInput(
     label,
     codes.map((code) => ({ value: code, label: ROUTES[code] })),
-    defaultCode
+    defaultCode,
   );
 }
 

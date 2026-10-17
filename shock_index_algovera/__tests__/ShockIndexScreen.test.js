@@ -5,7 +5,7 @@ import CalcShockIndexScreen from '../shock_algov_app';
 
 // Нативного AsyncStorage в Jest нет — официальный мок пакета (тема хранит режим)
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно (лишние предупреждения act) — заменяем заглушкой
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
@@ -17,7 +17,7 @@ const render = (patient) => {
     tree = create(
       <PatientProvider initialPatient={patient}>
         <CalcShockIndexScreen />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;
@@ -56,7 +56,9 @@ describe('экран «Шоковый индекс»', () => {
 
   it('нажимаемые элементы имеют роль и подпись', () => {
     const tree = render();
-    const pressables = tree.root.findAll((n) => typeof n.props.onPress === 'function' && n.props.accessibilityRole);
+    const pressables = tree.root.findAll(
+      (n) => typeof n.props.onPress === 'function' && n.props.accessibilityRole,
+    );
     expect(pressables.length).toBeGreaterThan(0);
     for (const p of pressables) expect(p.props.accessibilityLabel).toBeTruthy();
   });

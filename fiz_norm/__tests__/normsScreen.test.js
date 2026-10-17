@@ -6,7 +6,7 @@ import { PatientProvider, usePatient } from '../../patient/PatientContext';
 import PediatricNormsScreen from '../pediatric_norms_screen';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('../../components/a11y', () => ({
@@ -21,7 +21,10 @@ function Grab() {
   return null;
 }
 
-const metrics = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
+const metrics = {
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+  insets: { top: 0, left: 0, right: 0, bottom: 0 },
+};
 
 function mount(initialPatient) {
   let tree;
@@ -32,15 +35,17 @@ function mount(initialPatient) {
           <Grab />
           <PediatricNormsScreen />
         </PatientProvider>
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
   });
   return tree;
 }
 
 // Pressable в jest-expo — обёртка, поэтому ищем по имени компонента
-const isPressable = (n) => typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
-const radios = (tree) => tree.root.findAll((n) => isPressable(n) && n.props.accessibilityRole === 'radio');
+const isPressable = (n) =>
+  typeof n.type !== 'string' && (n.type.displayName || n.type.name) === 'Pressable';
+const radios = (tree) =>
+  tree.root.findAll((n) => isPressable(n) && n.props.accessibilityRole === 'radio');
 const selectedLabel = (tree) => {
   const sel = radios(tree).filter((n) => n.props.accessibilityState.selected);
   return sel.length ? sel.map((n) => n.props.accessibilityLabel) : [];
@@ -75,12 +80,18 @@ test('ручная смена строки, возврат по кнопке и 
   expect(announce).toHaveBeenCalledWith('Показаны нормы: 8 лет');
 
   const back = tree.root.find(
-    (n) => isPressable(n) && /Вернуть строку по возрасту пациента/.test(n.props.accessibilityLabel || '')
+    (n) =>
+      isPressable(n) &&
+      /Вернуть строку по возрасту пациента/.test(n.props.accessibilityLabel || ''),
   );
   act(() => back.props.onPress());
   expect(selectedLabel(tree)).toEqual(['5 лет']);
 
-  act(() => radios(tree).find((n) => n.props.accessibilityLabel === '1 год').props.onPress());
+  act(() =>
+    radios(tree)
+      .find((n) => n.props.accessibilityLabel === '1 год')
+      .props.onPress(),
+  );
   expect(selectedLabel(tree)).toEqual(['1 год']);
   act(() => api.setPatient({ ageMonths: 7 }));
   expect(selectedLabel(tree)).toEqual(['6 месяцев']);

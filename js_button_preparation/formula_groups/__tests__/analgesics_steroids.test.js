@@ -31,7 +31,13 @@ const hc = byName('Гидрокортизон');
 
 describe('группа анальгетиков и ГКС: контракт', () => {
   it('пять записей в заданном порядке', () => {
-    expect(group.map((g) => g.name)).toEqual(['Парацетамол', 'Ибупрофен', 'Преднизолон', 'Дексаметазон', 'Гидрокортизон']);
+    expect(group.map((g) => g.name)).toEqual([
+      'Парацетамол',
+      'Ибупрофен',
+      'Преднизолон',
+      'Дексаметазон',
+      'Гидрокортизон',
+    ]);
   });
 
   it.each(group.map((g) => [g.name, g]))('%s: поля контракта и пустой ввод', (_, f) => {
@@ -52,11 +58,25 @@ describe('группа анальгетиков и ГКС: контракт', ()
     expect(para.inputs.route.choices.map((c) => c.value)).toEqual(['po', 'pr', 'iv']);
     expect(para.inputs.route.default).toBe('po');
     expect(ibu.inputs.route.choices.map((c) => c.value)).toEqual(['po', 'pr']);
-    [para, ibu].forEach((f) => f.inputs.route.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value])));
+    [para, ibu].forEach((f) =>
+      f.inputs.route.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value])),
+    );
   });
 
   it.each([
-    [pred, ['anaphylaxis-iv', 'anaphylaxis-im', 'asthma-iv', 'asthma-im', 'asthma-po', 'croup-po', 'croup-im', 'croup-iv']],
+    [
+      pred,
+      [
+        'anaphylaxis-iv',
+        'anaphylaxis-im',
+        'asthma-iv',
+        'asthma-im',
+        'asthma-po',
+        'croup-po',
+        'croup-im',
+        'croup-iv',
+      ],
+    ],
     [dex, ['anaphylaxis-iv', 'anaphylaxis-im', 'croup-po', 'croup-im', 'croup-iv']],
     [hc, ['crisis-iv', 'crisis-im', 'anaphylaxis-iv', 'anaphylaxis-im']],
   ])('%#: «Показание и путь» с подписью пути из routes', (f, values) => {
@@ -155,9 +175,13 @@ describe('Парацетамол — ректально', () => {
   });
 
   it('6 кг: 50 мг — ниже 10 мг/кг отмечено; до 3 мес — расчёта нет', () => {
-    expect(para.formula({ weight: 6, ageYears: months(4), route: 'pr' }).result7).toMatch(/меньше 10 мг\/кг/);
+    expect(para.formula({ weight: 6, ageYears: months(4), route: 'pr' }).result7).toMatch(
+      /меньше 10 мг\/кг/,
+    );
     expect(para.formula({ weight: 5, ageYears: months(2), route: 'pr' }).result1).toBeUndefined();
-    expect(para.formula({ weight: 3, ageYears: months(3), route: 'pr' }).result7).toMatch(/суспензию/);
+    expect(para.formula({ weight: 3, ageYears: months(3), route: 'pr' }).result7).toMatch(
+      /суспензию/,
+    );
   });
 });
 
@@ -258,7 +282,9 @@ describe('Ибупрофен — внутрь', () => {
 
   it('до 3 мес или масса < 5 кг — противопоказан', () => {
     expect(ibu.formula({ weight: 5, ageYears: months(2), route: 'po' }).result1).toBeUndefined();
-    expect(ibu.formula({ weight: 4.8, ageYears: months(4), route: 'po' }).result6).toMatch(/противопоказан/);
+    expect(ibu.formula({ weight: 4.8, ageYears: months(4), route: 'po' }).result6).toMatch(
+      /противопоказан/,
+    );
     expect(ibu.formula({ weight: 6, ageYears: months(4), route: 'po' }).result6).toMatch(/24 ч/);
   });
 });
@@ -324,7 +350,9 @@ describe('Преднизолон', () => {
     close(r.result2, 2);
     expect(r.result4).toMatch(/120 мг/);
     expect(r.result5).toBeUndefined();
-    expect(pred.formula({ weight: 70, ageYears: 40, indication: 'anaphylaxis-im' }).result5).toMatch(/в\/в/);
+    expect(
+      pred.formula({ weight: 70, ageYears: 40, indication: 'anaphylaxis-im' }).result5,
+    ).toMatch(/в\/в/);
   });
 
   it('астма в/м, ребёнок 3 года 14 кг: 1 мг/кг = 14 мг, верхняя граница 28 мг', () => {
@@ -396,7 +424,11 @@ describe('Дексаметазон', () => {
     expect(d).toMatchObject({ mg: 10, up: 10, cap: 10 });
     const clean = { weight: 80, ageYears: 16, indication: 'croup-iv' };
     expect(dex.formula(clean).result1).toBe(10);
-    expect(limitsOf(dex, clean)).toEqual({ result1: { max: 10 }, result2: { max: 2.5 }, result3: { max: 20 } });
+    expect(limitsOf(dex, clean)).toEqual({
+      result1: { max: 10 },
+      result2: { max: 2.5 },
+      result3: { max: 20 },
+    });
     const po = dex.formula({ weight: 70, ageYears: 30, indication: 'croup-po' });
     expect(po.result1).toBe(10);
     expect(po.result3).toBe(20);
@@ -416,8 +448,12 @@ describe('Дексаметазон', () => {
     expect(r.result1).toBe(8);
     expect(r.result2).toBe(2);
     expect(r.result4).toMatch(/16 мг/);
-    expect(dex.formula({ weight: 70, ageYears: 30, indication: 'anaphylaxis-im' }).result5).toMatch(/в\/в/);
-    expect(limitsOf(dex, { weight: 70, ageYears: 30, indication: 'anaphylaxis-iv' }).result1.max).toBe(16);
+    expect(dex.formula({ weight: 70, ageYears: 30, indication: 'anaphylaxis-im' }).result5).toMatch(
+      /в\/в/,
+    );
+    expect(
+      limitsOf(dex, { weight: 70, ageYears: 30, indication: 'anaphylaxis-iv' }).result1.max,
+    ).toBe(16);
   });
 
   it('новорождённый 3 кг: малый объём — движок напоминает о разведении', () => {
@@ -474,8 +510,12 @@ describe('Гидрокортизон', () => {
     expect(r.result1).toBe(200);
     expect(r.result2).toBe(4);
     expect(r.result4).toBeUndefined();
-    expect(hc.formula({ weight: 70, ageYears: 30, indication: 'anaphylaxis-im' }).result4).toMatch(/в\/в/);
-    expect(limitsOf(hc, { weight: 70, ageYears: 30, indication: 'anaphylaxis-iv' }).result1.max).toBe(200);
+    expect(hc.formula({ weight: 70, ageYears: 30, indication: 'anaphylaxis-im' }).result4).toMatch(
+      /в\/в/,
+    );
+    expect(
+      limitsOf(hc, { weight: 70, ageYears: 30, indication: 'anaphylaxis-iv' }).result1.max,
+    ).toBe(200);
   });
 
   it('копия: показание и путь в тексте', () => {
@@ -496,17 +536,22 @@ describe('все записи: сводный прогон через движо
         [45, 14],
         [70, 30],
         [250, 80],
-      ].forEach(([weight, ageYears]) => cases.push([f.name, c.value, weight, ageYears, f, choiceKey]));
+      ].forEach(([weight, ageYears]) =>
+        cases.push([f.name, c.value, weight, ageYears, f, choiceKey]),
+      );
     });
   });
 
-  it.each(cases)('%s %s %p кг %p лет: без ошибки, числа конечны', (_n, value, weight, ageYears, f, key) => {
-    const res = computeResult(f, { weight, ageYears, [key]: value });
-    expect(res.error).toBeUndefined();
-    (res.items || []).forEach((i) => {
-      if (i.value !== null) expect(Number.isFinite(i.value)).toBe(true);
-      expect(i.status).not.toBe('zero');
-      expect(i.status).not.toBe('high');
-    });
-  });
+  it.each(cases)(
+    '%s %s %p кг %p лет: без ошибки, числа конечны',
+    (_n, value, weight, ageYears, f, key) => {
+      const res = computeResult(f, { weight, ageYears, [key]: value });
+      expect(res.error).toBeUndefined();
+      (res.items || []).forEach((i) => {
+        if (i.value !== null) expect(Number.isFinite(i.value)).toBe(true);
+        expect(i.status).not.toBe('zero');
+        expect(i.status).not.toBe('high');
+      });
+    },
+  );
 });

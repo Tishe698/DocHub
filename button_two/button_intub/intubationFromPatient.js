@@ -17,13 +17,21 @@ import {
   calculateIntubationTubeByZone,
   patientZoneKeyOf,
 } from './CalculateIntubationTube';
-import { zoneByKey as patientZoneByKey, zoneByHeight as patientZoneByHeight } from '../../patient/estimates';
+import {
+  zoneByKey as patientZoneByKey,
+  zoneByHeight as patientZoneByHeight,
+} from '../../patient/estimates';
 
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 // Масса введена (взвешивание / слова родителей), а не оценена по ленте или по возрасту.
-const enteredWeight = (p) => (isNum(p.weightKg) && p.weightSource === 'entered' ? p.weightKg : undefined);
+const enteredWeight = (p) =>
+  isNum(p.weightKg) && p.weightSource === 'entered' ? p.weightKg : undefined;
 const estimateSourceText = (p) =>
-  p.weightSource === 'broselow' ? 'оценка по ленте Broselow' : p.weightSource === 'age' ? 'оценка по возрасту' : 'оценка';
+  p.weightSource === 'broselow'
+    ? 'оценка по ленте Broselow'
+    : p.weightSource === 'age'
+      ? 'оценка по возрасту'
+      : 'оценка';
 const fmt = (x) => String(x).replace('.', ',');
 export const fmtMm = (x) => Number(x).toFixed(1).replace('.', ',');
 export const fmtCm = (x) => fmt(x);
@@ -104,7 +112,7 @@ export function computeIntubation(patient, { cuffed = false, route = 'both', gre
     } catch (e) {
       if (!estimateDropped) throw e;
       throw new Error(
-        `${(e && e.message) || 'Ошибка расчёта'} Масса ${fmt(p.weightKg)} кг — ${estimateSourceText(p)}, для подбора трубки не используется: введите измеренную массу.`
+        `${(e && e.message) || 'Ошибка расчёта'} Масса ${fmt(p.weightKg)} кг — ${estimateSourceText(p)}, для подбора трубки не используется: введите измеренную массу.`,
       );
     }
     if (estimateDropped) {
@@ -117,7 +125,12 @@ export function computeIntubation(patient, { cuffed = false, route = 'both', gre
     // Только если расчёт действительно шёл по зоне ленты по росту (есть broselowZoneKey).
     // Совпадение — по любой из двух таблиц длины: ленты 2017 (patient/estimates, по ней подсказка
     // BroselowPicker «совпадает с ростом») и таблицы расчёта ЭТТ (границы на 0,2–0,3 см больше).
-    if (mode === 'height' && p.broselowZone && p.weightSource === 'broselow' && res.broselowZoneKey) {
+    if (
+      mode === 'height' &&
+      p.broselowZone &&
+      p.weightSource === 'broselow' &&
+      res.broselowZoneKey
+    ) {
       const byCalc = patientZoneKeyOf(res.broselowZoneKey);
       const byTape = patientZoneByHeight(p.heightCm);
       const picked = patientZoneByKey(p.broselowZone);
@@ -146,8 +159,14 @@ export function computeIntubation(patient, { cuffed = false, route = 'both', gre
 export function depthRows(result, route) {
   if (!result) return [];
   const rows = [];
-  if (route !== 'nasal') rows.push({ key: 'oral', label: 'Глубина через рот (у губ / резцов)', value: result.depthOralCm });
-  if (route !== 'oral') rows.push({ key: 'nasal', label: 'Глубина назальная (у ноздри)', value: result.depthNasalCm });
+  if (route !== 'nasal')
+    rows.push({
+      key: 'oral',
+      label: 'Глубина через рот (у губ / резцов)',
+      value: result.depthOralCm,
+    });
+  if (route !== 'oral')
+    rows.push({ key: 'nasal', label: 'Глубина назальная (у ноздри)', value: result.depthNasalCm });
   return rows.filter((r) => isNum(r.value));
 }
 
@@ -156,7 +175,9 @@ export function intubationAnnouncement(result, route = 'both') {
   if (!result) return '';
   const parts = [`Трубка ${fmtMm(result.tubeIDmm)} миллиметра, ${result.tubeType}`];
   for (const r of depthRows(result, route)) {
-    parts.push(`${r.key === 'oral' ? 'глубина через рот' : 'назальная глубина'} ${fmtCm(r.value)} сантиметра`);
+    parts.push(
+      `${r.key === 'oral' ? 'глубина через рот' : 'назальная глубина'} ${fmtCm(r.value)} сантиметра`,
+    );
   }
   const n = (result.warnings || []).length;
   if (n) parts.push(n === 1 ? 'есть предупреждение' : `предупреждений: ${n}`);

@@ -4,7 +4,8 @@ import { computeResult } from '../../engine';
 
 const byName = (start) => {
   const found = group.filter((f) => f.name.startsWith(start));
-  if (found.length !== 1) throw new Error(`Ожидалась одна запись «${start}», найдено ${found.length}`);
+  if (found.length !== 1)
+    throw new Error(`Ожидалась одна запись «${start}», найдено ${found.length}`);
   return found[0];
 };
 
@@ -45,11 +46,14 @@ describe('группа «Инфузионная терапия»: структу
     Object.keys(f.limits || {}).forEach((k) => expect(f.units[k]).toBeTruthy());
   });
 
-  it.each(group.map((f) => [f.name, f]))('%s: пустой или нулевой вес — расчёт не выполняется', (_name, f) => {
-    if (!Object.keys(f.inputs).length) return;
-    expect(f.formula({})).toEqual({});
-    expect(f.formula({ weight: 0, volume: 0 })).toEqual({});
-  });
+  it.each(group.map((f) => [f.name, f]))(
+    '%s: пустой или нулевой вес — расчёт не выполняется',
+    (_name, f) => {
+      if (!Object.keys(f.inputs).length) return;
+      expect(f.formula({})).toEqual({});
+      expect(f.formula({ weight: 0, volume: 0 })).toEqual({});
+    },
+  );
 
   it('отдельное поле пути — только у глюкозы 10% (в/в и в/к); у кристаллоидов путь — в варианте показания', () => {
     group.forEach((f) => {
@@ -60,7 +64,9 @@ describe('группа «Инфузионная терапия»: структу
       expect(route.choices.map((c) => c.value)).toEqual(['iv', 'io']);
     });
     expect(GLU10.inputs.route).toBeTruthy();
-    [NACL, RINGER, GEK, DEXTRAN, ACESOL, GLU40, WATER].forEach((f) => expect(f.inputs.route).toBeUndefined());
+    [NACL, RINGER, GEK, DEXTRAN, ACESOL, GLU40, WATER].forEach((f) =>
+      expect(f.inputs.route).toBeUndefined(),
+    );
   });
 
   it('записи с одним путём называют его в описании или подписи результата', () => {
@@ -150,7 +156,12 @@ describe('Декстран 40 (Реополиглюкин)', () => {
 describe('Натрия хлорид 0,9%', () => {
   it('выбор показания и пути, по умолчанию шок в/в; в/к — только у шока (n22)', () => {
     expect(NACL.inputs.indication.label).toBe('Показание и путь');
-    expect(NACL.inputs.indication.choices.map((c) => c.value)).toEqual(['shock-iv', 'shock-io', 'dka_child', 'dka_adult']);
+    expect(NACL.inputs.indication.choices.map((c) => c.value)).toEqual([
+      'shock-iv',
+      'shock-io',
+      'dka_child',
+      'dka_adult',
+    ]);
     expect(NACL.inputs.indication.choices.map((c) => c.label)).toEqual([
       `Шок / гиповолемия — ${ROUTES.iv}`,
       `Шок / гиповолемия — ${ROUTES.io}`,
@@ -216,11 +227,14 @@ describe('Натрия хлорид 0,9%', () => {
     expect(out.result5).toMatch(/2-й и 3-й час/);
   });
 
-  it.each(['dka_child', 'dka_adult'])('ДКА (%s): только в/в, лишний route не меняет расчёт', (indication) => {
-    const out = NACL.formula({ weight: 20, indication, route: 'io' });
-    expect(numericKeys(out).length).toBeGreaterThan(0);
-    expect(out.result5).not.toMatch(/В\/к/);
-  });
+  it.each(['dka_child', 'dka_adult'])(
+    'ДКА (%s): только в/в, лишний route не меняет расчёт',
+    (indication) => {
+      const out = NACL.formula({ weight: 20, indication, route: 'io' });
+      expect(numericKeys(out).length).toBeGreaterThan(0);
+      expect(out.result5).not.toMatch(/В\/к/);
+    },
+  );
 });
 
 describe('Глюкоза 10%', () => {
@@ -307,8 +321,17 @@ describe('Ацесоль', () => {
 
 describe('Раствор Рингера', () => {
   it('выбор показания и пути; в/к — только у шока (n22)', () => {
-    expect(RINGER.inputs.indication.choices.map((c) => c.value)).toEqual(['shock-iv', 'shock-io', 'daily_child', 'daily_adult']);
-    expect(RINGER.inputs.indication.choices.filter((c) => c.label.includes(ROUTES.io)).map((c) => c.value)).toEqual(['shock-io']);
+    expect(RINGER.inputs.indication.choices.map((c) => c.value)).toEqual([
+      'shock-iv',
+      'shock-io',
+      'daily_child',
+      'daily_adult',
+    ]);
+    expect(
+      RINGER.inputs.indication.choices
+        .filter((c) => c.label.includes(ROUTES.io))
+        .map((c) => c.value),
+    ).toEqual(['shock-io']);
     expect(RINGER.inputs.indication.default).toBe('shock-iv');
   });
 

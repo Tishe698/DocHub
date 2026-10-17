@@ -35,7 +35,9 @@ const Well = ({ reagent, value }) => {
   const dots = pos ? [0, 1, 2, 3, 4] : weak ? [0, 1, 2] : [];
   return (
     <View style={styles.wellRow} {...hideFromA11y}>
-      <View style={[styles.wellCircle, pos && styles.wellCircleActive, weak && styles.wellCircleWeak]}>
+      <View
+        style={[styles.wellCircle, pos && styles.wellCircleActive, weak && styles.wellCircleWeak]}
+      >
         <View style={styles.dotsWrap}>
           {dots.map((d) => (
             <View key={d} style={[styles.dot, pos ? styles.dotPos : styles.dotWeak]} />
@@ -61,11 +63,17 @@ const ReactionPicker = ({ title, reagent, hint, value, onChange, testID }) => {
         label: o.label,
         accessibilityLabel: `${reagent}: ${o.a11y}`,
       })),
-    [reagent]
+    [reagent],
   );
   return (
     <Card>
-      <ChoiceChips label={title} options={options} value={value} onChange={onChange} testID={testID} />
+      <ChoiceChips
+        label={title}
+        options={options}
+        value={value}
+        onChange={onChange}
+        testID={testID}
+      />
       {hint ? (
         <Text variant="caption" color="textSecondary" style={styles.hint}>
           {hint}
@@ -142,15 +150,17 @@ export default function BloodGroupScreen() {
       {/* Методика: приказ №363 (2002); инструкции к цоликлонам */}
       <Note level="info" title="Методика">
         <Text variant="body" style={styles.noteText}>
-          Капля реагента 0,1 мл + рядом капля крови 0,01–0,03 мл, перемешать, покачивать при
-          15–25 °C. Результат учитывать через 3 мин: слабые варианты A и B агглютинируют позже.
+          Капля реагента 0,1 мл + рядом капля крови 0,01–0,03 мл, перемешать, покачивать при 15–25
+          °C. Результат учитывать через 3 мин: слабые варианты A и B агглютинируют позже.
         </Text>
         <Text variant="body" style={styles.noteText}>
           − нет агглютинации · ± слабая / сомнительная · + агглютинация
         </Text>
       </Note>
 
-      <Section title="Группа AB0">{REAGENTS.filter((r) => r.section === 'abo').map(renderPicker)}</Section>
+      <Section title="Группа AB0">
+        {REAGENTS.filter((r) => r.section === 'abo').map(renderPicker)}
+      </Section>
 
       <Section title="Резус-принадлежность">
         {REAGENTS.filter((r) => r.section === 'rh').map(renderPicker)}

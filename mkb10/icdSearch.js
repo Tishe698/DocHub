@@ -66,7 +66,12 @@ const foldChar = (ch) => {
 export const fold = (s) => Array.from(String(s || ''), foldChar).join('');
 
 // Нормализация текста запроса/названия: регистр, ё, пробелы, двойники
-export const normalize = (s) => fold(String(s || '').replace(/\s+/g, ' ').trim());
+export const normalize = (s) =>
+  fold(
+    String(s || '')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
 
 // Разделители слов: пробелы, знаки препинания, скобки любых видов, кавычки, дефис, слэш
 export const WORD_SPLIT = /[\s,.;:!?()[\]{}«»"'/\\\-–—+]+/;
@@ -127,7 +132,8 @@ export const loadItems = (data) => {
 
 export const buildIndex = (items) => {
   const rubricName = new Map();
-  for (const it of items) if (/^[A-Z]\d\d\*?$/.test(it.code)) rubricName.set(codeKey(it.code), it.name);
+  for (const it of items)
+    if (/^[A-Z]\d\d\*?$/.test(it.code)) rubricName.set(codeKey(it.code), it.name);
   return items.map((it, idx) => {
     const key = codeKey(it.code);
     const isRubric = !key.includes('.');
@@ -136,7 +142,8 @@ export const buildIndex = (items) => {
     const parentNorm = normalize(parentName);
     // слова также без круглых скобок: «(остео)артроз» находится как «остеоартроз», «CR(E)ST» — как «CREST»
     const words = splitWords(nameNorm);
-    for (const w of splitWords(nameNorm.replace(/[()]/g, ''))) if (!words.includes(w)) words.push(w);
+    for (const w of splitWords(nameNorm.replace(/[()]/g, '')))
+      if (!words.includes(w)) words.push(w);
     return {
       ...it,
       id: `${it.code}-${idx}`,
@@ -376,9 +383,15 @@ export const helperText = ({ q, typed, found, fallback, total }) => {
   }
   const typedQ = makeQuery(typed);
   if (typedQ.raw.length > 0 && !isSearchable(typedQ)) {
-    return { text: 'Введите минимум 3 символа названия или код (буква и цифра, например I2).', warn: true };
+    return {
+      text: 'Введите минимум 3 символа названия или код (буква и цифра, например I2).',
+      warn: true,
+    };
   }
-  return { text: `Всего ${total} ${plural(total, ['код', 'кода', 'кодов'])}. Список прокручивается.`, warn: false };
+  return {
+    text: `Всего ${total} ${plural(total, ['код', 'кода', 'кодов'])}. Список прокручивается.`,
+    warn: false,
+  };
 };
 
 // Короткая озвучка итога поиска

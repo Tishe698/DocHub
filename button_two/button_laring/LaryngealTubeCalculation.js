@@ -106,7 +106,8 @@ const LaryngealTubeCalculation = () => {
       <Section title="Результат">
         {!category ? (
           <Note level="info" title="Нет данных для расчёта">
-            Выберите категорию пациента: ребёнок или взрослый (или укажите возраст в данных пациента).
+            Выберите категорию пациента: ребёнок или взрослый (или укажите возраст в данных
+            пациента).
           </Note>
         ) : null}
 
@@ -125,8 +126,16 @@ const LaryngealTubeCalculation = () => {
             announceText={laryngealAnnouncement(result)}
           >
             <InfoRow label="Объём манжеты (рекоменд.)" value={result.cuffVolume} styles={styles} />
-            <InfoRow label="Макс. давление в манжете" value={result.maxCuffPressure} styles={styles} />
-            <InfoRow label="Желудочный зонд через дренаж (LTS-D)" value={`до ${result.drainFr}`} styles={styles} />
+            <InfoRow
+              label="Макс. давление в манжете"
+              value={result.maxCuffPressure}
+              styles={styles}
+            />
+            <InfoRow
+              label="Желудочный зонд через дренаж (LTS-D)"
+              value={`до ${result.drainFr}`}
+              styles={styles}
+            />
             <InfoRow label="Группа по таблице" value={result.group} styles={styles} />
             <Text variant="caption" color="textSecondary" style={styles.basis}>
               {`Основание: ${result.basis}`}

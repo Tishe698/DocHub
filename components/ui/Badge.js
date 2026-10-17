@@ -28,7 +28,14 @@ export const levelColors = (colors, level) => {
   }
 };
 
-export default function Badge({ level = 'neutral', label, children, icon, style, accessibilityLabel }) {
+export default function Badge({
+  level = 'neutral',
+  label,
+  children,
+  icon,
+  style,
+  accessibilityLabel,
+}) {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { fg, bg } = levelColors(colors, level);

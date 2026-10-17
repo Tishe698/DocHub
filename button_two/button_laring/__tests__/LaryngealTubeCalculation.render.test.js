@@ -4,9 +4,12 @@ import renderer, { act } from 'react-test-renderer';
 import LaryngealTubeCalculation from '../LaryngealTubeCalculation';
 import { PatientProvider } from '../../../patient/PatientContext';
 
-jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно (setState вне act) — в дымовом тесте не нужны.
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
@@ -29,7 +32,7 @@ const renderWith = (initialPatient) => {
     tree = renderer.create(
       <PatientProvider initialPatient={initialPatient}>
         <LaryngealTubeCalculation />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;
@@ -54,6 +57,8 @@ describe('LaryngealTubeCalculation', () => {
   });
 
   test('вне таблицы — варианты', () => {
-    expect(textOf(renderWith({ ageMonths: 96, weightKg: 30, heightCm: 120 }))).toMatch(/Рассмотрите: № 2 или № 2,5/);
+    expect(textOf(renderWith({ ageMonths: 96, weightKg: 30, heightCm: 120 }))).toMatch(
+      /Рассмотрите: № 2 или № 2,5/,
+    );
   });
 });

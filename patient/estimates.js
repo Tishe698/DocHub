@@ -42,22 +42,103 @@ export function estimateWeightApls(ageMonths) {
 // key совпадает с ключами theme/broselow.js (цвет ленты)
 export const BROSELOW_ZONES = Object.freeze(
   [
-    { key: 'grey', name: 'Серая', lengthMinCm: 46.6, lengthMaxCm: 59.0, weightMinKg: 3, weightMaxKg: 5, typicalAge: 'новорождённый — 2 мес', typicalAgeMonths: 1 },
-    { key: 'pink', name: 'Розовая', lengthMinCm: 59.0, lengthMaxCm: 66.7, weightMinKg: 6, weightMaxKg: 7, typicalAge: '≈ 4 мес', typicalAgeMonths: 4 },
-    { key: 'red', name: 'Красная', lengthMinCm: 66.7, lengthMaxCm: 74.0, weightMinKg: 8, weightMaxKg: 9, typicalAge: '≈ 8 мес', typicalAgeMonths: 8 },
-    { key: 'purple', name: 'Фиолетовая', lengthMinCm: 74.0, lengthMaxCm: 83.6, weightMinKg: 10, weightMaxKg: 11, typicalAge: '≈ 1 год', typicalAgeMonths: 12 },
-    { key: 'yellow', name: 'Жёлтая', lengthMinCm: 83.6, lengthMaxCm: 95.2, weightMinKg: 12, weightMaxKg: 14, typicalAge: '≈ 2 года', typicalAgeMonths: 24 },
-    { key: 'white', name: 'Белая', lengthMinCm: 95.2, lengthMaxCm: 108.0, weightMinKg: 15, weightMaxKg: 18, typicalAge: '≈ 4 года', typicalAgeMonths: 48 },
-    { key: 'blue', name: 'Синяя', lengthMinCm: 108.0, lengthMaxCm: 121.2, weightMinKg: 19, weightMaxKg: 23, typicalAge: '≈ 6 лет', typicalAgeMonths: 72 },
-    { key: 'orange', name: 'Оранжевая', lengthMinCm: 121.2, lengthMaxCm: 130.4, weightMinKg: 24, weightMaxKg: 29, typicalAge: '≈ 8 лет', typicalAgeMonths: 96 },
-    { key: 'green', name: 'Зелёная', lengthMinCm: 130.4, lengthMaxCm: 143.3, weightMinKg: 30, weightMaxKg: 36, typicalAge: '≈ 10 лет', typicalAgeMonths: 120 },
+    {
+      key: 'grey',
+      name: 'Серая',
+      lengthMinCm: 46.6,
+      lengthMaxCm: 59.0,
+      weightMinKg: 3,
+      weightMaxKg: 5,
+      typicalAge: 'новорождённый — 2 мес',
+      typicalAgeMonths: 1,
+    },
+    {
+      key: 'pink',
+      name: 'Розовая',
+      lengthMinCm: 59.0,
+      lengthMaxCm: 66.7,
+      weightMinKg: 6,
+      weightMaxKg: 7,
+      typicalAge: '≈ 4 мес',
+      typicalAgeMonths: 4,
+    },
+    {
+      key: 'red',
+      name: 'Красная',
+      lengthMinCm: 66.7,
+      lengthMaxCm: 74.0,
+      weightMinKg: 8,
+      weightMaxKg: 9,
+      typicalAge: '≈ 8 мес',
+      typicalAgeMonths: 8,
+    },
+    {
+      key: 'purple',
+      name: 'Фиолетовая',
+      lengthMinCm: 74.0,
+      lengthMaxCm: 83.6,
+      weightMinKg: 10,
+      weightMaxKg: 11,
+      typicalAge: '≈ 1 год',
+      typicalAgeMonths: 12,
+    },
+    {
+      key: 'yellow',
+      name: 'Жёлтая',
+      lengthMinCm: 83.6,
+      lengthMaxCm: 95.2,
+      weightMinKg: 12,
+      weightMaxKg: 14,
+      typicalAge: '≈ 2 года',
+      typicalAgeMonths: 24,
+    },
+    {
+      key: 'white',
+      name: 'Белая',
+      lengthMinCm: 95.2,
+      lengthMaxCm: 108.0,
+      weightMinKg: 15,
+      weightMaxKg: 18,
+      typicalAge: '≈ 4 года',
+      typicalAgeMonths: 48,
+    },
+    {
+      key: 'blue',
+      name: 'Синяя',
+      lengthMinCm: 108.0,
+      lengthMaxCm: 121.2,
+      weightMinKg: 19,
+      weightMaxKg: 23,
+      typicalAge: '≈ 6 лет',
+      typicalAgeMonths: 72,
+    },
+    {
+      key: 'orange',
+      name: 'Оранжевая',
+      lengthMinCm: 121.2,
+      lengthMaxCm: 130.4,
+      weightMinKg: 24,
+      weightMaxKg: 29,
+      typicalAge: '≈ 8 лет',
+      typicalAgeMonths: 96,
+    },
+    {
+      key: 'green',
+      name: 'Зелёная',
+      lengthMinCm: 130.4,
+      lengthMaxCm: 143.3,
+      weightMinKg: 30,
+      weightMaxKg: 36,
+      typicalAge: '≈ 10 лет',
+      typicalAgeMonths: 120,
+    },
   ].map((z) =>
     Object.freeze({
       ...z,
       // Масса для расчёта доз — середина диапазона зоны
       weightKg: (z.weightMinKg + z.weightMaxKg) / 2,
-    })
-  )
+    }),
+  ),
 );
 
 export const BROSELOW_VERSION = '2017';
@@ -135,7 +216,10 @@ export function composeAgeMonths(years, months) {
   const y = years === null || years === undefined || years === '' ? null : Number(years);
   const m = months === null || months === undefined || months === '' ? null : Number(months);
   if (y === null && m === null) return null;
-  if ((y !== null && (!Number.isFinite(y) || y < 0)) || (m !== null && (!Number.isFinite(m) || m < 0)))
+  if (
+    (y !== null && (!Number.isFinite(y) || y < 0)) ||
+    (m !== null && (!Number.isFinite(m) || m < 0))
+  )
     return null;
   return Math.floor((y || 0) * 12 + (m || 0) + 1e-9);
 }

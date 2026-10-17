@@ -15,8 +15,9 @@ const limitsOf = (f, clean) => (typeof f.limits === 'function' ? f.limits(clean)
 const choiceCombos = (f) => {
   const fields = Object.entries(f.inputs).filter(([, v]) => isChoiceInput(v));
   return fields.reduce(
-    (acc, [key, input]) => acc.flatMap((combo) => input.choices.map((c) => ({ ...combo, [key]: c.value }))),
-    [{}]
+    (acc, [key, input]) =>
+      acc.flatMap((combo) => input.choices.map((c) => ({ ...combo, [key]: c.value }))),
+    [{}],
   );
 };
 
@@ -102,7 +103,7 @@ describe('группа «взрослые / без педиатрических 
         });
         if (!REFERENCE.includes(f.name)) expect(numericKeys(r).length).toBeGreaterThan(0);
       });
-    }
+    },
   );
 
   it('поля-выборы: коды путей из routes.js, значение по умолчанию — из вариантов', () => {
@@ -116,11 +117,19 @@ describe('группа «взрослые / без педиатрических 
     const routes = (name) => byName(name).inputs.route;
     expect(routes('Нитроглицерин').choices.map((c) => c.value)).toEqual(['sl', 'iv']);
     expect(routes('Нитроглицерин').default).toBe('sl');
-    expect(routes('Изосорбида динитрат (раствор/спрей)').choices.map((c) => c.value)).toEqual(['buccal', 'iv']);
-    expect(routes('Этилметилгидроксипиридина сукцинат').choices.map((c) => c.value)).toEqual(['iv', 'im']);
-    ['Нитроглицерин', 'Изосорбида динитрат (раствор/спрей)', 'Этилметилгидроксипиридина сукцинат'].forEach((n) =>
-      routes(n).choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]))
-    );
+    expect(routes('Изосорбида динитрат (раствор/спрей)').choices.map((c) => c.value)).toEqual([
+      'buccal',
+      'iv',
+    ]);
+    expect(routes('Этилметилгидроксипиридина сукцинат').choices.map((c) => c.value)).toEqual([
+      'iv',
+      'im',
+    ]);
+    [
+      'Нитроглицерин',
+      'Изосорбида динитрат (раствор/спрей)',
+      'Этилметилгидроксипиридина сукцинат',
+    ].forEach((n) => routes(n).choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value])));
   });
 
   it('у препаратов с одним путём путь указан в подписи первого результата', () => {
@@ -145,27 +154,36 @@ describe('группа «взрослые / без педиатрических 
 
   it('у многопутевых записей подпись каждой числовой строки называет путь', () => {
     const re = /в\/в|в\/м|п\/к|под язык|слизистую рта/i;
-    ['Нитроглицерин', 'Изосорбида динитрат (раствор/спрей)', 'Этилметилгидроксипиридина сукцинат', 'Окситоцин', 'Эноксапарин натрия'].forEach(
-      (name) => {
-        const f = byName(name);
-        choiceCombos(f).forEach((combo) => {
-          const r = f.formula({ ...ADULT, ...combo });
-          numericKeys(r).forEach((k) => expect(f.labels[k]).toMatch(re));
-        });
-      }
-    );
-  });
-
-  it.each(ADULT_CALC.map((n) => [n]))('%s: детям (5 лет, 17 лет, новорождённый) расчёт не выполняется', (name) => {
-    const f = byName(name);
-    choiceCombos(f).forEach((combo) => {
-      expect(f.formula({ ...CHILD, ...combo })).toEqual({});
-      expect(f.formula({ weight: 60, ageYears: 17, ...combo })).toEqual({});
-      expect(f.formula({ weight: 3.5, ageYears: 0, ...combo })).toEqual({});
-      // Граница: 18 лет — уже взрослый
-      expect(Object.keys(f.formula({ weight: 60, ageYears: 18, ...combo })).length).toBeGreaterThan(0);
+    [
+      'Нитроглицерин',
+      'Изосорбида динитрат (раствор/спрей)',
+      'Этилметилгидроксипиридина сукцинат',
+      'Окситоцин',
+      'Эноксапарин натрия',
+    ].forEach((name) => {
+      const f = byName(name);
+      choiceCombos(f).forEach((combo) => {
+        const r = f.formula({ ...ADULT, ...combo });
+        numericKeys(r).forEach((k) => expect(f.labels[k]).toMatch(re));
+      });
     });
   });
+
+  it.each(ADULT_CALC.map((n) => [n]))(
+    '%s: детям (5 лет, 17 лет, новорождённый) расчёт не выполняется',
+    (name) => {
+      const f = byName(name);
+      choiceCombos(f).forEach((combo) => {
+        expect(f.formula({ ...CHILD, ...combo })).toEqual({});
+        expect(f.formula({ weight: 60, ageYears: 17, ...combo })).toEqual({});
+        expect(f.formula({ weight: 3.5, ageYears: 0, ...combo })).toEqual({});
+        // Граница: 18 лет — уже взрослый
+        expect(
+          Object.keys(f.formula({ weight: 60, ageYears: 18, ...combo })).length,
+        ).toBeGreaterThan(0);
+      });
+    },
+  );
 
   it.each(REFERENCE.map((n) => [n]))('%s: справочная запись без полей', (name) => {
     const f = byName(name);
@@ -176,7 +194,9 @@ describe('группа «взрослые / без педиатрических 
   });
 
   it('записи с расчётом — не справочные', () => {
-    [...ADULT_CALC, 'Окситоцин', 'Натрия гидрокарбонат 5%'].forEach((n) => expect(isReferenceOnly(byName(n))).toBe(false));
+    [...ADULT_CALC, 'Окситоцин', 'Натрия гидрокарбонат 5%'].forEach((n) =>
+      expect(isReferenceOnly(byName(n))).toBe(false),
+    );
   });
 });
 
@@ -411,7 +431,8 @@ describe('Клопидогрел', () => {
     expect(nste.result1).toBe(300);
     expect(nste.result3).toMatch(/600 мг/);
   });
-  it('неизвестное показание → {}', () => expect(f.formula({ ageYears: 60, indication: 'x' })).toEqual({}));
+  it('неизвестное показание → {}', () =>
+    expect(f.formula({ ageYears: 60, indication: 'x' })).toEqual({}));
 });
 
 describe('Окситоцин', () => {
@@ -516,7 +537,11 @@ describe('Натрия гидрокарбонат 5% (без изменений)
 
 describe('движок: расчёт записей группы', () => {
   it('ребёнок: «расчёт не выполняется» и предупреждение про 18 лет', () => {
-    const r = computeResult(byName('Метопролол'), { indication: 'svt' }, { age: { years: 10, months: 0 } });
+    const r = computeResult(
+      byName('Метопролол'),
+      { indication: 'svt' },
+      { age: { years: 10, months: 0 } },
+    );
     expect(r.info).toBe(true);
     expect(r.warnings[0]).toMatch(/до 18 лет/);
   });
@@ -524,7 +549,9 @@ describe('движок: расчёт записей группы', () => {
   it('взрослый: путь по умолчанию подставляется, путь — в выборе и в копии', () => {
     const r = computeResult(byName('Нитроглицерин'), {}, { age: { years: 55, months: 0 } });
     expect(r.success).toBe(true);
-    expect(r.choices).toEqual([expect.objectContaining({ key: 'route', value: 'sl', valueLabel: 'под язык' })]);
+    expect(r.choices).toEqual([
+      expect.objectContaining({ key: 'route', value: 'sl', valueLabel: 'под язык' }),
+    ]);
     expect(r.items[0].name).toMatch(/под язык/);
     expect(buildCopyText(r)).toMatch(/Путь введения: под язык/);
   });
@@ -533,7 +560,7 @@ describe('движок: расчёт записей группы', () => {
     const r = computeResult(
       byName('Эноксапарин натрия'),
       { weight: '120', indication: 'stemiLysis' },
-      { age: { years: 60, months: 0 } }
+      { age: { years: 60, months: 0 } },
     );
     expect(r.success).toBe(true);
     const sc = r.items.find((i) => i.key === 'result3');

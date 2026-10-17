@@ -76,7 +76,16 @@ const toNum = (v) => (typeof v === 'number' ? (Number.isFinite(v) ? v : undefine
  * @param {number|null} [p.ageMonths] — возраст пациента в месяцах (для детского предела дозы)
  * @returns {{ ok: boolean, errors: string[], fieldErrors: { weight, dose }, dose?, syringe?, bag? }}
  */
-export function calcNorepinephrine({ weight, dose, drugMg, syrVol, bagMg, bagDiluent, dropFactor, ageMonths = null } = {}) {
+export function calcNorepinephrine({
+  weight,
+  dose,
+  drugMg,
+  syrVol,
+  bagMg,
+  bagDiluent,
+  dropFactor,
+  ageMonths = null,
+} = {}) {
   const L = NOREPI_LIMITS;
   const W = toNum(weight);
   const D = toNum(dose); // мкг/кг/мин основания
@@ -96,7 +105,8 @@ export function calcNorepinephrine({ weight, dose, drugMg, syrVol, bagMg, bagDil
   if (errors.length) return { ok: false, errors, fieldErrors };
 
   // Доза: ограничение установленным максимумом
-  const childByAge = typeof ageMonths === 'number' && Number.isFinite(ageMonths) && ageMonths < L.childAgeMonths;
+  const childByAge =
+    typeof ageMonths === 'number' && Number.isFinite(ageMonths) && ageMonths < L.childAgeMonths;
   const isChild = W < L.childWeightKg || childByAge;
   const doseMax = isChild ? L.doseMaxChild : L.doseMaxAdult;
   const Dcalc = Math.min(D, doseMax);
@@ -151,7 +161,11 @@ export function calcNorepinephrine({ weight, dose, drugMg, syrVol, bagMg, bagDil
       const conc = (M * 1000) / V; // мкг/мл основания
       const mlph = (mcgMin * 60) / conc; // мл/ч
       // Инструкция РФ «Норэпинефрин»: концентрат вводят только после разведения в 5% декстрозе
-      if (concMl === V) w.push({ level: 'warn', text: 'Концентрат не разведён — вводят только после разведения (инструкция РФ).' });
+      if (concMl === V)
+        w.push({
+          level: 'warn',
+          text: 'Концентрат не разведён — вводят только после разведения (инструкция РФ).',
+        });
       if (!Number.isFinite(mlph)) ok = false;
       else if (mlph < L.pumpMinMlh) {
         w.push({
@@ -159,7 +173,10 @@ export function calcNorepinephrine({ weight, dose, drugMg, syrVol, bagMg, bagDil
           text: `Скорость ${fmt(mlph)} мл/ч ниже шага насоса (0,1 мл/ч) — разведите слабее (меньше мг или больше объём).`,
         });
       } else if (mlph < L.pumpLowMlh) {
-        w.push({ level: 'warn', text: `Скорость ${fmt(mlph)} мл/ч — меньше 1 мл/ч, точность насоса ниже. Лучше развести слабее.` });
+        w.push({
+          level: 'warn',
+          text: `Скорость ${fmt(mlph)} мл/ч — меньше 1 мл/ч, точность насоса ниже. Лучше развести слабее.`,
+        });
       } else if (mlph > L.pumpHighMlh) {
         w.push({
           level: 'warn',
@@ -198,7 +215,10 @@ export function calcNorepinephrine({ weight, dose, drugMg, syrVol, bagMg, bagDil
         text: `${gttExact < 1 ? 'Меньше 1' : gtt} кап/мин — капельница неточна. Используйте шприцевой насос или разведите слабее.`,
       });
     } else if (gttExact > L.gttHigh) {
-      w.push({ level: 'warn', text: `${gtt} кап/мин (${fmt(mlph)} мл/ч) — много жидкости. Проверьте ввод или разведите концентрированнее.` });
+      w.push({
+        level: 'warn',
+        text: `${gtt} кап/мин (${fmt(mlph)} мл/ч) — много жидкости. Проверьте ввод или разведите концентрированнее.`,
+      });
     }
     bag = {
       ok: Number.isFinite(mlph),
@@ -243,7 +263,8 @@ export function norepinephrineSummary(r) {
   if (!r || !r.ok) return '';
   const parts = [`Доза ${withUnit(say(r.dose.mcgMin), MCG)} в минуту`];
   if (r.dose.capped) parts.push(`ограничена максимумом ${echo(r.dose.doseMax)}`);
-  if (r.syringe && r.syringe.ok) parts.push(`шприцевой насос ${withUnit(say(r.syringe.mlph), ML)} в час`);
+  if (r.syringe && r.syringe.ok)
+    parts.push(`шприцевой насос ${withUnit(say(r.syringe.mlph), ML)} в час`);
   if (r.bag && r.bag.ok) {
     const drops = r.bag.gttExact < 1 ? 'меньше 1 капли' : withUnit(String(r.bag.gtt), DROPS);
     parts.push(`капельница ${withUnit(say(r.bag.mlph), ML)} в час, ${drops} в минуту`);

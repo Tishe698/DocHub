@@ -315,9 +315,15 @@ describe('Мидазолам', () => {
   });
 
   it('через движок: выбранный путь попадает в выбор результата', () => {
-    const r = computeResult(f, { weight: '20', route: 'buccal' }, { age: { years: '5', months: '' } });
+    const r = computeResult(
+      f,
+      { weight: '20', route: 'buccal' },
+      { age: { years: '5', months: '' } },
+    );
     expect(r.success).toBe(true);
-    expect(r.choices).toEqual([{ key: 'route', label: 'Путь введения', value: 'buccal', valueLabel: 'защёчно' }]);
+    expect(r.choices).toEqual([
+      { key: 'route', label: 'Путь введения', value: 'buccal', valueLabel: 'защёчно' },
+    ]);
     expect(r.items.find((i) => i.key === 'result1').value).toBe(7.5);
   });
 });

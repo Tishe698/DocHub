@@ -6,17 +6,38 @@ import { View } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { a11yLabel, announce } from '../components/a11y';
-import { Button, Card, ChoiceChips, Note, NumberField, ResultCard, Section } from '../components/ui';
+import {
+  Button,
+  Card,
+  ChoiceChips,
+  Note,
+  NumberField,
+  ResultCard,
+  Section,
+} from '../components/ui';
 import PatientBar from '../patient/PatientBar';
 import { usePatient, usePatientNumber } from '../patient/PatientContext';
 import { useThemedStyles } from '../theme/index';
-import { DROP_FACTORS, calcNorepinephrine, echo, fmt, norepinephrineSummary } from './norepinephrineCalc';
+import {
+  DROP_FACTORS,
+  calcNorepinephrine,
+  echo,
+  fmt,
+  norepinephrineSummary,
+} from './norepinephrineCalc';
 
 // Значения по умолчанию при открытии экрана и для «Новый пациент».
 // Доза 0,1 мкг/кг/мин основания = 0,2 тартрата (старт по инструкции РФ 0,1–0,3 тартрата).
 // Инструкция РФ «Норэпинефрин»: 2 мл концентрата (2 мг основания) + 48 мл 5% декстрозы = 40 мкг/мл;
 // 20 мл концентрата (20 мг основания) + 480 мл 5% декстрозы = 40 мкг/мл основания.
-const DEFAULTS = { dose: '0.1', drugMg: '2', syrVol: '50', bagMg: '20', bagDil: '480', dropFactor: 20 };
+const DEFAULTS = {
+  dose: '0.1',
+  drugMg: '2',
+  syrVol: '50',
+  bagMg: '20',
+  bagDil: '480',
+  dropFactor: 20,
+};
 const EMPTY = { dose: '', drugMg: '', syrVol: '', bagMg: '', bagDil: '', dropFactor: 20 };
 
 const BAG_VOLUMES = [200, 250, 400, 480, 500].map((v) => ({
@@ -27,12 +48,16 @@ const BAG_VOLUMES = [200, 250, 400, 480, 500].map((v) => ({
 const DROP_OPTIONS = DROP_FACTORS.map((f) => ({
   value: f,
   label: `${f} кап/мл`,
-  accessibilityLabel: f === 60 ? '60 капель в миллилитре, микрокапельная' : `${f} капель в миллилитре`,
+  accessibilityLabel:
+    f === 60 ? '60 капель в миллилитре, микрокапельная' : `${f} капель в миллилитре`,
 }));
 
 const isBlank = (t) => String(t ?? '').trim() === '';
 const toNotes = (items) =>
-  (items || []).map((it) => ({ level: it.level === 'error' ? 'danger' : it.level === 'warn' ? 'warning' : 'info', text: it.text }));
+  (items || []).map((it) => ({
+    level: it.level === 'error' ? 'danger' : it.level === 'warn' ? 'warning' : 'info',
+    text: it.text,
+  }));
 
 export default function NorepinephrineScreen() {
   const styles = useThemedStyles(makeStyles);
@@ -62,7 +87,7 @@ export default function NorepinephrineScreen() {
         dropFactor: f.dropFactor,
         ageMonths: patient.ageMonths,
       }),
-    [weight.text, f, patient.ageMonths]
+    [weight.text, f, patient.ageMonths],
   );
 
   const clearFields = () => {
@@ -82,7 +107,8 @@ export default function NorepinephrineScreen() {
       <PatientBar />
 
       <Text variant="body" color="textSecondary" style={styles.intro}>
-        Норадреналина тартрат 2 мг/мл = 1 мг/мл основания (ампула 4 мл = 4 мг основания). Доза и мг — по основанию.
+        Норадреналина тартрат 2 мг/мл = 1 мг/мл основания (ампула 4 мл = 4 мг основания). Доза и мг
+        — по основанию.
       </Text>
 
       <Section title="Пациент и доза">
@@ -94,7 +120,11 @@ export default function NorepinephrineScreen() {
           error={weightError}
           badge={derived.weightIsEstimate ? 'оценка' : null}
           badgeLevel="warning"
-          hint={derived.weightIsEstimate ? 'Масса оценена (лента Broselow или возраст) — уточните при возможности.' : null}
+          hint={
+            derived.weightIsEstimate
+              ? 'Масса оценена (лента Broselow или возраст) — уточните при возможности.'
+              : null
+          }
           testID="norepi-weight"
         />
         <NumberField
@@ -149,7 +179,12 @@ export default function NorepinephrineScreen() {
           value={String(f.bagDil).trim()}
           onChange={set('bagDil')}
         />
-        <ChoiceChips label="Капельная система" options={DROP_OPTIONS} value={f.dropFactor} onChange={set('dropFactor')} />
+        <ChoiceChips
+          label="Капельная система"
+          options={DROP_OPTIONS}
+          value={f.dropFactor}
+          onChange={set('dropFactor')}
+        />
       </Section>
 
       <Section title="Результаты">
@@ -163,9 +198,21 @@ export default function NorepinephrineScreen() {
               <Text variant="bodyStrong" style={styles.cardTitle} accessibilityRole="header">
                 Доза
               </Text>
-              <Row label="Доза в минуту (основание)" value={`${fmt(r.dose.mcgMin)} мкг/мин`} styles={styles} />
-              <Row label="Доза в час (основание)" value={`${fmt(r.dose.mgH)} мг/ч`} styles={styles} />
-              <Row label="То же по тартрату" value={`${fmt(r.dose.doseTartrate)} мкг/кг/мин`} styles={styles} />
+              <Row
+                label="Доза в минуту (основание)"
+                value={`${fmt(r.dose.mcgMin)} мкг/мин`}
+                styles={styles}
+              />
+              <Row
+                label="Доза в час (основание)"
+                value={`${fmt(r.dose.mgH)} мг/ч`}
+                styles={styles}
+              />
+              <Row
+                label="То же по тартрату"
+                value={`${fmt(r.dose.doseTartrate)} мкг/кг/мин`}
+                styles={styles}
+              />
               <Row
                 label="Предел дозы"
                 value={`${echo(r.dose.doseMax)} мкг/кг/мин (${r.dose.isChild ? 'дети' : 'взрослые'})`}
@@ -189,13 +236,22 @@ export default function NorepinephrineScreen() {
                     announceText={spoken}
                     testID="norepi-syringe-result"
                   >
-                    <Row label="Концентрация (основание)" value={`${fmt(s.conc)} мкг/мл`} styles={styles} />
+                    <Row
+                      label="Концентрация (основание)"
+                      value={`${fmt(s.conc)} мкг/мл`}
+                      styles={styles}
+                    />
                     <Row
                       label="Приготовление"
                       value={`${fmt(s.concMl)} мл конц. (${fmt(s.ampoules)} амп. по 4 мл) + ${fmt(s.diluentMl)} мл`}
                       styles={styles}
                     />
-                    <Row label="Шприца хватит на" value={`${fmt(s.hoursPerSyringe, 1)} ч`} styles={styles} last />
+                    <Row
+                      label="Шприца хватит на"
+                      value={`${fmt(s.hoursPerSyringe, 1)} ч`}
+                      styles={styles}
+                      last
+                    />
                   </ResultCard>
                 ) : null}
                 <Warnings items={s.warnings} />
@@ -217,7 +273,11 @@ export default function NorepinephrineScreen() {
                   testID="norepi-bag-result"
                 >
                   <Row label="Скорость" value={`${fmt(b.mlph)} мл/ч`} styles={styles} />
-                  <Row label="Концентрация (основание)" value={`${fmt(b.conc)} мкг/мл`} styles={styles} />
+                  <Row
+                    label="Концентрация (основание)"
+                    value={`${fmt(b.conc)} мкг/мл`}
+                    styles={styles}
+                  />
                   <Row
                     label="Общий объём"
                     value={`${fmt(b.total, 1)} мл (${fmt(b.concMl)} мл конц., ${fmt(b.ampoules)} амп. по 4 мл)`}
@@ -233,9 +293,10 @@ export default function NorepinephrineScreen() {
 
         {/* Инструкция РФ «Норэпинефрин» (МЭЗ): титрование шагом 0,05–0,1 мкг/кг/мин тартрата, центральный венозный доступ */}
         <Text variant="caption" color="textSecondary" style={styles.footnote}>
-          Формула: мл/ч = доза (мкг/кг/мин) × масса × 60 / концентрация (мкг/мл), всё по основанию.{'\n'}
-          Титровать по АД шагом 0,05–0,1 мкг/кг/мин тартрата (0,025–0,05 основания). Предпочтительно шприцевой насос и
-          центральная вена (инструкция РФ).{'\n'}
+          Формула: мл/ч = доза (мкг/кг/мин) × масса × 60 / концентрация (мкг/мл), всё по основанию.
+          {'\n'}
+          Титровать по АД шагом 0,05–0,1 мкг/кг/мин тартрата (0,025–0,05 основания). Предпочтительно
+          шприцевой насос и центральная вена (инструкция РФ).{'\n'}
           Пример по инструкции: 2 мл концентрата + 48 мл 5% глюкозы = 40 мкг/мл основания.
         </Text>
       </Section>
@@ -254,7 +315,11 @@ export default function NorepinephrineScreen() {
 
 function Row({ label, value, styles, last }) {
   return (
-    <View style={[styles.row, last ? null : styles.rowDivider]} accessible accessibilityLabel={a11yLabel(label, value)}>
+    <View
+      style={[styles.row, last ? null : styles.rowDivider]}
+      accessible
+      accessibilityLabel={a11yLabel(label, value)}
+    >
       <Text variant="body" color="textSecondary" style={styles.rowLabel}>
         {label}
       </Text>

@@ -9,12 +9,18 @@ import Calc_dorbinyn from '../calc_dorbinyn';
 import Calc_aparat_IVL from '../calc_aparat_IVl';
 import { PatientProvider } from '../../patient/PatientContext';
 
-jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно (setState вне act) — в дымовом тесте не нужны.
-jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null, MaterialCommunityIcons: () => null }));
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: () => null,
+  MaterialCommunityIcons: () => null,
+}));
 
 const textOf = (tree) => {
   const out = [];
@@ -34,26 +40,36 @@ const renderWith = (Comp, initialPatient) => {
     tree = renderer.create(
       <PatientProvider initialPatient={initialPatient}>
         <Comp />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;
 };
 
 const type = (tree, testID, text) => {
-  const input = tree.root.find((n) => n.props.testID === testID && typeof n.props.onChangeText === 'function');
+  const input = tree.root.find(
+    (n) => n.props.testID === testID && typeof n.props.onChangeText === 'function',
+  );
   act(() => input.props.onChangeText(text));
 };
 
 const pressRadio = (tree, label) => {
-  const radio = tree.root.find((n) => n.props.accessibilityRole === 'radio' && n.props.accessibilityLabel === label && n.props.onPress);
+  const radio = tree.root.find(
+    (n) =>
+      n.props.accessibilityRole === 'radio' &&
+      n.props.accessibilityLabel === label &&
+      n.props.onPress,
+  );
   act(() => radio.props.onPress());
 };
 
 // У каждого нажимаемого элемента есть роль и подпись
 const expectPressablesLabelled = (tree) => {
   const pressables = tree.root.findAll(
-    (n) => typeof n.type !== 'string' && typeof n.props.onPress === 'function' && n.props.accessibilityRole
+    (n) =>
+      typeof n.type !== 'string' &&
+      typeof n.props.onPress === 'function' &&
+      n.props.accessibilityRole,
   );
   expect(pressables.length).toBeGreaterThan(0);
   for (const p of pressables) expect(p.props.accessibilityLabel).toBeTruthy();
@@ -138,7 +154,9 @@ describe('экраны раздела «Кислород»', () => {
     expect(t).toMatch(/Возраст: лет 0–17, мес 0–11 — проверьте ввод/);
     expect(t).toMatch(/Масса для расчёта — Основа —/);
     expect(t).not.toMatch(/25 кг/);
-    const rr = tree.root.find((n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function');
+    const rr = tree.root.find(
+      (n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function',
+    );
     expect(rr.props.value).toBe('');
     // «5,,» не разбирается — в контексте остался старый возраст, но расчёт по нему не идёт
     type(tree, 'ivl-age-months', '');
@@ -149,7 +167,11 @@ describe('экраны раздела «Кислород»', () => {
   });
 
   test('ИВЛ: масса по ленте Broselow подписана как оценка, а не фактическая', () => {
-    const tree = renderWith(Calc_aparat_IVL, { ageMonths: 60, weightKg: 19, weightSource: 'broselow' });
+    const tree = renderWith(Calc_aparat_IVL, {
+      ageMonths: 60,
+      weightKg: 19,
+      weightSource: 'broselow',
+    });
     const t = textOf(tree);
     expect(t).toMatch(/оценка \(лента Broselow\)/);
     expect(t).not.toMatch(/фактическая/);
@@ -169,25 +191,37 @@ describe('экраны раздела «Кислород»', () => {
     expect(t).toMatch(/по возрасту \(APLS\)/);
     expect(t).toMatch(/18 кг/);
     expect(t).toMatch(/108/);
-    const rr = tree.root.find((n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function');
+    const rr = tree.root.find(
+      (n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function',
+    );
     expect(rr.props.value).toBe('20');
   });
 
   test('ИВЛ: подросток 16 лет, 110 кг, 170 см — группа «Ребёнок», ДО на должную массу 66 кг', () => {
-    const tree = renderWith(Calc_aparat_IVL, { ageMonths: 192, sex: 'male', heightCm: 170, weightKg: 110 });
+    const tree = renderWith(Calc_aparat_IVL, {
+      ageMonths: 192,
+      sex: 'male',
+      heightCm: 170,
+      weightKg: 110,
+    });
     const t = textOf(tree);
     expect(t).toMatch(/должная \(по росту и полу\)/);
     expect(t).toMatch(/66 кг/);
     expect(t).toMatch(/396 мл/);
     expect(t).not.toMatch(/660/);
-    const h = tree.root.find((n) => n.props.testID === 'ivl-height' && typeof n.props.onChangeText === 'function');
+    const h = tree.root.find(
+      (n) => n.props.testID === 'ivl-height' && typeof n.props.onChangeText === 'function',
+    );
     expect(h.props.value).toBe('170');
     expectPressablesLabelled(tree);
   });
 
   test('ИВЛ: смена сценария подставляет пресеты, ручная правка сохраняется до смены', () => {
     const tree = renderWith(Calc_aparat_IVL, { ageMonths: 480, sex: 'male', heightCm: 180 });
-    const rrInput = () => tree.root.find((n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function');
+    const rrInput = () =>
+      tree.root.find(
+        (n) => n.props.testID === 'ivl-rr' && typeof n.props.onChangeText === 'function',
+      );
     expect(rrInput().props.value).toBe('10');
     type(tree, 'ivl-rr', '12');
     expect(rrInput().props.value).toBe('12');
@@ -218,7 +252,10 @@ describe('литералы цвета', () => {
     'darbinyanCalc.js',
   ];
   test.each(files)('%s — цвета только из темы', (f) => {
-    const src = fs.readFileSync(path.join(path.dirname(require.resolve('../style_oxy')), f), 'utf8');
+    const src = fs.readFileSync(
+      path.join(path.dirname(require.resolve('../style_oxy')), f),
+      'utf8',
+    );
     expect(src).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(src).not.toMatch(/rgba?\(/);
     expect(src).not.toMatch(/['"](white|black|red|green|blue|gray|grey)['"]/);

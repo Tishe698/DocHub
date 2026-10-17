@@ -98,7 +98,7 @@ describe('резус (анти-D IgM)', () => {
   it('при неподтверждённом AB (IV) положительный анти-D под вопросом', () => {
     expect(run({ antiA: POS, antiB: POS, antiAB: POS, antiD: POS }).rh).toBe('Rh(+)?');
     expect(run({ antiA: POS, antiB: POS, antiAB: POS, antiD: POS, control: NEG }).rh).toBe(
-      'Rh(+) положительный'
+      'Rh(+) положительный',
     );
   });
 
@@ -138,7 +138,9 @@ describe('помощники экрана', () => {
   it('pendingHints', () => {
     expect(pendingHints(run({}))[0]).toMatch(/анти-A и анти-B .* анти-D/);
     expect(pendingHints(run({ antiD: POS }))).toEqual(['Для группы AB0 отметьте анти-A и анти-B.']);
-    expect(pendingHints(run({ antiA: NEG, antiB: NEG }))).toEqual(['Для резуса отметьте реакцию с анти-D.']);
+    expect(pendingHints(run({ antiA: NEG, antiB: NEG }))).toEqual([
+      'Для резуса отметьте реакцию с анти-D.',
+    ]);
     expect(pendingHints(run({ antiA: NEG, antiB: NEG, antiD: NEG }))).toEqual([]);
   });
 
@@ -146,7 +148,7 @@ describe('помощники экрана', () => {
     expect(resultSummary(run({}))).toBe('');
     const s = resultSummary(run({ antiA: POS, antiB: NEG, antiAB: POS, antiD: NEG }));
     expect(s).toBe(
-      'Группа AB0: A (II). Резус: Rh(−) отрицательный. Нужно подтверждение в лаборатории.'
+      'Группа AB0: A (II). Резус: Rh(−) отрицательный. Нужно подтверждение в лаборатории.',
     );
     const pending = resultSummary(run({ antiA: POS, antiB: POS, antiD: POS }));
     expect(pending).toMatch(/AB \(IV\), под вопросом/);

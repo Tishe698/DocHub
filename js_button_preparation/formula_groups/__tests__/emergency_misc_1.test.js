@@ -1,4 +1,8 @@
-import group, { magnesiumLimits, droperidolLimits, chlorpromazineLimits } from '../emergency_misc_1';
+import group, {
+  magnesiumLimits,
+  droperidolLimits,
+  chlorpromazineLimits,
+} from '../emergency_misc_1';
 import { isChoiceInput, ROUTES } from '../../routes';
 import { computeResult } from '../../engine';
 
@@ -158,7 +162,10 @@ describe('Магния сульфат', () => {
   });
 
   it('пределы зависят от показания', () => {
-    expect(magnesiumLimits({ indication: 'asthma' })).toEqual({ result1: { max: 2000 }, result2: { max: 8 } });
+    expect(magnesiumLimits({ indication: 'asthma' })).toEqual({
+      result1: { max: 2000 },
+      result2: { max: 8 },
+    });
     expect(magnesiumLimits({ indication: 'torsades' }).result1.max).toBe(2000);
     expect(magnesiumLimits({ indication: 'eclampsia' })).toEqual({});
     expect(magnesiumLimits({}).result1.max).toBe(2000);
@@ -296,7 +303,9 @@ describe('Метоклопрамид', () => {
   });
 
   it('по умолчанию — в/в', () => {
-    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(f.formula({ weight: 20, ageYears: 5, route: 'iv' }));
+    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(
+      f.formula({ weight: 20, ageYears: 5, route: 'iv' }),
+    );
   });
 
   it('в/м, ребёнок: пометка о различии инструкций', () => {
@@ -361,7 +370,9 @@ describe('Дроперидол', () => {
   });
 
   it('по умолчанию — в/в', () => {
-    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(f.formula({ weight: 20, ageYears: 5, route: 'iv' }));
+    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(
+      f.formula({ weight: 20, ageYears: 5, route: 'iv' }),
+    );
   });
 
   it('ребёнок 11 лет 60 кг: предел 5 мг', () => {
@@ -406,7 +417,9 @@ describe('Хлорпромазин', () => {
   });
 
   it('по умолчанию — в/м', () => {
-    expect(f.formula({ weight: 16, ageYears: 4 })).toEqual(f.formula({ weight: 16, ageYears: 4, route: 'im' }));
+    expect(f.formula({ weight: 16, ageYears: 4 })).toEqual(
+      f.formula({ weight: 16, ageYears: 4, route: 'im' }),
+    );
   });
 
   it('ребёнок 8 лет 30 кг: суточный предел 75 мг', () => {
@@ -448,8 +461,14 @@ describe('Хлорпромазин', () => {
   });
 
   it('пределы зависят от пути', () => {
-    expect(chlorpromazineLimits({ route: 'iv' })).toEqual({ result1: { max: 100 }, result2: { max: 4 } });
-    expect(chlorpromazineLimits({ route: 'im' })).toEqual({ result1: { max: 150 }, result2: { max: 6 } });
+    expect(chlorpromazineLimits({ route: 'iv' })).toEqual({
+      result1: { max: 100 },
+      result2: { max: 4 },
+    });
+    expect(chlorpromazineLimits({ route: 'im' })).toEqual({
+      result1: { max: 150 },
+      result2: { max: 6 },
+    });
     expect(limitsOf(f, {}).result1.max).toBe(150);
   });
 });

@@ -225,11 +225,17 @@ describe('форматирование и озвучка', () => {
   it('итог для диктора', () => {
     const s = norepinephrineSummary(calc());
     expect(s).toBe(
-      'Доза 7 микрограмм в минуту, шприцевой насос 10,5 миллилитра в час, капельница 10,5 миллилитра в час, 4 капли в минуту'
+      'Доза 7 микрограмм в минуту, шприцевой насос 10,5 миллилитра в час, капельница 10,5 миллилитра в час, 4 капли в минуту',
     );
-    expect(norepinephrineSummary(calc({ weight: '20' }))).toMatch('шприцевой насос 3 миллилитра в час');
-    expect(norepinephrineSummary(calc({ weight: '100', dose: '1', dropFactor: 60 }))).toMatch('150 капель в минуту');
-    expect(norepinephrineSummary(calc({ weight: '3', dose: '0.05' }))).toMatch('меньше 1 капли в минуту');
+    expect(norepinephrineSummary(calc({ weight: '20' }))).toMatch(
+      'шприцевой насос 3 миллилитра в час',
+    );
+    expect(norepinephrineSummary(calc({ weight: '100', dose: '1', dropFactor: 60 }))).toMatch(
+      '150 капель в минуту',
+    );
+    expect(norepinephrineSummary(calc({ weight: '3', dose: '0.05' }))).toMatch(
+      'меньше 1 капли в минуту',
+    );
     expect(norepinephrineSummary(calc({ dose: '3' }))).toMatch('ограничена максимумом 2,5');
     expect(norepinephrineSummary(calc({ weight: '' }))).toBe('');
   });

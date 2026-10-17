@@ -43,7 +43,14 @@ describe('пункты шкалы (Le Gal 2006; ESC 2019, табл. 5)', () => {
 describe('computeGeneva', () => {
   it('без ЧСС итога нет, но предварительная сумма считается', () => {
     const r = computeGeneva({ flags: { prev_vte: true, hemoptysis: true } });
-    expect(r).toMatchObject({ complete: false, sum: 5, risk: null, twoLevel: null, hrPts: null, discordant: false });
+    expect(r).toMatchObject({
+      complete: false,
+      sum: 5,
+      risk: null,
+      twoLevel: null,
+      hrPts: null,
+      discordant: false,
+    });
     expect(genevaSummary(r)).toBe('');
     expect(computeGeneva()).toMatchObject({ complete: false, sum: 0 });
   });
@@ -73,9 +80,13 @@ describe('computeGeneva', () => {
 
   it('6–10 баллов — схемы расходятся (discordant), 5 и 11 — нет', () => {
     expect(computeGeneva({ flags: { age: true }, hr: 'hr2' }).discordant).toBe(true); // 6
-    expect(computeGeneva({ flags: { dvt_signs: true, age: true }, hr: 'hr2' }).discordant).toBe(true); // 10
+    expect(computeGeneva({ flags: { dvt_signs: true, age: true }, hr: 'hr2' }).discordant).toBe(
+      true,
+    ); // 10
     expect(computeGeneva({ hr: 'hr2' }).discordant).toBe(false); // 5
-    expect(computeGeneva({ flags: { dvt_signs: true, surgery: true }, hr: 'hr2' }).discordant).toBe(false); // 11
+    expect(computeGeneva({ flags: { dvt_signs: true, surgery: true }, hr: 'hr2' }).discordant).toBe(
+      false,
+    ); // 11
   });
 });
 
@@ -139,7 +150,7 @@ describe('возраст из пациента', () => {
 describe('genevaSummary и ptsWord', () => {
   it('итог для диктора — без значков ≈ и %', () => {
     expect(genevaSummary(computeGeneva({ flags: { prev_vte: true }, hr: 'hr1' }))).toBe(
-      'Женевская шкала: 6 баллов. Вероятность ТЭЛА средняя, около 28 процентов. ТЭЛА вероятна (≥6)'
+      'Женевская шкала: 6 баллов. Вероятность ТЭЛА средняя, около 28 процентов. ТЭЛА вероятна (≥6)',
     );
   });
 

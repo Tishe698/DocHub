@@ -32,7 +32,9 @@ export default function ResultCard({
   const styles = useThemedStyles(makeStyles);
   const hasValue = value !== null && value !== undefined && value !== '';
   const spoken =
-    announceText !== undefined ? announceText : a11yLabel(title, hasValue ? `${value} ${unit || ''}` : null, levelLabel);
+    announceText !== undefined
+      ? announceText
+      : a11yLabel(title, hasValue ? `${value} ${unit || ''}` : null, levelLabel);
 
   const announcedOnce = useRef(false);
   useEffect(() => {
@@ -69,7 +71,9 @@ export default function ResultCard({
           ) : null}
         </View>
       ) : null}
-      {levelLabel ? <Badge level={level || 'neutral'} label={levelLabel} style={styles.badge} /> : null}
+      {levelLabel ? (
+        <Badge level={level || 'neutral'} label={levelLabel} style={styles.badge} />
+      ) : null}
       {children ? <View style={styles.details}>{children}</View> : null}
     </View>
   );

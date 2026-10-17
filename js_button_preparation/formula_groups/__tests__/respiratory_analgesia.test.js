@@ -76,7 +76,9 @@ describe('группа респираторной терапии и анальг
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
     expect(byName('Будесонид (небула)').labels.result1).toMatch(/ингаляционно, небулайзер/);
-    expect(byName('Ипратропия бромид + фенотерол').labels.result1).toMatch(/ингаляционно, небулайзер/);
+    expect(byName('Ипратропия бромид + фенотерол').labels.result1).toMatch(
+      /ингаляционно, небулайзер/,
+    );
     expect(byName('Сальбутамол').labels.result1).toMatch(/ингаляционно, небулайзер/);
     expect(byName('Пропофол').labels.result1).toMatch(/в\/в/);
     expect(byName('Тиопентал натрия').labels.result1).toMatch(/в\/в/);
@@ -84,15 +86,33 @@ describe('группа респираторной терапии и анальг
   });
 
   it('через движок: путь и показание попадают в результат и копию', () => {
-    const r = computeResult(byName('Морфин'), { weight: '20', route: 'sc' }, { age: { years: '5', months: '0' } });
+    const r = computeResult(
+      byName('Морфин'),
+      { weight: '20', route: 'sc' },
+      { age: { years: '5', months: '0' } },
+    );
     expect(r.success).toBe(true);
-    expect(r.choices).toEqual([{ key: 'route', label: 'Путь введения', value: 'sc', valueLabel: 'п/к' }]);
-    const def = computeResult(byName('Кеторолак'), { weight: '70' }, { age: { years: '30', months: '0' } });
+    expect(r.choices).toEqual([
+      { key: 'route', label: 'Путь введения', value: 'sc', valueLabel: 'п/к' },
+    ]);
+    const def = computeResult(
+      byName('Кеторолак'),
+      { weight: '70' },
+      { age: { years: '30', months: '0' } },
+    );
     expect(def.choices[0].valueLabel).toBe('в/м');
-    const bud = computeResult(byName('Будесонид (небула)'), {}, { age: { years: '0', months: '6' } });
+    const bud = computeResult(
+      byName('Будесонид (небула)'),
+      {},
+      { age: { years: '0', months: '6' } },
+    );
     expect(bud.success).toBe(true);
     expect(bud.choices[0].valueLabel).toMatch(/Круп/);
-    const young = computeResult(byName('Будесонид (небула)'), {}, { age: { years: '0', months: '5' } });
+    const young = computeResult(
+      byName('Будесонид (небула)'),
+      {},
+      { age: { years: '0', months: '5' } },
+    );
     expect(young.info).toBe(true);
   });
 });
@@ -201,7 +221,11 @@ describe('Кеторолак', () => {
     expect(r.result2).toBe(1);
     expect(r.result3).toBe(90);
     expect(r.result4).toMatch(/В\/м медленно, глубоко/);
-    expect(limitsOf(f, c)).toEqual({ result1: { max: 60 }, result2: { max: 2 }, result3: { max: 90 } });
+    expect(limitsOf(f, c)).toEqual({
+      result1: { max: 60 },
+      result2: { max: 2 },
+      result3: { max: 90 },
+    });
     expect(statuses(f, c).result1).toBe('ok');
     // По умолчанию — в/м
     expect(f.formula({ weight: 70, ageYears: 30 })).toEqual(r);
@@ -284,7 +308,9 @@ describe('Трамадол', () => {
     expect(r.result3).toBeUndefined();
     expect(r.result4).toBe(400);
     expect(r.result5).toMatch(/через 30–60 мин ещё 50 мг/);
-    expect(f.formula({ weight: 70, ageYears: 80, route: 'iv' }).result5).toMatch(/увеличить интервал/);
+    expect(f.formula({ weight: 70, ageYears: 80, route: 'iv' }).result5).toMatch(
+      /увеличить интервал/,
+    );
   });
 });
 
@@ -336,7 +362,11 @@ describe('Морфин', () => {
   });
 
   it('через движок: малый объём п/к показывает разведённый объём, а не «без разведения»', () => {
-    const r = computeResult(byName('Морфин'), { weight: '6', route: 'sc' }, { age: { years: '0', months: '5' } });
+    const r = computeResult(
+      byName('Морфин'),
+      { weight: '6', route: 'sc' },
+      { age: { years: '0', months: '5' } },
+    );
     expect(r.success).toBe(true);
     const items = buildItems(f.formula({ weight: 6, ageYears: 5 / 12, route: 'sc' }), f, {
       weight: 6,

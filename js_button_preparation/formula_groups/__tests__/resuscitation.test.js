@@ -48,16 +48,19 @@ describe('контракт записей группы', () => {
     });
   });
 
-  test.each([atropine, amio].map((f) => [f.name, f]))('%s: выбор «Показание и путь» с путями из routes', (_n, f) => {
-    const ch = f.inputs.indication;
-    expect(isChoiceInput(ch)).toBe(true);
-    expect(ch.label).toBe('Показание и путь');
-    ch.choices.forEach((c) => {
-      const code = c.value.split('-')[1];
-      expect(ROUTES[code]).toBeDefined();
-      expect(c.label.endsWith(`— ${ROUTES[code]}`)).toBe(true);
-    });
-  });
+  test.each([atropine, amio].map((f) => [f.name, f]))(
+    '%s: выбор «Показание и путь» с путями из routes',
+    (_n, f) => {
+      const ch = f.inputs.indication;
+      expect(isChoiceInput(ch)).toBe(true);
+      expect(ch.label).toBe('Показание и путь');
+      ch.choices.forEach((c) => {
+        const code = c.value.split('-')[1];
+        expect(ROUTES[code]).toBeDefined();
+        expect(c.label.endsWith(`— ${ROUTES[code]}`)).toBe(true);
+      });
+    },
+  );
 
   test('эпинефрин СЛР: пути только в/в и в/к, по умолчанию в/в', () => {
     const ch = epi.inputs.route;
@@ -78,7 +81,9 @@ describe('контракт записей группы', () => {
   });
 
   test('пустой вес — расчёт не выполняется', () => {
-    [epi, epiAna, atropine, amio, norepi, dobutamine, dopamine].forEach((f) => expect(f.formula({})).toEqual({}));
+    [epi, epiAna, atropine, amio, norepi, dobutamine, dopamine].forEach((f) =>
+      expect(f.formula({})).toEqual({}),
+    );
   });
 });
 
@@ -159,7 +164,11 @@ describe('Эпинефрин — СЛР', () => {
   });
 
   test('limits СЛР', () => {
-    expect(limitsOf(epi, { route: 'iv' })).toEqual({ result1: { max: 1000 }, result2: { max: 10 }, result3: { max: 1 } });
+    expect(limitsOf(epi, { route: 'iv' })).toEqual({
+      result1: { max: 1000 },
+      result2: { max: 10 },
+      result3: { max: 1 },
+    });
   });
 });
 
@@ -209,9 +218,18 @@ describe('Эпинефрин — анафилаксия в/м', () => {
   });
 
   test('limits по возрасту', () => {
-    expect(limitsOf(epiAna, { ageYears: 3 })).toEqual({ result1: { max: 150 }, result2: { max: 0.15 } });
-    expect(limitsOf(epiAna, { ageYears: 8 })).toEqual({ result1: { max: 300 }, result2: { max: 0.3 } });
-    expect(limitsOf(epiAna, { ageYears: 40 })).toEqual({ result1: { max: 500 }, result2: { max: 0.5 } });
+    expect(limitsOf(epiAna, { ageYears: 3 })).toEqual({
+      result1: { max: 150 },
+      result2: { max: 0.15 },
+    });
+    expect(limitsOf(epiAna, { ageYears: 8 })).toEqual({
+      result1: { max: 300 },
+      result2: { max: 0.3 },
+    });
+    expect(limitsOf(epiAna, { ageYears: 40 })).toEqual({
+      result1: { max: 500 },
+      result2: { max: 0.5 },
+    });
   });
 });
 
@@ -424,7 +442,9 @@ describe('Инфузии насосом', () => {
   });
 
   test('норэпинефрин: 1,5 мкг/кг/мин — проверка ввода', () => {
-    expect(norepi.formula({ weight: 70, rate: 1.5, drugMg: 4, volume: 50 }).result4).toMatch(/выше 1 мкг/);
+    expect(norepi.formula({ weight: 70, rate: 1.5, drugMg: 4, volume: 50 }).result4).toMatch(
+      /выше 1 мкг/,
+    );
   });
 
   test('добутамин: 70 кг, 5 мкг/кг/мин, 250 мг в 50 мл', () => {
@@ -436,8 +456,12 @@ describe('Инфузии насосом', () => {
   });
 
   test('добутамин: пороги 15 и 40', () => {
-    expect(dobutamine.formula({ weight: 20, rate: 20, drugMg: 250, volume: 50 }).result4).toMatch(/обычного/);
-    expect(dobutamine.formula({ weight: 20, rate: 45, drugMg: 250, volume: 50 }).result4).toMatch(/максимума/);
+    expect(dobutamine.formula({ weight: 20, rate: 20, drugMg: 250, volume: 50 }).result4).toMatch(
+      /обычного/,
+    );
+    expect(dobutamine.formula({ weight: 20, rate: 45, drugMg: 250, volume: 50 }).result4).toMatch(
+      /максимума/,
+    );
   });
 
   test('допамин: 20 кг, 5 мкг/кг/мин, 200 мг в 50 мл', () => {
@@ -448,8 +472,12 @@ describe('Инфузии насосом', () => {
   });
 
   test('допамин: пороги 25 и 50', () => {
-    expect(dopamine.formula({ weight: 70, rate: 30, drugMg: 200, volume: 50 }).result4).toMatch(/обычного/);
-    expect(dopamine.formula({ weight: 70, rate: 50.5, drugMg: 200, volume: 50 }).result4).toMatch(/исключительных/);
+    expect(dopamine.formula({ weight: 70, rate: 30, drugMg: 200, volume: 50 }).result4).toMatch(
+      /обычного/,
+    );
+    expect(dopamine.formula({ weight: 70, rate: 50.5, drugMg: 200, volume: 50 }).result4).toMatch(
+      /исключительных/,
+    );
   });
 });
 
@@ -505,6 +533,8 @@ describe('через движок', () => {
 
   test('неизвестное значение выбора — ошибка ввода', () => {
     expect(computeResult(epi, { route: 'et', weight: '20' }, NO_AGE).error).toBe(true);
-    expect(computeResult(atropine, { indication: 'brady-et', weight: '20' }, NO_AGE).error).toBe(true);
+    expect(computeResult(atropine, { indication: 'brady-et', weight: '20' }, NO_AGE).error).toBe(
+      true,
+    );
   });
 });

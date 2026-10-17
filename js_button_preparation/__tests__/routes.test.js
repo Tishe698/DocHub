@@ -74,7 +74,7 @@ describe('choiceInput', () => {
       { value: 'cpr', label: 'СЛР' },
       { value: 'anaphylaxis', label: 'Анафилаксия' },
     ],
-    'cpr'
+    'cpr',
   );
 
   it('строит поле с вариантами', () => {
@@ -88,7 +88,7 @@ describe('choiceInput', () => {
       choiceInput('X', [
         { value: 'a', label: 'A' },
         { value: 'a', label: 'B' },
-      ])
+      ]),
     ).toThrow(/повтор/);
     expect(() => choiceInput('X', [{ value: 'a' }])).toThrow();
     expect(() => choiceInput('X', [])).toThrow();

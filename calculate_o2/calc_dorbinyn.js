@@ -16,7 +16,11 @@ export { WEIGHT_MIN, WEIGHT_CHILD, computeDarbinyan, fmt };
 
 const BASIS_OPTIONS = [
   { value: 'actual', label: 'Фактическая масса' },
-  { value: 'pbw', label: 'Должная (рост и пол)', accessibilityLabel: 'Должная масса по росту и полу' },
+  {
+    value: 'pbw',
+    label: 'Должная (рост и пол)',
+    accessibilityLabel: 'Должная масса по росту и полу',
+  },
 ];
 const SEX_OPTIONS = [
   { value: 'male', label: 'Мужской' },
@@ -46,9 +50,15 @@ const Calc_dorbinyn = () => {
   const ok = r.mv !== undefined && !(basis === 'actual' && weightNotNumber);
 
   const weightError =
-    basis === 'actual' ? (weightNotNumber ? 'Введите число, например 75 или 7,5' : r.error || undefined) : undefined;
+    basis === 'actual'
+      ? weightNotNumber
+        ? 'Введите число, например 75 или 7,5'
+        : r.error || undefined
+      : undefined;
   const heightOutOfRange =
-    !heightNotNumber && height.value !== null && (height.value < HEIGHT_MIN || height.value > HEIGHT_MAX);
+    !heightNotNumber &&
+    height.value !== null &&
+    (height.value < HEIGHT_MIN || height.value > HEIGHT_MAX);
   const heightError = heightNotNumber
     ? 'Введите число, например 175'
     : heightOutOfRange
@@ -115,7 +125,8 @@ const Calc_dorbinyn = () => {
           </>
         ) : (
           <Text variant="caption" color="textSecondary">
-            При ожирении выберите «Должная (рост и пол)»: расчёт пойдёт по росту и полу, а не по фактической массе.
+            При ожирении выберите «Должная (рост и пол)»: расчёт пойдёт по росту и полу, а не по
+            фактической массе.
           </Text>
         )}
       </Section>
@@ -143,7 +154,8 @@ const Calc_dorbinyn = () => {
           </Text>
           {r.child ? (
             <Text variant="body" color="warning" style={styles.paragraph}>
-              У детей это лишь ориентир. Сверьте с ДО 6–8 мл/кг × возрастная ЧДД (экран «Аппаратная ИВЛ»).
+              У детей это лишь ориентир. Сверьте с ДО 6–8 мл/кг × возрастная ЧДД (экран «Аппаратная
+              ИВЛ»).
             </Text>
           ) : (
             <Text variant="body" style={styles.paragraph}>

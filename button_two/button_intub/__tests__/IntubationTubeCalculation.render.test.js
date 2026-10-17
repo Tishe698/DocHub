@@ -4,9 +4,12 @@ import renderer, { act } from 'react-test-renderer';
 import IntubationTubeCalculation from '../IntubationTubeCalculation';
 import { PatientProvider } from '../../../patient/PatientContext';
 
-jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
+);
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 // Иконки грузят шрифт асинхронно (setState вне act) — в дымовом тесте не нужны.
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
@@ -29,7 +32,7 @@ const renderWith = (initialPatient) => {
     tree = renderer.create(
       <PatientProvider initialPatient={initialPatient}>
         <IntubationTubeCalculation />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;
@@ -59,7 +62,9 @@ describe('IntubationTubeCalculation', () => {
   test('серая → 5 кг → розовая → серая: подзону нужно выбрать заново', () => {
     const tree = renderWith({ ageMonths: 2 });
     const press = (pred) => {
-      const node = tree.root.find((n) => typeof n.props.onPress === 'function' && pred(n.props.accessibilityLabel || ''));
+      const node = tree.root.find(
+        (n) => typeof n.props.onPress === 'function' && pred(n.props.accessibilityLabel || ''),
+      );
       act(() => node.props.onPress());
     };
     press((l) => l.startsWith('Зона Серая'));

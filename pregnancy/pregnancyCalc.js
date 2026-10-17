@@ -28,10 +28,13 @@ export const DAYS_MAX = 45 * 7;
 export const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 export const sameDay = (a, b) =>
-  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 // Номер календарного дня местной даты — через UTC, где суток всегда 24 часа.
-const dayNumber = (d) => Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / MS_PER_DAY);
+const dayNumber = (d) =>
+  Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / MS_PER_DAY);
 
 // Разница в календарных днях (to − from); время суток не учитывается.
 export const daysBetween = (from, to) => dayNumber(to) - dayNumber(from);
@@ -47,7 +50,8 @@ export const msUntilNextMidnight = (now) => {
 
 // Границы календаря выбора ДПМ: не раньше 45⁰ нед назад и не позже сегодняшнего дня.
 export const minLmpDate = (today) => addDays(today, -DAYS_MAX);
-export const maxLmpDate = (today) => new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+export const maxLmpDate = (today) =>
+  new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
 // ---------------------- Категории срока ----------------------
 
@@ -145,7 +149,12 @@ export function parseDDMMYYYY(s, todayDate) {
   const d = new Date(yyyy, mm - 1, dd);
   // new Date молча «переносит» несуществующие даты (31.02 → 03.03, 99.99 → через годы),
   // а годы 0–99 превращает в 1900–1999 — такие даты отклоняем.
-  if (isNaN(d.getTime()) || d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) {
+  if (
+    isNaN(d.getTime()) ||
+    d.getFullYear() !== yyyy ||
+    d.getMonth() !== mm - 1 ||
+    d.getDate() !== dd
+  ) {
     return { error: ERRORS.notExists };
   }
   const diff = daysBetween(d, todayDate);
@@ -176,10 +185,12 @@ const MONTHS_GENITIVE = [
 ];
 
 // «8 октября 2026 г.» — без Intl: на Android с урезанным ICU Intl ru-RU может быть недоступен.
-export const formatRussianDate = (d) => `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()} г.`;
+export const formatRussianDate = (d) =>
+  `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()} г.`;
 
 // Для диктора — без сокращения «г.»
-export const spokenRussianDate = (d) => `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()} года`;
+export const spokenRussianDate = (d) =>
+  `${d.getDate()} ${MONTHS_GENITIVE[d.getMonth()]} ${d.getFullYear()} года`;
 
 export function plural(n, one, few, many) {
   const a = Math.abs(n) % 100;
@@ -196,11 +207,13 @@ export const daysWord = (n) => plural(n, 'день', 'дня', 'дней');
 // «13 нед 2 дн»
 export const formatGestation = (weeks, days) => `${weeks} нед ${days} дн`;
 // «13 недель 2 дня»
-export const spokenGestation = (weeks, days) => `${weeks} ${weeksWord(weeks)} ${days} ${daysWord(days)}`;
+export const spokenGestation = (weeks, days) =>
+  `${weeks} ${weeksWord(weeks)} ${days} ${daysWord(days)}`;
 
 // Строка о ПДР относительно сегодняшнего дня: { text, spoken, level } или null.
 export function dueDateStatus(daysToDue) {
-  if (daysToDue === 0) return { text: 'ПДР — сегодня', spoken: 'Предполагаемая дата родов — сегодня', level: 'info' };
+  if (daysToDue === 0)
+    return { text: 'ПДР — сегодня', spoken: 'Предполагаемая дата родов — сегодня', level: 'info' };
   if (daysToDue < 0) {
     const n = -daysToDue;
     return {

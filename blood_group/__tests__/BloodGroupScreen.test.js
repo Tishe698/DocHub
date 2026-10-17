@@ -5,7 +5,7 @@ import BloodGroupScreen from '../blood_group_screen';
 import { NEG, POS } from '../bloodGroupLogic';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -13,7 +13,8 @@ jest.mock('react-native-safe-area-context', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
-const byTestID = (root, id) => root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
+const byTestID = (root, id) =>
+  root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
 
 describe('BloodGroupScreen', () => {
   beforeEach(() => jest.useFakeTimers());
@@ -54,7 +55,7 @@ describe('BloodGroupScreen', () => {
       tree = renderer.create(<BloodGroupScreen />);
     });
     const radios = tree.root.findAll(
-      (n) => typeof n.type !== 'string' && n.props && n.props.accessibilityRole === 'radio'
+      (n) => typeof n.type !== 'string' && n.props && n.props.accessibilityRole === 'radio',
     );
     expect(radios.length).toBeGreaterThanOrEqual(15);
     const labels = radios.map((r) => r.props.accessibilityLabel);

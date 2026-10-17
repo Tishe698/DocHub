@@ -5,7 +5,7 @@ import GCScreen from '../glazgo';
 import { PatientProvider } from '../../patient/PatientContext';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
@@ -13,7 +13,8 @@ jest.mock('react-native-safe-area-context', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
-const byTestID = (root, id) => root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
+const byTestID = (root, id) =>
+  root.find((n) => n.props && n.props.testID === id && typeof n.type !== 'string');
 
 const render = (initialPatient) => {
   let tree;
@@ -21,7 +22,7 @@ const render = (initialPatient) => {
     tree = renderer.create(
       <PatientProvider initialPatient={initialPatient}>
         <GCScreen />
-      </PatientProvider>
+      </PatientProvider>,
     );
   });
   return tree;

@@ -1,7 +1,15 @@
 // PatientContext.js — общий пациент: вес, возраст, пол, рост вводятся один раз
 // и подставляются во все калькуляторы. Хранится только в памяти (без AsyncStorage),
 // чтобы данные прошлого вызова не попали к следующему пациенту.
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import parseNum from '../utils/parseNum';
 import {
   composeAgeMonths,
@@ -100,7 +108,7 @@ export function PatientProvider({ children, initialPatient }) {
       // растёт при каждом «Новый пациент» — экраны могут сбрасывать свои поля
       resetCount: state.resetCount,
     }),
-    [state, setPatient, resetPatient]
+    [state, setPatient, resetPatient],
   );
 
   return <PatientContext.Provider value={value}>{children}</PatientContext.Provider>;
@@ -134,7 +142,9 @@ function useSyncedText(value, format) {
 //  - value — текущее число из контекста (или null).
 export function usePatientNumber(key) {
   if (!NUMBER_KEYS.includes(key)) {
-    throw new Error(`usePatientNumber: неизвестное поле «${key}», ожидается ${NUMBER_KEYS.join(', ')}`);
+    throw new Error(
+      `usePatientNumber: неизвестное поле «${key}», ожидается ${NUMBER_KEYS.join(', ')}`,
+    );
   }
   const { patient, setPatient } = usePatient();
   const value = patient[key];
@@ -155,7 +165,7 @@ export function usePatientNumber(key) {
       lastWritten.current = v;
       setPatient({ [key]: v });
     },
-    [key, setPatient, setText, lastWritten]
+    [key, setPatient, setText, lastWritten],
   );
 
   return { text, onChangeText, value };
@@ -194,7 +204,7 @@ export function usePatientAge() {
       lastWritten.current = total;
       setPatient({ ageMonths: total });
     },
-    [setPatient]
+    [setPatient],
   );
 
   const onYears = useCallback((t) => write({ ...textsRef.current, years: t }), [write]);
@@ -212,7 +222,9 @@ export function usePatientAge() {
 
 function splitToTexts(ageMonths) {
   const parts = splitAgeMonths(ageMonths);
-  return parts ? { years: String(parts.years), months: String(parts.months) } : { years: '', months: '' };
+  return parts
+    ? { years: String(parts.years), months: String(parts.months) }
+    : { years: '', months: '' };
 }
 
 export default PatientContext;

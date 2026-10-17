@@ -78,7 +78,8 @@ export default function PediatricNormsScreen() {
 
   const matchNote = ageMatchNote(ageMonths);
   const patientAgeText = ageMonths === null ? '' : formatAge(ageMonths);
-  const patientSbp = ageMonths === null || ageMonths >= 216 ? null : hypotensionSbp(Math.floor(ageMonths));
+  const patientSbp =
+    ageMonths === null || ageMonths >= 216 ? null : hypotensionSbp(Math.floor(ageMonths));
   const rowSbp = selectedNorm ? hypotensionSbp(selectedNorm.months) : null;
 
   return (
@@ -133,7 +134,10 @@ export default function PediatricNormsScreen() {
           ))}
 
           <Note level="danger" title="Гипотензия" style={styles.hypo}>
-            <Text variant="body" accessibilityLabel={`систолическое давление ниже ${rowSbp} миллиметров ртутного столба`}>
+            <Text
+              variant="body"
+              accessibilityLabel={`систолическое давление ниже ${rowSbp} миллиметров ртутного столба`}
+            >
               {`САД < ${rowSbp} мм рт. ст.`}
             </Text>
             {patientSbp !== null && patientSbp !== rowSbp && isAuto ? (
@@ -148,11 +152,11 @@ export default function PediatricNormsScreen() {
           </Note>
 
           <Text variant="caption" color="textSecondary" style={styles.disclaimer}>
-            Основное значение — среднее для обоих полов (Мазурин А.В., Воронцов И.М.; масса — медианы
-            ВОЗ/CDC). В калькуляторах масса по возрасту оценивается по APLS и для 6–12 лет может быть
-            выше табличной. «Норма» — границы по PALS (AHA) 2015/2020; где источники расходятся, взята
-            более узкая граница. Гипотензия — по PALS (1–10 лет: 70 + 2 × возраст в годах). Значения
-            ориентировочные и не заменяют клиническую оценку врача.
+            Основное значение — среднее для обоих полов (Мазурин А.В., Воронцов И.М.; масса —
+            медианы ВОЗ/CDC). В калькуляторах масса по возрасту оценивается по APLS и для 6–12 лет
+            может быть выше табличной. «Норма» — границы по PALS (AHA) 2015/2020; где источники
+            расходятся, взята более узкая граница. Гипотензия — по PALS (1–10 лет: 70 + 2 × возраст
+            в годах). Значения ориентировочные и не заменяют клиническую оценку врача.
           </Text>
         </Card>
       ) : null}

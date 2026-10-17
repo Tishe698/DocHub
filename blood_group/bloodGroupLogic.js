@@ -72,7 +72,13 @@ export const REAGENTS = [
   },
 ];
 
-export const EMPTY_REACTIONS = { antiA: null, antiB: null, antiAB: null, control: null, antiD: null };
+export const EMPTY_REACTIONS = {
+  antiA: null,
+  antiB: null,
+  antiAB: null,
+  control: null,
+  antiD: null,
+};
 
 export const NOT_SET = '—';
 const UNDET_ABO = 'Не определена';
@@ -103,13 +109,15 @@ export function interpretBloodGroup({ antiA, antiB, antiAB = null, antiD = null,
     warnings.push(
       'Агглютинация в контроле с 0,9% NaCl — неспецифическая (аутоагглютинация, холодовые антитела). ' +
         'Группа и резус не определяются. ' +
-        LAB
+        LAB,
     );
   } else if (aboReady) {
     if (antiA === WEAK || antiB === WEAK || antiAB === WEAK) {
       // Слабые варианты A/B агглютинируют позже и слабее (инструкции к цоликлонам)
       abo = UNDET_ABO;
-      warnings.push('Слабая или сомнительная реакция: возможен слабый вариант антигена A или B. ' + LAB);
+      warnings.push(
+        'Слабая или сомнительная реакция: возможен слабый вариант антигена A или B. ' + LAB,
+      );
     } else {
       const aPos = antiA === POS;
       const bPos = antiB === POS;
@@ -127,7 +135,7 @@ export function interpretBloodGroup({ antiA, antiB, antiAB = null, antiD = null,
           antiAB === POS
             ? 'Агглютинация только с анти-AB: возможен слабый вариант A или B. ' + LAB
             : 'Нет агглютинации с анти-AB при агглютинации с анти-A/анти-B — реакции противоречат друг другу. ' +
-                LAB
+                LAB,
         );
       } else if (base === 'AB (IV)' && control !== NEG) {
         // AB(IV) устанавливают только при отсутствии агглютинации в контроле
@@ -136,7 +144,7 @@ export function interpretBloodGroup({ antiA, antiB, antiAB = null, antiD = null,
         aboPending = true;
         warnings.push(
           'Агглютинация с анти-A и анти-B: выполните контроль — капля эритроцитов + капля 0,9% NaCl. ' +
-            'AB (IV) — только если в контроле агглютинации нет.'
+            'AB (IV) — только если в контроле агглютинации нет.',
         );
       } else {
         abo = base;
@@ -167,7 +175,7 @@ export function interpretBloodGroup({ antiA, antiB, antiAB = null, antiD = null,
     warnings.push(
       'Слабая или сомнительная реакция с анти-D: возможен вариант D. ' +
         LAB +
-        ' До уточнения считать резус-отрицательным (безопасно при любом варианте D).'
+        ' До уточнения считать резус-отрицательным (безопасно при любом варианте D).',
     );
   }
 
@@ -216,7 +224,9 @@ export function resultSummary(result) {
   const parts = [`Группа AB0: ${spoken(result.abo)}`, `Резус: ${spoken(result.rh)}`];
   if (result.warnings.length) {
     parts.push(
-      result.warnings.length === 1 ? 'Есть предупреждение' : `Предупреждений: ${result.warnings.length}`
+      result.warnings.length === 1
+        ? 'Есть предупреждение'
+        : `Предупреждений: ${result.warnings.length}`,
     );
   }
   parts.push('Нужно подтверждение в лаборатории');

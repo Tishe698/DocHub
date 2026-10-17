@@ -9,7 +9,7 @@ import { ThemeContext, buildTheme } from '../../theme/ThemeProvider';
 import { allMainCards, TUBE_MENU, OXYGEN_MENU } from '../menuConfig';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
 // Значки — простой хост-элемент: настоящий Icon асинхронно грузит шрифт и шумит в консоли
@@ -29,7 +29,7 @@ function render(Component, theme) {
         <ThemeContext.Provider value={theme}>
           <Component navigation={navigation} />
         </ThemeContext.Provider>
-      </SafeAreaProvider>
+      </SafeAreaProvider>,
     );
   });
   return { tree, navigation };
@@ -42,7 +42,7 @@ const byTestID = (tree, id) =>
       n.props.testID === id &&
       typeof n.type !== 'string' &&
       n.props.accessibilityRole === 'button' &&
-      typeof n.props.onPress === 'function'
+      typeof n.props.onPress === 'function',
   );
 
 describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) => {
@@ -62,7 +62,7 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
   it('главный экран: переключатель темы вызывает setMode', () => {
     const { tree } = render(ButtonApp, theme);
     const radios = tree.root.findAll(
-      (n) => n.props.accessibilityRole === 'radio' && typeof n.props.onPress === 'function'
+      (n) => n.props.accessibilityRole === 'radio' && typeof n.props.onPress === 'function',
     );
     const labels = radios.map((r) => r.props.accessibilityLabel);
     expect(labels).toEqual(expect.arrayContaining(['Тёмная тема', 'Светлая тема']));
@@ -77,9 +77,11 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
       .findAll((n) => n.props.accessibilityRole === 'header' && typeof n.type === 'string')
       .map((n) => [].concat(n.props.children).join(''));
     expect(headers).toEqual(
-      expect.arrayContaining(['DocHub', 'Препараты', 'Шкалы и индексы', 'Справочники'])
+      expect.arrayContaining(['DocHub', 'Препараты', 'Шкалы и индексы', 'Справочники']),
     );
-    const texts = tree.root.findAll((n) => typeof n.type === 'string' && n.props.children === 'Пациент не указан');
+    const texts = tree.root.findAll(
+      (n) => typeof n.type === 'string' && n.props.children === 'Пациент не указан',
+    );
     expect(texts.length).toBeGreaterThan(0);
   });
 

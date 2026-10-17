@@ -66,9 +66,15 @@ describe('группа НМБД и гематологии: структура', 
   });
 
   it('неизвестное значение выбора — расчёт не выполняется', () => {
-    expect(byName('Суксаметония хлорид').formula({ weight: 20, ageYears: 5, route: 'po' })).toEqual({});
-    expect(byName('Гепарин натрия').formula({ weight: 20, ageYears: 5, indication: 'x' })).toEqual({});
-    expect(byName('Транексамовая кислота').formula({ weight: 20, concentration: '25' })).toEqual({});
+    expect(byName('Суксаметония хлорид').formula({ weight: 20, ageYears: 5, route: 'po' })).toEqual(
+      {},
+    );
+    expect(byName('Гепарин натрия').formula({ weight: 20, ageYears: 5, indication: 'x' })).toEqual(
+      {},
+    );
+    expect(byName('Транексамовая кислота').formula({ weight: 20, concentration: '25' })).toEqual(
+      {},
+    );
   });
 });
 
@@ -84,7 +90,9 @@ describe('Суксаметония хлорид', () => {
   });
 
   it('по умолчанию — в/в', () => {
-    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(f.formula({ weight: 20, ageYears: 5, route: 'iv' }));
+    expect(f.formula({ weight: 20, ageYears: 5 })).toEqual(
+      f.formula({ weight: 20, ageYears: 5, route: 'iv' }),
+    );
   });
 
   it('в/в, границы возраста: до 1 года 2 мг/кг, 1 год — 1 мг/кг, 12 лет — 1,5 мг/кг', () => {
@@ -132,7 +140,9 @@ describe('Суксаметония хлорид', () => {
   it('через движок: путь показан строкой выбора, доза на пределе — бейдж', () => {
     const r = computeResult(f, { weight: '70', route: 'im' }, { age: { years: '30', months: '' } });
     expect(r.success).toBe(true);
-    expect(r.choices).toEqual([{ key: 'route', label: 'Путь введения', value: 'im', valueLabel: 'в/м' }]);
+    expect(r.choices).toEqual([
+      { key: 'route', label: 'Путь введения', value: 'im', valueLabel: 'в/м' },
+    ]);
     expect(r.items.find((i) => i.key === 'result1').status).toBe('atmax');
   });
 });
@@ -204,7 +214,10 @@ describe('Гепарин натрия', () => {
     expect(r.result1).toBe(5000);
     expect(r.result2).toBe(1);
     expect(r.result4).toMatch(/Болюс ограничен 5000 МЕ \(расчёт 6000 МЕ\)/);
-    expect(limitsOf(f, { indication: 'peds' })).toEqual({ result1: { max: 5000 }, result2: { max: 1 } });
+    expect(limitsOf(f, { indication: 'peds' })).toEqual({
+      result1: { max: 5000 },
+      result2: { max: 1 },
+    });
   });
 
   it('детская схема для 18 лет и старше и взрослые схемы до 18 лет — без числовой дозы', () => {
@@ -273,7 +286,11 @@ describe('Гепарин натрия', () => {
   });
 
   it('через движок: показание в строке выбора, пределы по показанию', () => {
-    const r = computeResult(f, { weight: '100', indication: 'stemi_tlt' }, { age: { years: '50', months: '' } });
+    const r = computeResult(
+      f,
+      { weight: '100', indication: 'stemi_tlt' },
+      { age: { years: '50', months: '' } },
+    );
     expect(r.success).toBe(true);
     expect(r.choices[0]).toEqual({
       key: 'indication',
@@ -283,7 +300,11 @@ describe('Гепарин натрия', () => {
     });
     expect(r.items.find((i) => i.key === 'result1').status).toBe('atmax');
     expect(r.items.find((i) => i.key === 'result3').status).toBe('atmax');
-    const mismatch = computeResult(f, { weight: '20', indication: 'pe' }, { age: { years: '5', months: '' } });
+    const mismatch = computeResult(
+      f,
+      { weight: '20', indication: 'pe' },
+      { age: { years: '5', months: '' } },
+    );
     expect(mismatch.success).toBe(true);
     expect(mismatch.items.map((i) => i.key)).toEqual(['result9']);
   });
@@ -301,7 +322,9 @@ describe('Этамзилат', () => {
   });
 
   it('новорождённый с весом больше 6 кг — проверка ввода, без дозы', () => {
-    expect(f.formula({ weight: 7, ageYears: 0 })).toEqual({ result9: expect.stringMatching(/нетипичен/) });
+    expect(f.formula({ weight: 7, ageYears: 0 })).toEqual({
+      result9: expect.stringMatching(/нетипичен/),
+    });
     close(f.formula({ weight: 6, ageYears: 0 }).result1, 60);
   });
 
@@ -356,7 +379,9 @@ describe('Транексамовая кислота', () => {
   });
 
   it('по умолчанию — травма и 50 мг/мл', () => {
-    expect(f.formula({ weight: 20 })).toEqual(f.formula({ weight: 20, indication: 'trauma', concentration: '50' }));
+    expect(f.formula({ weight: 20 })).toEqual(
+      f.formula({ weight: 20, indication: 'trauma', concentration: '50' }),
+    );
   });
 
   it('травма, 100 мг/мл: объём вдвое меньше, скорость по мг та же', () => {

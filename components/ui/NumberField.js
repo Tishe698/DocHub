@@ -35,7 +35,7 @@ const NumberField = forwardRef(function NumberField(
     inputStyle,
     testID,
   },
-  ref
+  ref,
 ) {
   const { colors } = useTheme();
   const styles = useThemedStyles(makeStyles);

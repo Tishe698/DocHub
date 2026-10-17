@@ -118,7 +118,11 @@ function VideoCard() {
 
       <View style={styles.videoWrap}>
         {failed ? (
-          <View style={styles.videoFallback} accessible accessibilityLabel="Видео не удалось загрузить">
+          <View
+            style={styles.videoFallback}
+            accessible
+            accessibilityLabel="Видео не удалось загрузить"
+          >
             <View {...hideFromA11y}>
               <Ionicons name="videocam-off-outline" size={40} color={colors.textMuted} />
             </View>
@@ -341,7 +345,10 @@ const Date_pregnancy = () => {
               accessibilityLabel={category.spoken}
               style={styles.badge}
             />
-            <Text variant="body" color="textSecondary">{`идёт ${result.currentWeek}-я неделя`}</Text>
+            <Text
+              variant="body"
+              color="textSecondary"
+            >{`идёт ${result.currentWeek}-я неделя`}</Text>
             <Text
               variant="bodyStrong"
               style={styles.due}
@@ -350,7 +357,11 @@ const Date_pregnancy = () => {
               {`Предполагаемая дата родов: ${formatRussianDate(result.due)}`}
             </Text>
             {due ? (
-              <Text variant="body" color={due.level === 'warning' ? 'warning' : 'textSecondary'} accessibilityLabel={due.spoken}>
+              <Text
+                variant="body"
+                color={due.level === 'warning' ? 'warning' : 'textSecondary'}
+                accessibilityLabel={due.spoken}
+              >
                 {due.text}
               </Text>
             ) : null}
@@ -359,9 +370,9 @@ const Date_pregnancy = () => {
           {/* КР МЗ РФ «Нормальная беременность» 2023 (ID 288): срок определяют по ДПМ и УЗИ;
               при расхождении в 11⁰–13⁶ нед достовернее срок по УЗИ (КТР). */}
           <Note level="info" title="Как считается">
-            ПДР = ДПМ + 280 дней. Срок рассчитан по ДПМ при 28-дневном цикле; при другой длине цикла он
-            смещается. Если есть УЗИ в 11⁰–13⁶ нед, срок устанавливают по УЗИ (КТР) — сверяйтесь с обменной
-            картой.
+            ПДР = ДПМ + 280 дней. Срок рассчитан по ДПМ при 28-дневном цикле; при другой длине цикла
+            он смещается. Если есть УЗИ в 11⁰–13⁶ нед, срок устанавливают по УЗИ (КТР) — сверяйтесь
+            с обменной картой.
           </Note>
 
           <Button
@@ -411,7 +422,12 @@ const makeStyles = ({ colors, spacing, radius }) => ({
   },
   controlBtn: { margin: spacing.xs, flexGrow: 1 },
   picker: { marginTop: spacing.md },
-  pickerActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', marginTop: spacing.sm },
+  pickerActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    marginTop: spacing.sm,
+  },
   pickerBtn: { marginLeft: spacing.sm, marginTop: spacing.xs },
   meta: { marginBottom: spacing.md },
   due: { marginTop: spacing.sm },

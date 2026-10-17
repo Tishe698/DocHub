@@ -23,7 +23,11 @@ const sel = (e, v, m, extra = {}) => ({ eye: `E${e}`, verbal: `V${v}`, motor: `M
 
 describe('варианты шкалы', () => {
   it('баллы компонентов: E 1–4, V 1–5, M 1–6 в обеих шкалах', () => {
-    const scores = (list) => list.filter((o) => !o.nt).map((o) => o.score).sort((a, b) => a - b);
+    const scores = (list) =>
+      list
+        .filter((o) => !o.nt)
+        .map((o) => o.score)
+        .sort((a, b) => a - b);
     expect(scores(E_OPTIONS)).toEqual([1, 2, 3, 4]);
     expect(scores(V_OPTIONS_ADULT)).toEqual([1, 2, 3, 4, 5]);
     expect(scores(V_OPTIONS_CHILD)).toEqual([1, 2, 3, 4, 5]);
@@ -32,7 +36,14 @@ describe('варианты шкалы', () => {
   });
 
   it('id вариантов уникальны внутри компонента', () => {
-    for (const list of [E_OPTIONS, V_OPTIONS_ADULT, V_OPTIONS_CHILD, M_OPTIONS_ADULT, M_OPTIONS_CHILD, P_OPTIONS]) {
+    for (const list of [
+      E_OPTIONS,
+      V_OPTIONS_ADULT,
+      V_OPTIONS_CHILD,
+      M_OPTIONS_ADULT,
+      M_OPTIONS_CHILD,
+      P_OPTIONS,
+    ]) {
       const ids = list.map((o) => o.id);
       expect(new Set(ids).size).toBe(ids.length);
     }
@@ -126,20 +137,36 @@ describe('computeGcs', () => {
 
   it('неполный ввод: суммы нет, в нотации прочерк, перечислены недостающие', () => {
     const empty = computeGcs();
-    expect(empty).toMatchObject({ complete: false, scorable: false, sum: null, notation: 'E– V– M–' });
+    expect(empty).toMatchObject({
+      complete: false,
+      scorable: false,
+      sum: null,
+      notation: 'E– V– M–',
+    });
     expect(empty.missing).toEqual(['E', 'V', 'M']);
     expect(empty.hint).toBe('Оценка неполная: выберите E, V, M');
     expect(empty.level).toBeNull();
 
     const partial = computeGcs({ eye: 'E3', motor: 'M5' });
-    expect(partial).toMatchObject({ complete: false, sum: null, notation: 'E3 V– M5', missing: ['V'] });
+    expect(partial).toMatchObject({
+      complete: false,
+      sum: null,
+      notation: 'E3 V– M5',
+      missing: ['V'],
+    });
     expect(partial.hint).toBe('Оценка неполная: выберите V');
     expect(gcsSummary(partial)).toBe('');
   });
 
   it('NT: сумма не считается, в нотации C / T / НО (Teasdale 2014)', () => {
     const closed = computeGcs({ eye: 'EC', verbal: 'V5', motor: 'M6' });
-    expect(closed).toMatchObject({ complete: true, hasNT: true, scorable: false, sum: null, notation: 'EC V5 M6' });
+    expect(closed).toMatchObject({
+      complete: true,
+      hasNT: true,
+      scorable: false,
+      sum: null,
+      notation: 'EC V5 M6',
+    });
     expect(closed.ntParts).toEqual(['E']);
     expect(closed.hint).toMatch(/Сумма не определяется/);
     expect(closed.level).toBeNull();
@@ -205,7 +232,7 @@ describe('computeGcs', () => {
 describe('gcsSummary и pointsWord', () => {
   it('итог для диктора', () => {
     expect(gcsSummary(computeGcs(sel(4, 4, 6, { pupils: 'P1' })))).toBe(
-      'ШКГ 14 баллов, E4 V4 M6. Умеренное оглушение (13–14). Тяжесть при ЧМТ: лёгкая (13–15). ШКГ-З 13'
+      'ШКГ 14 баллов, E4 V4 M6. Умеренное оглушение (13–14). Тяжесть при ЧМТ: лёгкая (13–15). ШКГ-З 13',
     );
     expect(gcsSummary(null)).toBe('');
   });

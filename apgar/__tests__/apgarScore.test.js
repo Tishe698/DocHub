@@ -63,7 +63,12 @@ describe('признаки', () => {
 
 describe('apgarTotal / completeTotal', () => {
   it('пустая оценка — неполная, сумма 0', () => {
-    expect(apgarTotal(emptyAssessment())).toEqual({ total: 0, filled: 0, complete: false, missing: SIGN_KEYS });
+    expect(apgarTotal(emptyAssessment())).toEqual({
+      total: 0,
+      filled: 0,
+      complete: false,
+      missing: SIGN_KEYS,
+    });
     expect(completeTotal(emptyAssessment())).toBeNull();
     expect(completeTotal(undefined)).toBeNull();
   });
@@ -157,13 +162,17 @@ describe('правило повторных оценок', () => {
       expect(visibleMinutes(a)).toEqual([1, 5, 10]);
     }
     // флаг отмечен до завершения оценки 5-й минуты — 10-я уже нужна
-    expect(requiredMinutes({ 5: { ...emptyAssessment(), duringResuscitation: true } })).toEqual([1, 5, 10]);
+    expect(requiredMinutes({ 5: { ...emptyAssessment(), duringResuscitation: true } })).toEqual([
+      1, 5, 10,
+    ]);
     // при < 7 — объединение правил: 10, 15, 20
     expect(requiredMinutes({ 5: resus(6) })).toEqual([1, 5, 10, 15, 20]);
   });
 
   it('флаг реанимации на 1-й минуте или без флага — 10-я минута не нужна', () => {
-    expect(requiredMinutes({ 1: { ...withTotal(3), duringResuscitation: true }, 5: withTotal(8) })).toEqual([1, 5]);
+    expect(
+      requiredMinutes({ 1: { ...withTotal(3), duringResuscitation: true }, 5: withTotal(8) }),
+    ).toEqual([1, 5]);
     expect(needsTenMinute({ 5: withTotal(7) })).toBe(false);
     expect(resuscitationAfterFive({})).toBe(false);
     expect(resuscitationAfterFive(null)).toBe(false);
@@ -171,7 +180,9 @@ describe('правило повторных оценок', () => {
 
   it('видимые минуты: обязательные плюс уже заполненные', () => {
     expect(visibleMinutes({})).toEqual([1, 5]);
-    expect(visibleMinutes({ 5: withTotal(8), 10: { ...emptyAssessment(), tone: 1 } })).toEqual([1, 5, 10]);
+    expect(visibleMinutes({ 5: withTotal(8), 10: { ...emptyAssessment(), tone: 1 } })).toEqual([
+      1, 5, 10,
+    ]);
     expect(visibleMinutes({ 5: withTotal(5) })).toEqual([1, 5, 10, 15, 20]);
   });
 });
@@ -203,22 +214,29 @@ describe('подписи и текст', () => {
     const a = uniform(1, { heartRate: 2 });
     expect(assessmentLine(1, a)).toBe('1-я мин — 6 баллов (умеренная асфиксия)');
     expect(assessmentLine(5, { ...uniform(2), duringResuscitation: true })).toBe(
-      '5-я мин — 10 баллов (удовлетворительное состояние, на фоне реанимационных мероприятий)'
+      '5-я мин — 10 баллов (удовлетворительное состояние, на фоне реанимационных мероприятий)',
     );
     expect(assessmentLine(1, emptyAssessment())).toBeNull();
     expect(breakdownLine(a)).toBe('ЧСС 2, дыхание 1, тонус 1, рефлексы 1, окраска 1');
-    expect(breakdownLine({ heartRate: 1 })).toBe('ЧСС 1, дыхание —, тонус —, рефлексы —, окраска —');
+    expect(breakdownLine({ heartRate: 1 })).toBe(
+      'ЧСС 1, дыхание —, тонус —, рефлексы —, окраска —',
+    );
   });
 
   it('короткая запись по полным оценкам', () => {
     expect(shortRecord({})).toBe('');
     expect(shortRecord({ 1: withTotal(6), 5: withTotal(8) })).toBe('6/8');
-    expect(shortRecord({ 1: withTotal(3), 5: withTotal(5), 10: withTotal(7), 15: emptyAssessment() })).toBe('3/5/7');
+    expect(
+      shortRecord({ 1: withTotal(3), 5: withTotal(5), 10: withTotal(7), 15: emptyAssessment() }),
+    ).toBe('3/5/7');
   });
 
   it('текст для копирования', () => {
     const birthAt = new Date(2026, 0, 1, 14, 5, 0).getTime();
-    const txt = summaryText({ 1: withTotal(3), 5: withTotal(6), 10: { ...emptyAssessment(), heartRate: 2 } }, birthAt);
+    const txt = summaryText(
+      { 1: withTotal(3), 5: withTotal(6), 10: { ...emptyAssessment(), heartRate: 2 } },
+      birthAt,
+    );
     expect(txt).toContain('Время рождения: 14:05');
     expect(txt).toContain('1-я мин — 3 балла (тяжёлая асфиксия)');
     expect(txt).toContain('5-я мин — 6 баллов (умеренная асфиксия)');
@@ -226,9 +244,16 @@ describe('подписи и текст', () => {
     expect(txt).toContain('Итог: 3/6 баллов');
     expect(txt).toContain('повторные оценки на 10-й, 15-й, 20-й минуте');
     expect(summaryText({}, null)).toBe('Оценка по шкале Апгар');
-    const resus = summaryText({ 1: withTotal(6), 5: { ...withTotal(8), duringResuscitation: true } }, null);
-    expect(resus).toContain('5-я мин — 8 баллов (удовлетворительное состояние, на фоне реанимационных мероприятий)');
-    expect(resus).toContain('Реанимационные мероприятия продолжаются после 5-й минуты: оценка на 10-й минуте');
+    const resus = summaryText(
+      { 1: withTotal(6), 5: { ...withTotal(8), duringResuscitation: true } },
+      null,
+    );
+    expect(resus).toContain(
+      '5-я мин — 8 баллов (удовлетворительное состояние, на фоне реанимационных мероприятий)',
+    );
+    expect(resus).toContain(
+      'Реанимационные мероприятия продолжаются после 5-й минуты: оценка на 10-й минуте',
+    );
     expect(resus).not.toContain('15-й');
   });
 });

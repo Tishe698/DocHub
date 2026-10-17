@@ -20,7 +20,9 @@ const round1 = (x) => Math.round(x * 10) / 10;
 
 // I:E в виде «1:2» или «1/2» (дробные части — через точку или запятую); null, если ввод некорректен
 export const parseIE = (s) => {
-  const parts = String(s ?? '').split(/[:/]/).map(parseNum);
+  const parts = String(s ?? '')
+    .split(/[:/]/)
+    .map(parseNum);
   return parts.length === 2 && parts.every((x) => x > 0) ? parts : null;
 };
 
@@ -248,7 +250,7 @@ export const deviceHint = (key) => {
   if (c.vtMin !== undefined) parts.push(`Vt ${c.vtMin}–${c.vtMax} мл`);
   else parts.push('Vt отдельно не задаётся — выставляют МОД и ЧДД');
   parts.push(
-    `ЧДД ${c.rrMin}–${c.rrMax}/мин${key === 'ivl440' ? ' (ВЧ 90–360 — отдельный режим, расчёт по мл/кг не применим)' : ''}`
+    `ЧДД ${c.rrMin}–${c.rrMax}/мин${key === 'ivl440' ? ' (ВЧ 90–360 — отдельный режим, расчёт по мл/кг не применим)' : ''}`,
   );
   if (c.veMin !== undefined) parts.push(`МОД ${fmt(c.veMin)}–${c.veMax} л/мин`);
   parts.push(`Pmax ${c.pmaxMin}–${c.pmaxMax}`);
@@ -260,7 +262,7 @@ export const deviceHint = (key) => {
   if (c.o2Switch) parts.push('FiO₂: 100 % O₂ или Air Mix');
   if (c.child) {
     parts.push(
-      `дети 1–6 лет: Pmax ${c.child.pmaxMin}–${c.child.pmaxMax}, МОД ${fmt(c.child.veMin)}–${c.child.veMax} л/мин; от 1 года`
+      `дети 1–6 лет: Pmax ${c.child.pmaxMin}–${c.child.pmaxMax}, МОД ${fmt(c.child.veMin)}–${c.child.veMax} л/мин; от 1 года`,
     );
   }
   return `${c.label}: ${parts.join(', ')}.`;
@@ -336,7 +338,8 @@ export function childAgeFieldErrors(yearsText, monthsText) {
   const y = hasY ? parseNum(yearsText) : null;
   const m = hasM ? parseNum(monthsText) : null;
   if (hasY && (y === undefined || y < 0)) out.years = 'Введите число лет (0–17).';
-  else if (hasY && y > CHILD_AGE_MAX_YEARS) out.years = `Ребёнок — 0–${CHILD_AGE_MAX_YEARS} лет; с 18 лет выберите «Взрослый».`;
+  else if (hasY && y > CHILD_AGE_MAX_YEARS)
+    out.years = `Ребёнок — 0–${CHILD_AGE_MAX_YEARS} лет; с 18 лет выберите «Взрослый».`;
   if (hasM && (m === undefined || m < 0)) out.months = 'Введите число месяцев.';
   else if (hasY && hasM && m >= 12) out.months = 'При указанных годах — месяцев 0–11.';
   return out;
@@ -363,7 +366,8 @@ export function computeIvl(s) {
   let teenActual = false; // подросток ≥ 12 лет на фактической массе без роста
   const wActual = toNum(s.weightKg);
   const wOk = wActual !== undefined && wActual > 0 && wActual <= WEIGHT_MAX;
-  if (wActual !== undefined && !wOk) warnings.push(`Масса вне 0–${WEIGHT_MAX} кг — проверьте ввод.`);
+  if (wActual !== undefined && !wOk)
+    warnings.push(`Масса вне 0–${WEIGHT_MAX} кг — проверьте ввод.`);
 
   if (s.group === 'adult') {
     const h = toNum(s.heightCm);
@@ -372,23 +376,32 @@ export function computeIvl(s) {
       mass = pbw.kg;
       massBasis = 'ibw';
       if (pbw.sexAssumed) {
-        warnings.push('Пол не указан — должная масса рассчитана по женской формуле (меньший ДО, консервативно). Укажите пол.');
+        warnings.push(
+          'Пол не указан — должная масса рассчитана по женской формуле (меньший ДО, консервативно). Укажите пол.',
+        );
       }
     } else {
-      if (h !== undefined) warnings.push(`Рост вне ${HEIGHT_MIN}–${HEIGHT_MAX} см — идеальная масса не рассчитана.`);
+      if (h !== undefined)
+        warnings.push(`Рост вне ${HEIGHT_MIN}–${HEIGHT_MAX} см — идеальная масса не рассчитана.`);
       if (wOk) {
         mass = wActual;
         massBasis = 'actual';
         warnings.push(
-          'ДО рассчитан на фактическую массу — при ожирении завышен. Введите рост и пол: расчёт пойдёт по идеальной массе.'
+          'ДО рассчитан на фактическую массу — при ожирении завышен. Введите рост и пол: расчёт пойдёт по идеальной массе.',
         );
       }
     }
-    if (wOk && wActual < 40) warnings.push('Масса < 40 кг — проверьте группу: для детей выберите «Ребёнок».');
+    if (wOk && wActual < 40)
+      warnings.push('Масса < 40 кг — проверьте группу: для детей выберите «Ребёнок».');
   } else {
-    if (s.ageInvalid) warnings.push('Возраст: лет 0–17, мес 0–11 — проверьте ввод. ЧДД и масса по возрасту не подставлены.');
-    else if (months === undefined) warnings.push('Введите возраст ребёнка — от него зависят ЧДД и пределы аппарата.');
-    else if (months >= ADULT_AGE_MONTHS) warnings.push('Возраст 18 лет и старше — выберите «Взрослый».');
+    if (s.ageInvalid)
+      warnings.push(
+        'Возраст: лет 0–17, мес 0–11 — проверьте ввод. ЧДД и масса по возрасту не подставлены.',
+      );
+    else if (months === undefined)
+      warnings.push('Введите возраст ребёнка — от него зависят ЧДД и пределы аппарата.');
+    else if (months >= ADULT_AGE_MONTHS)
+      warnings.push('Возраст 18 лет и старше — выберите «Взрослый».');
     // Базовая масса ребёнка: фактическая, без неё — оценка по возрасту (APLS, до 12 лет)
     let base;
     let baseBasis = null;
@@ -409,18 +422,21 @@ export function computeIvl(s) {
     // формула (меньше). Ниже 130 см должная масса не считается — фактическая/APLS, как раньше.
     const h = toNum(s.heightCm);
     const pbw = predictedBodyWeight(s.sex, h);
-    if (h !== undefined && h > HEIGHT_MAX) warnings.push(`Рост вне ${HEIGHT_MIN}–${HEIGHT_MAX} см — должная масса не рассчитана.`);
+    if (h !== undefined && h > HEIGHT_MAX)
+      warnings.push(`Рост вне ${HEIGHT_MIN}–${HEIGHT_MAX} см — должная масса не рассчитана.`);
     if (pbw && (base === undefined || pbw.kg < base)) {
       mass = pbw.kg;
       massBasis = 'ibw';
       if (pbw.sexAssumed) {
-        warnings.push('Пол не указан — должная масса рассчитана по женской формуле (меньший ДО, консервативно). Укажите пол.');
+        warnings.push(
+          'Пол не указан — должная масса рассчитана по женской формуле (меньший ДО, консервативно). Укажите пол.',
+        );
       }
       // Фактическая масса больше должной более чем на 20 % — избыток массы, ДО на фактическую был бы завышен
       if (wOk && wActual > pbw.kg * CHILD_OVERWEIGHT_RATIO) {
         childOverweight = true;
         warnings.push(
-          `Фактическая масса ${fmt(round1(wActual))} кг больше должной (${fmt(round1(pbw.kg))} кг) более чем на 20 % — ДО рассчитан на должную массу.`
+          `Фактическая масса ${fmt(round1(wActual))} кг больше должной (${fmt(round1(pbw.kg))} кг) более чем на 20 % — ДО рассчитан на должную массу.`,
         );
       }
     } else {
@@ -428,23 +444,27 @@ export function computeIvl(s) {
       massBasis = baseBasis;
     }
     if (mass === undefined && months !== undefined && months >= 144) {
-      warnings.push('Старше 12 лет масса по возрасту не оценивается — введите рост (≥ 130 см) или массу.');
+      warnings.push(
+        'Старше 12 лет масса по возрасту не оценивается — введите рост (≥ 130 см) или массу.',
+      );
     }
     // Подросток (≥ 12 лет) на фактической массе без роста — ДО при ожирении завышен: подсветка и просьба
     if (massBasis === 'actual' && !pbw && months !== undefined && months >= 144) {
       teenActual = true;
-      warnings.push('Подросток: ДО рассчитан на фактическую массу — при ожирении завышен. Введите рост и пол: расчёт пойдёт по должной массе.');
+      warnings.push(
+        'Подросток: ДО рассчитан на фактическую массу — при ожирении завышен. Введите рост и пол: расчёт пойдёт по должной массе.',
+      );
     }
     if (mass !== undefined) {
       warnings.push(
-        'У ребёнка ДО считается на фактическую массу (без неё — по возрасту, APLS); если введён рост от 130 см — на меньшую из неё и должной массы по росту и полу.'
+        'У ребёнка ДО считается на фактическую массу (без неё — по возрасту, APLS); если введён рост от 130 см — на меньшую из неё и должной массы по росту и полу.',
       );
     }
     // Новорождённых вентилируют по давлению и частоте (ERC 2021 Newborn Life Support; КР «Реанимация
     // и стабилизация новорождённых»), а не по мл/кг — расчёт для них только ориентир.
     if (months !== undefined && months < 1) {
       warnings.push(
-        'Новорождённый: вентиляция — по давлению и частоте по алгоритму реанимации новорождённых (ERC NLS 2021), расчёт по мл/кг — лишь ориентир.'
+        'Новорождённый: вентиляция — по давлению и частоте по алгоритму реанимации новорождённых (ERC NLS 2021), расчёт по мл/кг — лишь ориентир.',
       );
     }
   }
@@ -473,32 +493,38 @@ export function computeIvl(s) {
     if (vtPerKgN < VT_PER_KG_MIN || vtPerKgN > VT_PER_KG_MAX) {
       vtTone = 'bad';
       warnings.push(
-        `ДО ${fmt(vtPerKgN)} мл/кг вне защитного диапазона ${VT_PER_KG_MIN}–${VT_PER_KG_MAX} мл/кг (рекомендуется 6–8 мл/кг идеальной массы).`
+        `ДО ${fmt(vtPerKgN)} мл/кг вне защитного диапазона ${VT_PER_KG_MIN}–${VT_PER_KG_MAX} мл/кг (рекомендуется 6–8 мл/кг идеальной массы).`,
       );
     }
   }
 
   const veTone = out(ve, caps.veMin, caps.veMax) ? 'bad' : 'default';
   if (veTone === 'bad') {
-    warnings.push(`МОД ${fmt(ve)} л/мин вне возможностей аппарата (${fmt(caps.veMin)}–${caps.veMax} л/мин).`);
+    warnings.push(
+      `МОД ${fmt(ve)} л/мин вне возможностей аппарата (${fmt(caps.veMin)}–${caps.veMax} л/мин).`,
+    );
   }
 
   const rrTone = !rrOk || out(rrN, caps.rrMin, caps.rrMax) ? 'bad' : 'default';
   if (rrOk && rrTone === 'bad') {
-    warnings.push(`ЧДД ${fmt(rrN)}/мин вне возможностей аппарата (${caps.rrMin}–${caps.rrMax}/мин).`);
+    warnings.push(
+      `ЧДД ${fmt(rrN)}/мин вне возможностей аппарата (${caps.rrMin}–${caps.rrMax}/мин).`,
+    );
   }
 
   const peepN = toNum(s.peep);
   const pmaxN = toNum(s.pmax);
   const peepTone =
-    peepN === undefined || peepN < 0 || (!caps.peepExternal && out(peepN, caps.peepMin, caps.peepMax))
+    peepN === undefined ||
+    peepN < 0 ||
+    (!caps.peepExternal && out(peepN, caps.peepMin, caps.peepMax))
       ? 'bad'
       : 'default';
   if (peepN !== undefined && peepTone === 'bad') {
     warnings.push(
       caps.peepExternal
         ? 'ПДКВ не может быть отрицательным.'
-        : `ПДКВ ${fmt(peepN)} вне возможностей аппарата (${caps.peepMin}–${caps.peepMax} см вод. ст.).`
+        : `ПДКВ ${fmt(peepN)} вне возможностей аппарата (${caps.peepMin}–${caps.peepMax} см вод. ст.).`,
     );
   }
   if (caps.peepExternal) warnings.push('ПДКВ на этом аппарате — только внешним клапаном ПДКВ.');
@@ -506,12 +532,14 @@ export function computeIvl(s) {
   let pmaxTone = pmaxN === undefined || out(pmaxN, caps.pmaxMin, caps.pmaxMax) ? 'bad' : 'default';
   if (pmaxN !== undefined && pmaxTone === 'bad') {
     warnings.push(
-      `Pmax ${fmt(pmaxN)} вне возможностей аппарата (${caps.pmaxMin}–${caps.pmaxMax} см вод. ст.${caps.childLimits ? ', дети до 7 лет' : ''}).`
+      `Pmax ${fmt(pmaxN)} вне возможностей аппарата (${caps.pmaxMin}–${caps.pmaxMax} см вод. ст.${caps.childLimits ? ', дети до 7 лет' : ''}).`,
     );
   }
   if (pmaxN !== undefined && peepN !== undefined && pmaxN < peepN + PMAX_PEEP_MARGIN) {
     pmaxTone = 'bad';
-    warnings.push(`Pmax должен быть выше ПДКВ хотя бы на ${PMAX_PEEP_MARGIN} см вод. ст. — иначе ДО не будет доставлен.`);
+    warnings.push(
+      `Pmax должен быть выше ПДКВ хотя бы на ${PMAX_PEEP_MARGIN} см вод. ст. — иначе ДО не будет доставлен.`,
+    );
   }
 
   // I:E по возможностям аппарата; инверсия — риск ауто-ПДКВ
@@ -550,7 +578,7 @@ export function computeIvl(s) {
   }
   if (caps.childLimits) {
     warnings.push(
-      `Ребёнок до 7 лет: детские пределы аппарата (Pmax ${caps.pmaxMin}–${caps.pmaxMax}, МОД ${fmt(caps.veMin)}–${fmt(caps.veMax)} л/мин).`
+      `Ребёнок до 7 лет: детские пределы аппарата (Pmax ${caps.pmaxMin}–${caps.pmaxMax}, МОД ${fmt(caps.veMin)}–${fmt(caps.veMax)} л/мин).`,
     );
   }
 
@@ -582,7 +610,10 @@ export function computeIvl(s) {
       pmax: pmaxTone,
       ie: ieTone,
       fio2: fio2Tone,
-      mass: (massBasis === 'actual' && s.group === 'adult') || childOverweight || teenActual ? 'bad' : 'default',
+      mass:
+        (massBasis === 'actual' && s.group === 'adult') || childOverweight || teenActual
+          ? 'bad'
+          : 'default',
     },
     setting,
     warnings,
