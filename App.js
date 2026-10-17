@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 // Масштабирование шрифтов задаётся в components/AppText.js: экраны импортируют
 // Text и TextInput оттуда (Text.defaultProps в React 19 не работает).
+import { ThemeProvider, useTheme, makeNavigationTheme } from './theme/index';
+import { PatientProvider } from './patient/PatientContext';
 import ButtonApp from './main_screen/button_app';
 import WelcomeScreen from './js_button_preparation/calculate_button';
 import Tabnav from './button_two/navigate_button/TabnavTube';
@@ -22,105 +25,72 @@ import GCScreen from './glazgo/glazgo';
 import GenevaScoreScreen from './Tela/tela';
 import SHOKSScreen from './shoks/shoks';
 import NorepinephrineScreen from './Norepinephrine/NorepinephrineScreen';
+import NewsScreen from './news/NewsScreen';
+import ApgarScreen from './apgar/ApgarScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
+
+// Имена маршрутов не менять: на них ссылаются экраны (navigation.navigate).
+// Заголовки — короткие и без эмодзи: длинные обрезаются в нативной шапке.
+const ROUTES = [
+  { name: 'Расчет лекарств', component: WelcomeScreen, title: 'Расчёт препаратов' },
+  { name: 'Tabnav', component: Tabnav, title: 'Интубация' },
+  { name: 'CalcShockIndexScreen', component: CalcShockIndexScreen, title: 'Шоковый индекс' },
+  { name: 'Date_pregnancy', component: Date_pregnancy, title: 'Срок беременности' },
+  { name: 'Tabnav_oxy', component: Tabnav_oxy, title: 'Кислород' },
+  { name: 'Calc_max_time_o2', component: Calc_max_time_o2, title: 'Время работы баллона' },
+  { name: 'Calc_dorbinyn', component: Calc_dorbinyn, title: 'Минутный объём дыхания' },
+  { name: 'Calc_aparat_IVL', component: Calc_aparat_IVL, title: 'Настройка ИВЛ' },
+  { name: 'IntubationTubeCalculation', component: IntubationTubeCalculation, title: 'Эндотрахеальная трубка' },
+  { name: 'Button_Tube_Calculation', component: LaryngealTubeCalculation, title: 'Ларингеальная трубка' },
+  { name: 'MKBScreen', component: ICDSearchScreen, title: 'МКБ-10' },
+  { name: 'PediatricNormsScreen', component: PediatricNormsScreen, title: 'Нормы в педиатрии' },
+  { name: 'BloodGroupScreen', component: BloodGroupScreen, title: 'Группа крови' },
+  { name: 'GCScreen', component: GCScreen, title: 'Шкала Глазго' },
+  { name: 'GenevaScoreScreen', component: GenevaScoreScreen, title: 'Вероятность ТЭЛА' },
+  { name: 'SHOKSScreen', component: SHOKSScreen, title: 'Шкала ШОКС' },
+  { name: 'NorepinephrineScreen', component: NorepinephrineScreen, title: 'Норадреналин' },
+  { name: 'NewsScreen', component: NewsScreen, title: 'NEWS2' },
+  { name: 'ApgarScreen', component: ApgarScreen, title: 'Шкала Апгар' },
+];
+
+function AppNavigator() {
+  const theme = useTheme();
+  const { colors, isDark } = theme;
+  const navigationTheme = useMemo(() => makeNavigationTheme(theme), [theme]);
+  const screenOptions = useMemo(
+    () => ({
+      headerStyle: { backgroundColor: colors.surface },
+      headerTintColor: colors.primary,
+      headerTitleStyle: { color: colors.text },
+      headerBackButtonDisplayMode: 'minimal',
+      contentStyle: { backgroundColor: colors.bg },
+    }),
+    [colors]
+  );
+
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      {/* Единственный StatusBar приложения: экраны свой не рисуют */}
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
+        <Stack.Screen name="Home" component={ButtonApp} options={{ headerShown: false }} />
+        {ROUTES.map(({ name, component, title }) => (
+          <Stack.Screen key={name} name={name} component={component} options={{ title }} />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="dark" />
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen
-          name="Home"
-          component={ButtonApp}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Расчет лекарств"
-          component={WelcomeScreen}
-          options={{ title: 'Расчет дозировок препаратов' }}
-        />
-        <Stack.Screen
-          name="Tabnav"
-          component={Tabnav}
-          options={{ title: 'Расчеты интубации' }}
-        />
-        <Stack.Screen
-          name="CalcShockIndexScreen"
-          component={CalcShockIndexScreen}
-          options={{ title: 'Шоковый индекс' }}
-        />
-        <Stack.Screen
-          name="Date_pregnancy"
-          component={Date_pregnancy}
-          options={{ title: 'Калькулятор беременности' }}
-        />
-        <Stack.Screen
-          name="Tabnav_oxy"
-          component={Tabnav_oxy}
-          options={{ title: 'Кислородные расчеты' }}
-        />
-        <Stack.Screen
-          name="Calc_max_time_o2"
-          component={Calc_max_time_o2}
-          options={{ title: '⏱️ Время работы кислородного баллона' }}
-        />
-        <Stack.Screen
-          name="Calc_dorbinyn"
-          component={Calc_dorbinyn}
-          options={{ title: '📊 Минутный объем дыхания' }}
-        />
-        <Stack.Screen
-          name="Calc_aparat_IVL"
-          component={Calc_aparat_IVL}
-          options={{ title: '🏥 Настройка аппарата ИВЛ' }}
-        />
-        <Stack.Screen
-          name="IntubationTubeCalculation"
-          component={IntubationTubeCalculation}
-          options={{ title: '🫁 Расчет размера эндотрахеальной трубки' }}
-        />
-        <Stack.Screen
-          name="Button_Tube_Calculation"
-          component={LaryngealTubeCalculation}
-          options={{ title: '🫁 Подбор ларингеальной трубки' }}
-        />
-        <Stack.Screen
-          name="MKBScreen"
-          component={ICDSearchScreen}
-          options={{ title: '📋 МКБ-10 — Международная классификация болезней' }}
-        />
-        <Stack.Screen
-          name="PediatricNormsScreen"
-          component={PediatricNormsScreen}
-          options={{ title: '👶 Физиологические нормы в педиатрии' }}
-        />
-        <Stack.Screen
-          name="BloodGroupScreen"
-          component={BloodGroupScreen}
-          options={{ title: '🩸 Определение группы крови' }}
-        />
-        <Stack.Screen
-          name="GCScreen"
-          component={GCScreen}
-          options={{ title: '🧠 Шкала комы Глазго' }}
-        />
-        <Stack.Screen
-          name="GenevaScoreScreen"
-          component={GenevaScoreScreen}
-          options={{ title: '🫁 Шкала вероятности ТЭЛА' }}
-        />
-        <Stack.Screen
-          name="SHOKSScreen"
-          component={SHOKSScreen}
-          options={{ title: '❤️ Шкала ШОКС' }}
-        />
-        <Stack.Screen
-          name="NorepinephrineScreen"
-          component={NorepinephrineScreen}
-          options={{ title: '💉 Норадреналин' }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <PatientProvider>
+          <AppNavigator />
+        </PatientProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
