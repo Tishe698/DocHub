@@ -11,7 +11,7 @@ const limitsOf = (f, clean) => (typeof f.limits === 'function' ? f.limits(clean)
 const close = (a, b) => expect(a).toBeCloseTo(b, 6);
 
 const epi = byName('Адреналин (эпинефрин) — СЛР');
-const epiAna = byName('Эпинефрин (адреналин) — анафилаксия');
+const epiAna = byName('Адреналин (эпинефрин) — анафилаксия');
 const atropine = byName('Атропин');
 const amio = byName('Кордарон (амиодарон)');
 const verapamil = byName('Изоптин (верапамил)');
@@ -25,7 +25,7 @@ const NO_AGE = { age: { years: '', months: '' } };
 describe('контракт записей группы', () => {
   test('восемь записей: эпинефрин — СЛР и анафилаксия отдельно', () => {
     expect(group).toHaveLength(8);
-    expect(group.filter((f) => f.name.startsWith('Эпинефрин')).map((f) => f.name)).toEqual([
+    expect(group.filter((f) => f.name.startsWith('Адреналин')).map((f) => f.name)).toEqual([
       'Адреналин (эпинефрин) — СЛР',
       'Адреналин (эпинефрин) — анафилаксия в/м',
     ]);

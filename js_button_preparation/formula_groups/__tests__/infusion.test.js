@@ -3,7 +3,7 @@ import { isChoiceInput, ROUTES } from '../../routes';
 import { computeResult } from '../../engine';
 
 const byName = (start) => {
-  const found = group.filter((f) => f.name.startsWith(start));
+  const found = group.filter((f) => f.name.toLowerCase().includes(start.toLowerCase()));
   if (found.length !== 1)
     throw new Error(`Ожидалась одна запись «${start}», найдено ${found.length}`);
   return found[0];
