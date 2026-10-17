@@ -190,8 +190,13 @@ formula: ({ weight, route, indication }) => …          // route === 'iv'
 умолчанию вне вариантов — исключение при загрузке модуля (ловится тестами группы). Путь, для
 которого у препарата нет утверждённой дозы, не предлагается.
 
-Новые группы препаратов: `formula_groups/analgesics_steroids.js`,
-`formula_groups/cardio_endocrine_misc.js` (зарегистрированы в конце `formulas.js`).
+Группы, добавленные после исходного списка, регистрируются в конце `formulas.js` в таком порядке:
+`analgesics_steroids.js`, `cardio_endocrine_misc.js`, `thrombolytics_antiplatelets.js`,
+`antiarrhythmics_vasopressors.js`, `bronchodilators_rsi.js`, `electrolytes_solutions.js`,
+`antidotes_local_analgesia.js`, затем вторая очередь — `antimicrobials_antihistamines.js`,
+`neuro_cardio_volume.js`, `nebulized_pediatrics.js`. Синонимы-показания («судороги», «круп»,
+«менингит») есть и у препаратов первой линии (словарь `SYNONYMS` в `engine.js`): при равном
+балле поиска выше та запись, что раньше в списке.
 
 ## 7. Тесты и линтер
 
