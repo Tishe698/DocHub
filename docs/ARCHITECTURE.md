@@ -10,6 +10,7 @@ UI-компоненты, общий пациент, пути введения в
 | --- | --- |
 | `palette.js` | `palette.light` и `palette.dark` — семантические цвета с одинаковыми ключами |
 | `broselow.js` | физические цвета зон ленты Broselow: `{ bg, text, border }`, одинаковы в обеих темах |
+| `bloodDrop.js` | физические цвета рисунка капли на экране группы крови (кровь, плазма, хлопья, блик), одинаковы в обеих темах |
 | `tokens.js` | `spacing`, `radius`, `typography`, `fontScaling`, `MIN_TOUCH` |
 | `ThemeProvider.js` | провайдер темы и режима `system / light / dark` |
 | `index.js` | публичный API |
