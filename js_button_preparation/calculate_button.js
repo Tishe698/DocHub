@@ -325,9 +325,10 @@ const WelcomeScreen = () => {
     const yearsOnly = 'ageYears' in inputsMap && !('ageMonths' in inputsMap);
     return (
       <View key="age" style={styles.block}>
+        {/* Короткие подписи, как в карточке пациента: обе в одну строку, поля стоят ровно */}
         <View style={styles.ageRow}>
           <NumberField
-            label="Возраст, полных лет"
+            label="Возраст"
             unit="лет"
             value={age.years.text}
             onChangeText={age.years.onChangeText}
@@ -335,7 +336,7 @@ const WelcomeScreen = () => {
             style={styles.ageField}
           />
           <NumberField
-            label="и месяцев"
+            label="Месяцы"
             unit="мес"
             value={age.months.text}
             onChangeText={age.months.onChangeText}
