@@ -16,6 +16,7 @@ import { formatAge } from '../patient/estimates';
 import { useTheme, useThemedStyles, MIN_TOUCH } from '../theme/index';
 import { inputLabel } from './routes';
 import formulas from './formulas';
+import { findAbbreviations, formulaTexts } from './abbreviations';
 import {
   asChoiceInput,
   buildCopyText,
@@ -51,6 +52,36 @@ const weightBadgeOf = (patient, derived) =>
       ? 'оценка: Broselow'
       : 'оценка: по возрасту'
     : null;
+
+/** ------------------------------ Расшифровка сокращений ------------------------------ **/
+// Свёрнутый блок под предупреждениями: только сокращения, которые встречаются в этой записи
+// (а после расчёта — и в результатах). Словарь — ./abbreviations.js.
+function AbbreviationsBlock({ texts }) {
+  const [open, setOpen] = useState(false);
+  const list = useMemo(() => findAbbreviations(texts), [texts]);
+  if (!list.length) return null;
+  return (
+    <View>
+      <Button
+        title={open ? 'Скрыть расшифровку сокращений' : `Расшифровка сокращений (${list.length})`}
+        variant="ghost"
+        icon={open ? 'chevron-up' : 'book-outline'}
+        onPress={() => setOpen((v) => !v)}
+        accessibilityHint={open ? 'Свернуть список' : 'Показать, что означают сокращения в тексте'}
+      />
+      {open ? (
+        <Note level="info" title="Сокращения">
+          {list.map(({ abbr, full }) => (
+            <Text key={abbr} variant="body">
+              <Text variant="bodyStrong">{abbr}</Text>
+              {` — ${full}`}
+            </Text>
+          ))}
+        </Note>
+      ) : null}
+    </View>
+  );
+}
 
 /** ------------------------------ Подсветка найденного ------------------------------ **/
 function Highlighted({ text, term, variant, color, style }) {
@@ -202,6 +233,18 @@ const WelcomeScreen = () => {
   // не должна остаться на экране и в буфере)
   const sig = selected ? JSON.stringify([selected.name, rawInputs, ageTexts, weightNote]) : '';
   const shownResults = results && results.sig === sig ? results : null;
+
+  // Тексты для расшифровки сокращений: поля записи, а после расчёта — строки и примечания результата
+  const abbreviationTexts = useMemo(() => {
+    if (!selected) return [];
+    const texts = formulaTexts(selected);
+    if (shownResults) {
+      (shownResults.items || []).forEach((item) => texts.push(item.name, item.text));
+      (shownResults.notes || []).forEach((n) => texts.push(n));
+      if (shownResults.message) texts.push(shownResults.message);
+    }
+    return texts.filter((t) => typeof t === 'string');
+  }, [selected, shownResults]);
 
   const openFormula = (formula) => {
     setSelected(formula);
@@ -523,6 +566,8 @@ const WelcomeScreen = () => {
             ))}
           </Note>
         ) : null}
+
+        <AbbreviationsBlock key={selected.name} texts={abbreviationTexts} />
 
         {renderFields()}
 

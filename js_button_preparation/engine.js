@@ -239,7 +239,7 @@ export const ageWeightWarning = (clean, inputsMap, ageMonths) => {
   if (ratio <= 2 && (months < 12 || ratio >= 0.4)) return null;
   const ageText =
     months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : `${Math.floor(months / 12)} лет`;
-  return `Вес ${ru(clean.weight)} кг необычен для возраста ${ageText} (ожидаемо около ${ru(Math.round(exp))} кг по APLS). Проверьте ввод — нет ли ошибки в разряде.`;
+  return `Вес ${ru(clean.weight)} кг необычен для возраста ${ageText} (ожидаемо около ${ru(Math.round(exp))} кг по возрастной формуле). Проверьте ввод — нет ли ошибки в разряде.`;
 };
 
 // Проверка всех полей записи: { ok, errors, clean, notes, choices, ageMonths }.
