@@ -13,10 +13,10 @@ describe('группа токсикологии: структура', () => {
   it('содержит все записи в прежнем порядке', () => {
     expect(group.map((g) => g.name)).toEqual([
       'Активированный уголь',
-      'Ацетилцистеин',
-      'Диазепам',
-      'Мидазолам',
-      'Флумазенил',
+      'АЦЦ (ацетилцистеин)',
+      'Реланиум (диазепам)',
+      'Дормикум (мидазолам)',
+      'Анексат (флумазенил)',
     ]);
   });
 
@@ -42,20 +42,20 @@ describe('группа токсикологии: структура', () => {
           expect(c.choices.some((x) => x.value === c.default)).toBe(true);
         });
     });
-    const mid = byName('Мидазолам').inputs.route;
+    const mid = byName('Дормикум (мидазолам)').inputs.route;
     expect(mid.choices.map((c) => c.value)).toEqual(['im', 'iv', 'buccal', 'in']);
     mid.choices.forEach((c) => expect(c.label).toBe(ROUTES[c.value]));
     expect(mid.default).toBe('im');
-    const flu = byName('Флумазенил').inputs.indication;
+    const flu = byName('Анексат (флумазенил)').inputs.indication;
     expect(flu.choices.map((c) => c.value)).toEqual(['overdose', 'anesthesia']);
     expect(flu.default).toBe('overdose');
   });
 
   it('у препаратов с одним путём путь указан в подписи результата', () => {
     expect(byName('Активированный уголь').labels.result1).toMatch(/внутрь/);
-    expect(byName('Ацетилцистеин').labels.result1).toMatch(/в\/в/);
-    expect(byName('Диазепам').labels.result1).toMatch(/в\/в/);
-    expect(byName('Флумазенил').labels.result1).toMatch(/в\/в/);
+    expect(byName('АЦЦ (ацетилцистеин)').labels.result1).toMatch(/в\/в/);
+    expect(byName('Реланиум (диазепам)').labels.result1).toMatch(/в\/в/);
+    expect(byName('Анексат (флумазенил)').labels.result1).toMatch(/в\/в/);
   });
 });
 
@@ -102,8 +102,8 @@ describe('Активированный уголь', () => {
   });
 });
 
-describe('Ацетилцистеин', () => {
-  const f = byName('Ацетилцистеин');
+describe('АЦЦ (ацетилцистеин)', () => {
+  const f = byName('АЦЦ (ацетилцистеин)');
 
   it('ребёнок 20 кг: 3000 мг = 30 мл, растворитель по мл/кг', () => {
     const r = f.formula({ weight: 20 });
@@ -148,7 +148,7 @@ describe('Ацетилцистеин', () => {
 });
 
 describe('Диазепам (в/в)', () => {
-  const f = byName('Диазепам');
+  const f = byName('Реланиум (диазепам)');
 
   it('ребёнок 5 лет 20 кг: 0.2 мг/кг = 4 мг = 0.8 мл (максимум 10 мг)', () => {
     const r = f.formula({ weight: 20, ageYears: 5 });
@@ -202,8 +202,8 @@ describe('Диазепам (в/в)', () => {
   });
 });
 
-describe('Мидазолам', () => {
-  const f = byName('Мидазолам');
+describe('Дормикум (мидазолам)', () => {
+  const f = byName('Дормикум (мидазолам)');
 
   it('по умолчанию (путь не передан) — в/м', () => {
     const r = f.formula({ weight: 20, ageYears: 5 });
@@ -328,8 +328,8 @@ describe('Мидазолам', () => {
   });
 });
 
-describe('Флумазенил', () => {
-  const f = byName('Флумазенил');
+describe('Анексат (флумазенил)', () => {
+  const f = byName('Анексат (флумазенил)');
 
   it('взрослый, отравление (по умолчанию): 0.3 мг = 3 мл, суммарно до 2 мг', () => {
     const r = f.formula({ weight: 70, ageYears: 30 });

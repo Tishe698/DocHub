@@ -3,18 +3,18 @@ import { isChoiceInput, ROUTES } from '../../routes';
 import { computeResult, buildCopyText } from '../../engine';
 
 const byName = (start) => {
-  const f = group.find((x) => x.name.startsWith(start));
+  const f = group.find((x) => x.name.toLowerCase().includes(start.toLowerCase()));
   if (!f) throw new Error(`нет записи «${start}»`);
   return f;
 };
 const limitsOf = (f, clean) => (typeof f.limits === 'function' ? f.limits(clean) : f.limits || {});
 const close = (a, b) => expect(a).toBeCloseTo(b, 6);
 
-const epi = byName('Эпинефрин (адреналин) — СЛР');
+const epi = byName('Адреналин (эпинефрин) — СЛР');
 const epiAna = byName('Эпинефрин (адреналин) — анафилаксия');
 const atropine = byName('Атропин');
-const amio = byName('Амиодарон');
-const verapamil = byName('Верапамил');
+const amio = byName('Кордарон (амиодарон)');
+const verapamil = byName('Изоптин (верапамил)');
 const norepi = byName('Норэпинефрин');
 const dobutamine = byName('Добутамин');
 const dopamine = byName('Допамин');
@@ -26,8 +26,8 @@ describe('контракт записей группы', () => {
   test('восемь записей: эпинефрин — СЛР и анафилаксия отдельно', () => {
     expect(group).toHaveLength(8);
     expect(group.filter((f) => f.name.startsWith('Эпинефрин')).map((f) => f.name)).toEqual([
-      'Эпинефрин (адреналин) — СЛР',
-      'Эпинефрин (адреналин) — анафилаксия в/м',
+      'Адреналин (эпинефрин) — СЛР',
+      'Адреналин (эпинефрин) — анафилаксия в/м',
     ]);
   });
 
@@ -310,7 +310,7 @@ describe('Атропин', () => {
   });
 });
 
-describe('Амиодарон', () => {
+describe('Кордарон (амиодарон)', () => {
   const run = (weight, indication = 'cpr-iv') => amio.formula({ indication, weight });
 
   test('СЛР, ребёнок 20 кг: 5 мг/кг', () => {
@@ -379,7 +379,7 @@ describe('Амиодарон', () => {
   });
 });
 
-describe('Верапамил', () => {
+describe('Изоптин (верапамил)', () => {
   const run = (weight, ageYears) => verapamil.formula({ weight, ageYears });
 
   test('ребёнок 20 кг, 5 лет: 0,1 мг/кг', () => {

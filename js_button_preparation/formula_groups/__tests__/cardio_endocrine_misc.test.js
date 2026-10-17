@@ -3,7 +3,7 @@ import { isChoiceInput, ROUTES } from '../../routes';
 import { computeResult, buildCopyText, searchFormulas } from '../../engine';
 
 const byName = (start) => {
-  const f = group.find((x) => x.name.startsWith(start));
+  const f = group.find((x) => x.name.toLowerCase().includes(start.toLowerCase()));
   if (!f) throw new Error(`нет записи «${start}»`);
   return f;
 };
@@ -23,8 +23,8 @@ describe('контракт записей группы', () => {
   test('семь препаратов в порядке спецификации', () => {
     expect(group.map((f) => f.name)).toEqual([
       'Лидокаин',
-      'Натрия аденозинтрифосфат (АТФ)',
-      'Ацетилсалициловая кислота — ОКС',
+      'АТФ (натрия аденозинтрифосфат)',
+      'Аспирин (ацетилсалициловая кислота) — ОКС',
       'Фуросемид',
       'Инсулин короткого действия — ДКА (в/в инфузия)',
       'Глюкагон — тяжёлая гипогликемия',
@@ -235,7 +235,7 @@ describe('Натрия аденозинтрифосфат', () => {
   });
 });
 
-describe('Ацетилсалициловая кислота — ОКС', () => {
+describe('Аспирин (ацетилсалициловая кислота) — ОКС', () => {
   test('500 мг: ½ таблетки = 250 мг', () => {
     const r = asa.formula({ tablet: '500', ageYears: 55 });
     expect(r.result1).toBe(250);
