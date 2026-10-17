@@ -11,12 +11,123 @@ import {
   StyleSheet,
   Keyboard,
   TouchableWithoutFeedback,
+  AppState,
 } from "react-native";
 import { Text, TextInput } from "../components/AppText";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+
+// ---------------------- Расчёт срока (чистые функции) ----------------------
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+// Пороги в днях от первого дня последней менструации (ДПМ).
+// ПДР = ДПМ + 280 дней (40 нед) — КР МЗ РФ «Нормальная беременность» 2023 (ID 288), раздел определения сроков.
+const DAYS_TO_DUE = 280;
+// 22⁰ нед: с этого срока прерывание — роды (преждевременные), до него — выкидыш.
+// КР МЗ РФ «Преждевременные роды» 2024 (ID 331), «Термины и определения»: 22⁰–36⁶ нед.
+const DAYS_22W = 22 * 7;
+// 37⁰–41⁶ нед — доношенный срок: КР МЗ РФ «Нормальная беременность» 2023 (ID 288), определение.
+const DAYS_37W = 37 * 7;
+// ≥42⁰ нед (294 дня) — переношенная беременность: МКБ-10 O48, определение ВОЗ.
+const DAYS_42W = 42 * 7;
+// Больше 45⁰ нед по ДПМ беременность не продолжается — почти наверняка ошибка в дате (год).
+// Предел консервативный, введён для защиты от опечаток (логика задачи, не норматив).
+const DAYS_MAX = 45 * 7;
+
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+const sameDay = (a, b) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+// Считаем в календарных днях, а не в миллисекундах: при переходе на летнее/зимнее
+// время в сутках 23 или 25 часов, и расчёт через мс сдвигал результат на день.
+const daysBetween = (from, to) => Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY);
+
+const calcPregnancy = (lmpDate, todayDate) => {
+  const lmp = startOfDay(lmpDate);
+  const daysSinceLMP = daysBetween(lmp, todayDate);
+  // Срок записывается полными неделями и днями (N нед M дн, 37⁰–41⁶) —
+  // КР МЗ РФ «Нормальная беременность» 2023 (ID 288).
+  const weeks = Math.floor(daysSinceLMP / 7);
+  const days = daysSinceLMP % 7;
+  const due = new Date(lmp.getFullYear(), lmp.getMonth(), lmp.getDate() + DAYS_TO_DUE);
+  const daysToDue = daysBetween(todayDate, due);
+  let category;
+  if (daysSinceLMP < DAYS_22W) category = "early";
+  else if (daysSinceLMP < DAYS_37W) category = "preterm";
+  else if (daysSinceLMP < DAYS_42W) category = "term";
+  else category = "postterm";
+  return { daysSinceLMP, weeks, days, due, daysToDue, category, tooLong: daysSinceLMP > DAYS_MAX };
+};
+
+// Маска дд.мм.гггг. Понимает ввод и вставку с разделителями «. , / - пробел» без ведущих нулей
+// («3.5.2026» → «03.05.2026») и ISO «гггг-мм-дд». Цифр не больше 8 — лишние отбрасываются.
+const formatInputDate = (value) => {
+  const raw = String(value ?? "");
+  const iso = raw.trim().match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+  if (iso) return `${iso[3].padStart(2, "0")}.${iso[2].padStart(2, "0")}.${iso[1]}`;
+  const segs = [""];
+  for (const ch of raw) {
+    const i = segs.length - 1;
+    if (ch >= "0" && ch <= "9") {
+      const maxLen = i < 2 ? 2 : 4;
+      if (segs[i].length < maxLen) segs[i] += ch;
+      else if (i < 2) segs.push(ch);
+      // год уже 4 цифры — лишние цифры игнорируем
+    } else if (/[.,/\-\s]/.test(ch)) {
+      if (i < 2 && segs[i].length > 0) {
+        segs[i] = segs[i].padStart(2, "0");
+        segs.push("");
+      }
+    }
+  }
+  return segs.join(".");
+};
+
+// Возвращает { date } или { error } с причиной для пользователя.
+const parseDDMMYYYY = (s, todayDate) => {
+  const m = String(s).match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!m) return { error: "Проверьте дату в формате дд.мм.гггг." };
+  const dd = Number(m[1]);
+  const mm = Number(m[2]);
+  const yyyy = Number(m[3]);
+  const d = new Date(yyyy, mm - 1, dd);
+  // new Date молча «переносит» несуществующие даты (31.02 → 03.03, 99.99 → через годы),
+  // а годы 0–99 превращает в 1900–1999 — такие даты отклоняем.
+  if (isNaN(d.getTime()) || d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) {
+    return { error: "Такой даты нет. Проверьте дату в формате дд.мм.гггг." };
+  }
+  const diff = daysBetween(d, todayDate);
+  // Дата последней менструации не может быть в будущем (как и в календаре: maximumDate)
+  if (diff < 0) return { error: "Дата не может быть позже сегодняшней." };
+  if (diff > DAYS_MAX) return { error: "Срок по этой дате больше 45 недель. Проверьте дату, особенно год." };
+  return { date: d };
+};
+
+const formatShortDate = (d) =>
+  `${String(d.getDate()).padStart(2, "0")}.${String(d.getMonth() + 1).padStart(2, "0")}.${d.getFullYear()}`;
+
+const formatRussianDate = (date) => {
+  try {
+    return new Intl.DateTimeFormat("ru-RU", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(date);
+  } catch {
+    return formatShortDate(date);
+  }
+};
+
+// Строка о сроке относительно порогов (короткая, для экрана СМП).
+const CATEGORY_TEXT = {
+  early: "До 22⁰ нед: прерывание — выкидыш, не роды",
+  preterm: "22⁰–36⁶ нед: роды в этом сроке — преждевременные (КР 2024)",
+  term: "37⁰–41⁶ нед: доношенный срок",
+  postterm: "≥42⁰ нед: переношенная беременность",
+};
 
 const Date_pregnancy = () => {
   const videoRef = useRef(null);
@@ -39,9 +150,12 @@ const Date_pregnancy = () => {
   const [lastMenstrualPeriod, setLastMenstrualPeriod] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [manualDateInput, setManualDateInput] = useState("");
-  const [week, setWeek] = useState(null);
-  const [dueDate, setDueDate] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  // iOS: колесо вызывает onChange на каждое движение, поэтому выбор храним временно
+  // и применяем только по кнопке «Готово».
+  const [pickerDate, setPickerDate] = useState(() => new Date());
+  // «Сегодня» как состояние: срок пересчитывается после полуночи и при возврате в приложение.
+  const [today, setToday] = useState(() => startOfDay(new Date()));
 
   // ---------------------- Анимации ----------------------
   const fadeCards = useRef(new Animated.Value(0)).current;
@@ -71,68 +185,50 @@ const Date_pregnancy = () => {
     ]).start();
   }, []);
 
-  // ---------------------- Вычисления срока ----------------------
+  // ---------------------- Актуальная дата ----------------------
   useEffect(() => {
-    if (!lastMenstrualPeriod) {
-      setWeek(null);
-      setDueDate(null);
-      return;
-    }
-    // Считаем в календарных днях, а не в миллисекундах: при переходе на летнее/зимнее
-    // время в сутках 23 или 25 часов, и расчёт через мс сдвигал результат на день.
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const lmp = new Date(
-      lastMenstrualPeriod.getFullYear(),
-      lastMenstrualPeriod.getMonth(),
-      lastMenstrualPeriod.getDate()
-    );
-    const daysSinceLMP = Math.round((today.getTime() - lmp.getTime()) / (1000 * 60 * 60 * 24));
-    const calculatedWeek = Math.floor(daysSinceLMP / 7);
-    setWeek(calculatedWeek);
-    const due = new Date(lmp.getFullYear(), lmp.getMonth(), lmp.getDate() + 40 * 7);
-    setDueDate(due);
-  }, [lastMenstrualPeriod]);
+    const refresh = () => {
+      const now = startOfDay(new Date());
+      setToday((prev) => (sameDay(prev, now) ? prev : now));
+    };
+    let timer;
+    const schedule = () => {
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+      timer = setTimeout(() => {
+        refresh();
+        schedule();
+      }, nextMidnight.getTime() - now.getTime());
+    };
+    schedule();
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        refresh();
+        clearTimeout(timer);
+        schedule();
+      }
+    });
+    return () => {
+      clearTimeout(timer);
+      sub?.remove?.();
+    };
+  }, []);
 
-  // ---------------------- Хелперы ----------------------
-  const formatRussianDate = (date) => {
-    try {
-      return new Intl.DateTimeFormat("ru-RU", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).format(date);
-    } catch {
-      const dd = String(date.getDate()).padStart(2, "0");
-      const mm = String(date.getMonth() + 1).padStart(2, "0");
-      const yyyy = date.getFullYear();
-      return `${dd}.${mm}.${yyyy}`;
-    }
-  };
+  // ---------------------- Вычисления срока ----------------------
+  const result = useMemo(
+    () => (lastMenstrualPeriod ? calcPregnancy(lastMenstrualPeriod, today) : null),
+    [lastMenstrualPeriod, today]
+  );
 
-  const formatInputDate = (value) => {
-    if (value.length <= 10) {
-      let f = value.replace(/\D/g, "");
-      if (f.length > 2) f = `${f.slice(0, 2)}.${f.slice(2)}`;
-      if (f.length > 5) f = `${f.slice(0, 5)}.${f.slice(5)}`;
-      return f;
-    }
-    return value.substring(0, 10);
-  };
-
-  const parseDDMMYYYY = (s) => {
-    const parts = s.split(".").map((n) => Number(n));
-    if (parts.length !== 3) return null;
-    const [dd, mm, yyyy] = parts;
-    const d = new Date(yyyy, mm - 1, dd);
-    if (isNaN(d.getTime())) return null;
-    // new Date молча «переносит» несуществующие даты (31.02 → 03.03, 99.99 → через годы),
-    // а годы 0–99 превращает в 1900–1999 — такие даты отклоняем.
-    if (d.getFullYear() !== yyyy || d.getMonth() !== mm - 1 || d.getDate() !== dd) return null;
-    // Дата последней менструации не может быть в будущем (как и в календаре: maximumDate)
-    if (d > new Date()) return null;
-    return d;
-  };
+  // Календарь: не раньше 45⁰ нед назад (см. DAYS_MAX) и не позже сегодня.
+  const minPickerDate = useMemo(
+    () => new Date(today.getFullYear(), today.getMonth(), today.getDate() - DAYS_MAX),
+    [today]
+  );
+  const maxPickerDate = useMemo(
+    () => new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59),
+    [today]
+  );
 
   // ---------------------- Обработчики ----------------------
   const handleManualDateChange = (text) => {
@@ -140,39 +236,58 @@ const Date_pregnancy = () => {
     setManualDateInput(f);
     setIsTyping(!!text);
     if (f.length === 10) {
-      const selectedDate = parseDDMMYYYY(f);
-      if (!selectedDate) {
-        Alert.alert("Некорректная дата", "Проверьте дату в формате дд.мм.гггг. Дата не может быть позже сегодняшней.");
+      const parsed = parseDDMMYYYY(f, today);
+      if (!parsed.date) {
+        Alert.alert("Некорректная дата", parsed.error);
         return;
       }
-      setLastMenstrualPeriod(selectedDate);
+      setLastMenstrualPeriod(parsed.date);
       Keyboard.dismiss();
     }
   };
 
+  const applyPickedDate = (selectedDate) => {
+    if (!selectedDate) return;
+    const d = startOfDay(selectedDate);
+    setLastMenstrualPeriod(d);
+    setManualDateInput(formatShortDate(d));
+  };
+
+  const openDatePicker = () => {
+    Keyboard.dismiss();
+    setPickerDate(lastMenstrualPeriod || new Date());
+    setShowDatePicker(true);
+  };
+
   const handleDateChange = (event, selectedDate) => {
+    if (Platform.OS === "ios") {
+      // На iOS spinner шлёт onChange (type: "set") на каждое движение колеса —
+      // только запоминаем, применяем по «Готово».
+      if (selectedDate) setPickerDate(selectedDate);
+      return;
+    }
     setShowDatePicker(false);
     // На Android «Отмена» тоже вызывает onChange (type: "dismissed") с исходной датой
     // (сегодняшней) — её не применяем, иначе запускался расчёт от сегодняшнего дня.
     if (event?.type !== "set") return;
-    if (selectedDate) {
-      setLastMenstrualPeriod(selectedDate);
-      setManualDateInput(
-        `${String(selectedDate.getDate()).padStart(2, "0")}.${String(selectedDate.getMonth() + 1).padStart(2, "0")}.${selectedDate.getFullYear()}`
-      );
-    }
+    applyPickedDate(selectedDate);
   };
+
+  const handlePickerDone = () => {
+    setShowDatePicker(false);
+    applyPickedDate(pickerDate);
+  };
+
+  const handlePickerCancel = () => setShowDatePicker(false);
 
   const handleRecalculate = () => {
     setLastMenstrualPeriod(null);
     setManualDateInput("");
     setIsTyping(false);
+    setShowDatePicker(false);
   };
 
-  const titleToday = useMemo(() => {
-    const d = new Date();
-    return new Intl.DateTimeFormat("ru-RU", { year: "numeric", month: "long", day: "numeric" }).format(d);
-  }, []);
+  const titleToday = useMemo(() => formatRussianDate(today), [today]);
 
   const enterFs = () => videoRef.current?.enterFullscreen();
 
@@ -297,7 +412,7 @@ const Date_pregnancy = () => {
                   {!isTyping && (
                     <Pressable
                       style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-                      onPress={() => setShowDatePicker(true)}
+                      onPress={openDatePicker}
                       android_ripple={{ color: "#e2e8f0" }}
                       accessibilityRole="button"
                       accessibilityLabel="Открыть календарь"
@@ -310,24 +425,97 @@ const Date_pregnancy = () => {
                   {showDatePicker && (
                     <View style={{ marginTop: 8 }}>
                       <DateTimePicker
-                        value={lastMenstrualPeriod || new Date()}
+                        value={Platform.OS === "ios" ? pickerDate : lastMenstrualPeriod || new Date()}
                         mode="date"
                         display={Platform.OS === "ios" ? "spinner" : "default"}
                         onChange={handleDateChange}
-                        maximumDate={new Date()}
+                        maximumDate={maxPickerDate}
+                        minimumDate={minPickerDate}
                       />
+                      {Platform.OS === "ios" && (
+                        <View style={styles.pickerActions}>
+                          <Pressable
+                            style={({ pressed }) => [styles.pickerBtn, pressed && styles.buttonPressed]}
+                            onPress={handlePickerCancel}
+                            accessibilityRole="button"
+                            accessibilityLabel="Отмена"
+                          >
+                            <Text style={styles.pickerBtnText}>Отмена</Text>
+                          </Pressable>
+                          <Pressable
+                            style={({ pressed }) => [
+                              styles.pickerBtn,
+                              styles.pickerBtnPrimary,
+                              pressed && styles.buttonPressed,
+                            ]}
+                            onPress={handlePickerDone}
+                            accessibilityRole="button"
+                            accessibilityLabel="Готово"
+                          >
+                            <Text style={[styles.pickerBtnText, styles.pickerBtnPrimaryText]}>Готово</Text>
+                          </Pressable>
+                        </View>
+                      )}
                     </View>
                   )}
                 </View>
               </TouchableWithoutFeedback>
             ) : (
               <View>
-                <Text style={styles.result_pregnancy}>Неделя беременности: {week}</Text>
-                {dueDate && (
+                <Text style={styles.resultMeta}>
+                  ДПМ (первый день последней менструации): {formatRussianDate(lastMenstrualPeriod)}
+                </Text>
+                <Text style={styles.resultMeta}>Срок на {formatRussianDate(today)}</Text>
+
+                {result?.tooLong && (
+                  <View style={[styles.notice, styles.noticeDanger]}>
+                    <Text style={styles.noticeDangerText}>
+                      Срок больше 45 недель — почти наверняка ошибка в дате. Проверьте ДПМ, особенно год.
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={styles.result_pregnancy}>
+                  Срок беременности: {result?.weeks} нед {result?.days} дн
+                </Text>
+                <Text style={styles.resultHint}>идёт {result ? result.weeks + 1 : ""}-я неделя</Text>
+
+                {result && (
+                  <View
+                    style={[
+                      styles.notice,
+                      result.category === "postterm" || result.category === "preterm"
+                        ? styles.noticeWarn
+                        : styles.noticeInfo,
+                    ]}
+                  >
+                    <Text style={styles.noticeText}>{CATEGORY_TEXT[result.category]}</Text>
+                  </View>
+                )}
+
+                {result && (
                   <Text style={styles.result_pregnancy}>
-                    Предполагаемая дата родов: {formatRussianDate(dueDate)}
+                    Предполагаемая дата родов: {formatRussianDate(result.due)}
                   </Text>
                 )}
+                {result && result.daysToDue < 0 && (
+                  <View style={[styles.notice, styles.noticeWarn]}>
+                    <Text style={styles.noticeText}>ПДР прошла {-result.daysToDue} дн назад</Text>
+                  </View>
+                )}
+                {result && result.daysToDue === 0 && (
+                  <View style={[styles.notice, styles.noticeInfo]}>
+                    <Text style={styles.noticeText}>ПДР — сегодня</Text>
+                  </View>
+                )}
+
+                {/* КР МЗ РФ «Нормальная беременность» 2023 (ID 288): срок определяют по ДПМ и УЗИ;
+                    при расхождении в 11⁰–13⁶ нед достовернее срок по УЗИ (КТР). */}
+                <Text style={styles.resultNote}>
+                  ПДР = ДПМ + 280 дней. Срок рассчитан по ДПМ при 28-дневном цикле; при другой длине цикла
+                  он смещается. Если есть УЗИ в 11⁰–13⁶ нед, срок устанавливают по УЗИ (КТР) — сверяйтесь
+                  с обменной картой.
+                </Text>
                 <Pressable
                   style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
                   onPress={handleRecalculate}
@@ -400,6 +588,31 @@ const styles = StyleSheet.create({
   las_day_menstr: { fontSize: 19, marginVertical: 10, fontWeight: "500", textAlign: "center", color: "#0F172A" },
   las_day_menstr_1: { fontSize: 19, marginVertical: 10, fontWeight: "300", textAlign: "center", color: "#0F172A" },
   result_pregnancy: { fontSize: 25, fontWeight: "normal", marginVertical: 14, textAlign: "center", color: "#0F172A" },
+  resultMeta: { fontSize: 15, textAlign: "center", color: "#475569", marginTop: 4 },
+  resultHint: { fontSize: 16, textAlign: "center", color: "#475569", marginTop: -8, marginBottom: 6 },
+  resultNote: { fontSize: 13, lineHeight: 18, color: "#64748B", marginTop: 12, textAlign: "center" },
+
+  notice: { borderRadius: 12, borderWidth: 1, paddingVertical: 8, paddingHorizontal: 12, marginTop: 8 },
+  noticeInfo: { backgroundColor: "#F1F5F9", borderColor: "#E2E8F0" },
+  noticeWarn: { backgroundColor: "#FFFBEB", borderColor: "#FCD34D" },
+  noticeDanger: { backgroundColor: "#FEF2F2", borderColor: "#FCA5A5" },
+  noticeText: { fontSize: 15, textAlign: "center", color: "#0F172A" },
+  noticeDangerText: { fontSize: 16, fontWeight: "700", textAlign: "center", color: "#B91C1C" },
+
+  pickerActions: { flexDirection: "row", gap: 10, justifyContent: "flex-end", marginTop: 6 },
+  pickerBtn: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    paddingHorizontal: 18,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  pickerBtnPrimary: { backgroundColor: "#8B5CF6", borderColor: "#8B5CF6" },
+  pickerBtnText: { fontSize: 16, fontWeight: "600", color: "#0F172A" },
+  pickerBtnPrimaryText: { color: "#FFFFFF" },
 
   input: {
     backgroundColor: "#FFFFFF",
