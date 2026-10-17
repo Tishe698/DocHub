@@ -2,8 +2,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
@@ -11,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 
 // Подключаем офлайн JSON (массив объектов вида { "КОД": "A00", "Наименование КОДА ": "Холера" })
 let ICD_DATA;

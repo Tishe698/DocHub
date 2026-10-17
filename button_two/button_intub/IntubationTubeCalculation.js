@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Switch, TouchableOpacity, Platform, ScrollView } from 'react-native';
+import { View, Switch, TouchableOpacity, Platform, ScrollView } from 'react-native';
+import { Text, TextInput } from '../../components/AppText';
 import { calculateIntubationTubeLogic } from './CalculateIntubationTube';
 
 const Label = ({ children }) => (

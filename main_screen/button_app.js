@@ -2,7 +2,6 @@
 import React from "react";
 import {
   View,
-  Text,
   SafeAreaView,
   FlatList,
   TouchableOpacity,
@@ -13,6 +12,7 @@ import {
   Platform,
   StatusBar,
 } from "react-native";
+import { Text } from "../components/AppText";
 
 // ====== ДАННЫЕ КАРТОЧЕК (иконки остаются из твоего проекта) ======
 const CARDS = [

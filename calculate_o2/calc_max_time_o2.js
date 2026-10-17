@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
-import {View, Text, TextInput, Button, TouchableOpacity, ScrollView, SafeAreaView, StatusBar} from 'react-native';
+import {View, Button, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Alert} from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import styles from './style_oxy';
+import parseNum from '../utils/parseNum';
 const Calc_max_time_o2 = () => {
     const [volume, setVolume] = useState('');
     const [pressure, setPressure] = useState('');
@@ -9,14 +11,19 @@ const Calc_max_time_o2 = () => {
     const [result, setResult] = useState(null);
 
     const calculateTime = () => {
-        if (volume && pressure && flowRate) {
-            let pressureValue = parseFloat(pressure);
-            if (selectedUnit === 'MPa') {
-                pressureValue *= 10; // Умножаем на 10, если выбраны мегапаскали
-            }
-            const time = (parseFloat(volume) * pressureValue) / parseFloat(flowRate);
-            setResult(Math.floor(time)); // Округление до целого числа
+        const volumeValue = parseNum(volume);
+        let pressureValue = parseNum(pressure);
+        const flowValue = parseNum(flowRate);
+        if (!(volumeValue > 0) || !(pressureValue > 0) || !(flowValue > 0)) {
+            setResult(null);
+            Alert.alert('Проверьте данные', 'Объём, давление и скорость потока должны быть числами больше нуля');
+            return;
         }
+        if (selectedUnit === 'MPa') {
+            pressureValue *= 10; // Умножаем на 10, если выбраны мегапаскали
+        }
+        const time = (volumeValue * pressureValue) / flowValue;
+        setResult(Math.floor(time)); // Округление до целого числа
     };
     const resetFields = () => {
         setVolume('');
