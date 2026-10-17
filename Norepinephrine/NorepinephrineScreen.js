@@ -2,8 +2,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -11,6 +9,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 
 // --- утилиты ---
 const parseNum = (v) => {

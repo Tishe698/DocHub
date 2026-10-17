@@ -1,6 +1,7 @@
 // Calc_aparat_IVL_pretty.js
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 // --- THEME ---
@@ -88,6 +89,12 @@ const parseNum = (s) => {
   if (s === '' || s === null || s === undefined) return undefined;
   const v = parseFloat(String(s).replace(',', '.'));
   return Number.isFinite(v) ? v : undefined;
+};
+
+// I:E в виде «1:2» или «1/2» (дробные части — через точку или запятую); null, если ввод некорректен
+const parseIE = (s) => {
+  const parts = String(s).split(/[:/]/).map(parseNum);
+  return parts.length === 2 && parts.every((x) => x > 0) ? parts : null;
 };
 
 // Возможности устройств (сводно)
@@ -180,10 +187,10 @@ export default function Calc_aparat_IVL_pretty() {
   const ve = Math.round(vtL * rrN * 100) / 100;        // л/мин
 
   // Времена вдоха/выдоха из I:E
-  const [iRatio, eRatio] = (ie || '1:2').split(':').map((x) => parseFloat(x) || 1);
+  const ieParts = parseIE(ie || '1:2');
   const cycleT = rrN > 0 ? 60 / rrN : 0;
-  const inspT = Math.round((cycleT * (iRatio / (iRatio + eRatio))) * 10) / 10;
-  const expT  = Math.round((cycleT - inspT) * 10) / 10;
+  const inspT = ieParts ? Math.round((cycleT * (ieParts[0] / (ieParts[0] + ieParts[1]))) * 10) / 10 : null;
+  const expT  = ieParts ? Math.round((cycleT - inspT) * 10) / 10 : null;
 
   // Контроль диапазонов устройства
   const caps = CAPS[device];
@@ -279,8 +286,8 @@ export default function Calc_aparat_IVL_pretty() {
           <Row style={{ flexWrap: 'wrap' }}>
             <Stat label="Дых. объём (VT)" value={`${vt} мл`} tone={vtTone} />
             <Stat label="Минутная вентиляция (V̇E)" value={`${ve} л/мин`} />
-            <Stat label="Вдох" value={`${inspT} с`} />
-            <Stat label="Выдох" value={`${expT} с`} />
+            <Stat label="Вдох" value={inspT === null ? '—' : `${inspT} с`} />
+            <Stat label="Выдох" value={expT === null ? '—' : `${expT} с`} />
           </Row>
 
           <View style={{ marginTop: 10, borderTopWidth: 1, borderTopColor: theme.line, paddingTop: 10 }}>

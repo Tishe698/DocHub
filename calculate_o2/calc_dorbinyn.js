@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-import {View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, StatusBar} from 'react-native';
+import {View, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Alert} from 'react-native';
+import { Text, TextInput } from '../components/AppText';
 import styles from './style_oxy';
+import parseNum from '../utils/parseNum';
 
 const Calc_dorbinyn = () => {
     const [volume, setVolume] = useState('');
     const [result, setResult] = useState(null);
 
     const calculateTime = () => {
-        if (volume) {
-            const time = parseFloat(volume) / 10 + 1 ; // Пример формулы: умножение объема на 2
-            setResult(Math.floor(time));
+        const weightValue = parseNum(volume);
+        if (!(weightValue > 0)) {
+            setResult(null);
+            Alert.alert('Проверьте данные', 'Масса тела должна быть числом больше нуля');
+            return;
         }
+        const time = weightValue / 10 + 1; // МОВ = масса тела / 10 + 1
+        setResult(Math.floor(time));
     };
 
     const resetFields = () => {

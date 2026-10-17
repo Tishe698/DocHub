@@ -2,13 +2,13 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
+import { Text } from '../components/AppText';
 
 const Option = ({ label, active, onPress }) => (
   <TouchableOpacity

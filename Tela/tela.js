@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Switch,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Text } from '../components/AppText';
 
 /**
  * Revised Geneva Score (пересмотренная Женева):

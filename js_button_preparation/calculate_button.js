@@ -2,8 +2,6 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  Text,
-  TextInput,
   ScrollView,
   TouchableOpacity,
   useColorScheme,
@@ -12,6 +10,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { Text, TextInput } from "../components/AppText";
 import Animated, {
   FadeIn,
   FadeInUp,
@@ -26,6 +25,7 @@ import { colors, spacing, animation, borderRadius, shadows, typography } from ".
 import styles from "../css/calculate_preparation/WelcomeScreenStyles";
 import modalStyles from "../css/calculate_preparation/calculates_css";
 import formulas from "./formulas";
+import parseNum from "../utils/parseNum";
 // ✅ Правильный импорт Clipboard
 import * as Clipboard from "expo-clipboard";
 
@@ -38,19 +38,6 @@ const FONT_LIMIT = {
   body: 1.15, // обычный текст
   small: 1.1, // подписи/бейджи
   emoji: 1.0, // декоративные эмодзи не масштабируем
-};
-
-/** ============================== Хелперы ============================== **/
-// аккуратный парсер числа: поддерживает запятую и точку, но не обе сразу
-const parseNum = (v) => {
-  if (v === null || v === undefined) return undefined;
-  const s = String(v).trim();
-  if (!s) return undefined;
-  if (s.includes(",") && s.includes(".")) return undefined;
-  const normalized = s.replace(",", ".");
-  if (!/^[+-]?\d*(?:\.\d+)?$/.test(normalized)) return undefined;
-  const n = Number(normalized);
-  return Number.isFinite(n) ? n : undefined;
 };
 
 /** ============================== BottomSheet ============================== **/
@@ -349,7 +336,16 @@ const WelcomeScreen = () => {
     if (unit === "мл") return v < 1 ? `${v.toFixed(2)} ${unit}` : `${v.toFixed(1)} ${unit}`;
     if (unit === "мкг" || unit === "мг" || unit === "ЕД")
       return v < 10 ? `${v.toFixed(2)} ${unit}` : `${v.toFixed(0)} ${unit}`;
-    return String(v);
+    // Граммы и скорости инфузии: до сотых, на десятках — до десятых, чтобы не терять точность
+    if (unit === "г" || unit === "мкг/мин" || unit === "мкг/ч" || unit === "мг/ч")
+      return v < 10
+        ? `${v.toFixed(2)} ${unit}`
+        : v < 100
+          ? `${v.toFixed(1)} ${unit}`
+          : `${v.toFixed(0)} ${unit}`;
+    // Прочие единицы: убираем «хвост» плавающей точки (0.30000000000000004 → 0.3), единицу не теряем
+    const s = String(Number(v.toPrecision(4)));
+    return unit ? `${s} ${unit}` : s;
   };
 
   const copyResults = async () => {
@@ -407,7 +403,7 @@ const WelcomeScreen = () => {
             name: label,
             unit,
             value: val,
-            text: unit ? fmtValue(val, unit) : String(val),
+            text: fmtValue(val, unit),
             status, // ok | low | high
           });
         } else if (typeof val === "string" && val.trim()) {
