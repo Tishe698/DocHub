@@ -10,12 +10,6 @@
 //   icon    — имя значка Ionicons (декоративный, скрыт от диктора);
 //   section — ключ theme.colors.section (цвет полоски и значка).
 
-export const THEME_MODE_OPTIONS = [
-  { value: 'system', label: 'Авто', accessibilityLabel: 'Авто, как в настройках телефона' },
-  { value: 'light', label: 'Светлая', accessibilityLabel: 'Светлая тема' },
-  { value: 'dark', label: 'Тёмная', accessibilityLabel: 'Тёмная тема' },
-];
-
 export const MENU_SECTIONS = [
   {
     key: 'drugs',
