@@ -41,6 +41,7 @@ SafeAreaProvider
 | `SHOKSScreen` | Шкала ШОКС | SHOKSScreen | shoks/shoks.js |
 | `PediatricNormsScreen` | Нормы в педиатрии | PediatricNormsScreen | fiz_norm/pediatric_norms_screen.js |
 | `ApgarScreen` | Шкала Апгар | ApgarScreen | apgar/ApgarScreen.js |
+| `DefibrillatorScreen` | Дефибриллятор | DefibrillatorScreen | defibrillation/DefibrillatorScreen.js |
 | `MKBScreen` | МКБ-10 | ICDSearchScreen | mkb10/mkbscreen.js |
 | `BloodGroupScreen` | Группа крови | BloodGroupScreen | blood_group/blood_group_screen.js |
 | `Date_pregnancy` | Срок беременности | Date_pregnancy | pregnancy/pregnancy.js |
@@ -55,6 +56,7 @@ main_screen/button_app.js
 ├── PatientBar — сводка пациента, «Изменить» / «Указать», «Новый пациент»
 ├── Разделы (данные — main_screen/menuConfig.js → MENU_SECTIONS, карточка — MenuCard.js)
 │   ├── Препараты .................. Расчёт препаратов, Норадреналин
+│   ├── Реанимация ................. Дефибриллятор
 │   ├── Дыхательные пути и кислород  Интубация, Кислород и ИВЛ
 │   ├── Шкалы и индексы ............ NEWS2, Шкала Глазго, Шоковый индекс, Шкала ТЭЛА, Шкала ШОКС
 │   ├── Педиатрия и неонатология ... Нормы в педиатрии, Шкала Апгар
@@ -250,6 +252,15 @@ fiz_norm/pediatric_norms_screen.js + normsData.js
 ├── normForAge: ближайшая младшая строка в той же полосе PALS; 1–2 мес → «3 мес»;
 │   15–17 лет → «14 лет» (ориентировочно); с 18 лет — не применяется
 └── Ручной выбор сбрасывается при смене возраста пациента и «Новый пациент»
+
+defibrillation/DefibrillatorScreen.js + defibLogic.js + devices.js
+├── «Что на мониторе?»: ФЖ / ЖТ без пульса, ЖТ с пульсом, ФП, ТП / НЖТ, брадикардия, асистолия / ЭАБП
+│   («?» — расшифровка и признаки нестабильности)
+├── Взрослый / Ребёнок (по возрасту; без возраста — масса меньше 40 кг), масса — из поля с проверкой
+├── Аппарат: LIFEPAK 15, ZOLL R Series, Аксион, Philips, Mindray, Nihon Kohden, corpuls3, ZOLL AED Plus,
+│   другой бифазный, монофазный — энергия на ступени аппарата (shockPlan, pickStep)
+├── ResultCard: энергия, режим (без синхронизации / SYNC), повторные разряды, расчёт Дж/кг
+└── Электроды, действия по шагам (stepsFor), безопасность (safetyFor), особые случаи (SPECIAL)
 
 apgar/ApgarScreen.js + apgarScore.js
 ├── Секундомер от рождения: «Ребёнок родился — запустить», сдвиг ±1 мин, «Сбросить»

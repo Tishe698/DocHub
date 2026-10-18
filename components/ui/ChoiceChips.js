@@ -84,6 +84,8 @@ const makeStyles = ({ colors, spacing, radius }) => ({
   chip: {
     minHeight: MIN_TOUCH,
     minWidth: MIN_TOUCH,
+    // Длинная подпись: чип сжимается до ширины строки, текст переносится (не уходит за край экрана)
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

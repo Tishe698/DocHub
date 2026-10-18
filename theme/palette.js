@@ -75,6 +75,7 @@ const light = {
     norepinephrine: '#7E22CE',
     news: '#047857',
     apgar: '#B45309',
+    defib: '#A21CAF',
   },
 };
 
@@ -138,6 +139,7 @@ const dark = {
     norepinephrine: '#D8B4FE',
     news: '#6EE7B7',
     apgar: '#FDE68A',
+    defib: '#F0ABFC',
   },
 };
 

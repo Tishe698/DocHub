@@ -48,7 +48,7 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({ … }
 - поля: `inputBg`, `inputBorder`, `inputBorderFocus`, `inputBorderError`, `placeholder`;
 - `focusRing`, `shadow` (в тёмной теме `transparent` — тени не рисуем, выделяем `surfaceRaised` и границей);
 - `section.<ключ>` — акцент раздела главного экрана: `drugs`, `airway`, `shock`, `pregnancy`,
-  `oxygen`, `icd`, `pediatrics`, `blood`, `gcs`, `pe`, `chf`, `norepinephrine`, `news`, `apgar`
+  `oxygen`, `icd`, `pediatrics`, `blood`, `gcs`, `pe`, `chf`, `norepinephrine`, `news`, `apgar`, `defib`
   (≥ 4.5:1 на surface и bg — можно и для текста, и для иконок).
 
 Правила: никаких литералов цвета вне `theme/`; цвет никогда не единственный носитель смысла —
@@ -66,7 +66,7 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({ … }
 `SafeAreaProvider → ThemeProvider → PatientProvider → NavigationContainer (theme) → native-stack`.
 Шапка: фон `surface`, кнопки `primary`, заголовок `text`, фон экранов `bg`, подпись «Назад»
 скрыта (`headerBackButtonDisplayMode: 'minimal'`). Имена маршрутов не меняются; новые:
-`NewsScreen` («NEWS2»), `ApgarScreen` («Шкала Апгар»). Заголовки короткие, без эмодзи.
+`NewsScreen` («NEWS2»), `ApgarScreen` («Шкала Апгар»), `DefibrillatorScreen` («Дефибриллятор»). Заголовки короткие, без эмодзи.
 `StatusBar` (expo-status-bar) один, в корне; экраны свой не рисуют и не прячут.
 
 ## 3. Контейнер экрана и safe area (`components/Screen.js`)
