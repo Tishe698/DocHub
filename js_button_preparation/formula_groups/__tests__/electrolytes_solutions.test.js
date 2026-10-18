@@ -207,14 +207,14 @@ describe('Кальция хлорид', () => {
 
 describe('Рингер-лактат', () => {
   test('болюс: ребёнок 10 кг — 100 мл; взрослый 70 кг — 500 мл (предел)', () => {
-    const c = rl.formula({ weight: 10, indication: 'shock-iv' });
+    const c = rl.formula({ weight: 10, ageYears: 2, indication: 'shock-iv' });
     expect(c.result1).toBe(100);
-    expect(c.result6).toMatch(/SSC 2020/);
-    expect(c.result6).toMatch(/100–200 мл/);
-    const a = rl.formula({ weight: 70, indication: 'shock-iv' });
+    expect(c.result6).toMatch(/40–60 мл\/кг \(400–600 мл\) за 1-й час.*ERC 2025/);
+    expect(c.result6).not.toMatch(/Взрослым при сепсисе/);
+    const a = rl.formula({ weight: 70, ageYears: 40, indication: 'shock-iv' });
     expect(a.result1).toBe(500);
     expect(a.result6).toMatch(/Ограничено взрослым болюсом 500 мл/);
-    expect(a.result6).not.toMatch(/SSC 2020/);
+    expect(a.result6).not.toMatch(/40–60 мл\/кг/);
   });
 
   test('болюс в/к — шприцем или под давлением', () => {
