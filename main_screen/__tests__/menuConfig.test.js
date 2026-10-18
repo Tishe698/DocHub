@@ -47,6 +47,7 @@ describe('menuConfig', () => {
   it('разделы главного экрана — в заданном порядке', () => {
     expect(MENU_SECTIONS.map((s) => s.title)).toEqual([
       'Препараты',
+      'Реанимация',
       'Дыхательные пути и кислород',
       'Шкалы и индексы',
       'Педиатрия и неонатология',
@@ -61,6 +62,7 @@ describe('menuConfig', () => {
     expect([...main].sort()).toEqual([...topLevel].sort());
     expect(main).toContain('NewsScreen');
     expect(main).toContain('ApgarScreen');
+    expect(main).toContain('DefibrillatorScreen');
   });
 
   it('маршруты на главном экране не повторяются', () => {
