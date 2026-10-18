@@ -38,6 +38,19 @@ export const MENU_SECTIONS = [
     ],
   },
   {
+    key: 'resus',
+    title: 'Реанимация',
+    cards: [
+      {
+        route: 'DefibrillatorScreen',
+        title: 'Дефибриллятор',
+        description: 'Когда разряд, какая энергия, кардиоверсия',
+        icon: 'flash-outline',
+        section: 'defib',
+      },
+    ],
+  },
+  {
     key: 'airway',
     title: 'Дыхательные пути и кислород',
     cards: [

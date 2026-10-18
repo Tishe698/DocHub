@@ -320,6 +320,7 @@ describe('Кордарон (амиодарон)', () => {
     expect(r.result3).toBeUndefined();
     expect(r.result4).toMatch(/^в\/в струйно.*20 мл 5% глюкозы/);
     expect(r.result5).toMatch(/после 5-го разряда.*взрослым 150 мг/);
+    expect(r.result5).toMatch(/не более 150 мг \(ERC 2025\)/);
     expect(r.result5).not.toMatch(/если пациент взрослый/);
   });
 
