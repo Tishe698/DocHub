@@ -6,7 +6,7 @@ import { View, useWindowDimensions } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { hideFromA11y } from '../components/a11y';
-import { ChoiceChips, Note, Section } from '../components/ui';
+import { ChoiceChips, Note, Section, ThemeToggle } from '../components/ui';
 import PatientBar from '../patient/PatientBar';
 import { useTheme, useThemedStyles } from '../theme/index';
 import MenuCard from './MenuCard';
@@ -30,6 +30,8 @@ export default function ButtonApp({ navigation }) {
           <Text variant="title" accessibilityRole="header" style={styles.brandTitle}>
             DocHub
           </Text>
+          {/* Быстрое переключение светлой и тёмной темы; «Авто» — в разделе «Оформление» внизу */}
+          <ThemeToggle style={styles.themeToggle} testID="home-theme-toggle" />
         </View>
         <Text variant="body" color="textSecondary">
           Расчёты и шкалы для бригад СМП и педиатрии. Работает без интернета.
@@ -64,6 +66,10 @@ export default function ButtonApp({ navigation }) {
           hint="Переключает светлую и тёмную тему приложения"
           testID="home-theme-mode"
         />
+        <Text variant="caption" color="textSecondary">
+          Быстро переключить светлую и тёмную тему — переключатель «Тёмная тема» (луна или солнце) в
+          правом верхнем углу любого экрана. «Авто» — как в настройках телефона.
+        </Text>
       </Section>
 
       <Note level="info">
@@ -97,6 +103,7 @@ const makeStyles = ({ colors, spacing, radius, typography }) => ({
   },
   brandMarkText: { ...typography.heading, color: colors.onPrimary },
   brandTitle: { flexShrink: 1 },
+  themeToggle: { marginLeft: 'auto' },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
