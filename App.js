@@ -29,6 +29,7 @@ import SHOKSScreen from './shoks/shoks';
 import NorepinephrineScreen from './Norepinephrine/NorepinephrineScreen';
 import NewsScreen from './news/NewsScreen';
 import ApgarScreen from './apgar/ApgarScreen';
+import DefibrillatorScreen from './defibrillation/DefibrillatorScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +63,7 @@ const ROUTES = [
   { name: 'NorepinephrineScreen', component: NorepinephrineScreen, title: 'Норадреналин' },
   { name: 'NewsScreen', component: NewsScreen, title: 'NEWS2' },
   { name: 'ApgarScreen', component: ApgarScreen, title: 'Шкала Апгар' },
+  { name: 'DefibrillatorScreen', component: DefibrillatorScreen, title: 'Дефибриллятор' },
 ];
 
 // На вебе React Navigation подписывает кнопку «назад» для экранного диктора по-английски
