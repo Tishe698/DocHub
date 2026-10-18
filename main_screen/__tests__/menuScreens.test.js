@@ -71,6 +71,20 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
     expect(theme.setMode).toHaveBeenLastCalledWith(scheme === 'dark' ? 'light' : 'dark');
   });
 
+  it('главный экран: быстрый переключатель темы вверху (луна / солнце)', () => {
+    const { tree } = render(ButtonApp, theme);
+    const sw = tree.root.find(
+      (n) =>
+        n.props.testID === 'home-theme-toggle' &&
+        n.props.accessibilityRole === 'switch' &&
+        typeof n.props.onPress === 'function',
+    );
+    expect(sw.props.accessibilityLabel).toBe('Тёмная тема');
+    expect(sw.props.accessibilityState).toEqual({ checked: scheme === 'dark' });
+    act(() => sw.props.onPress());
+    expect(theme.setMode).toHaveBeenLastCalledWith(scheme === 'dark' ? 'light' : 'dark');
+  });
+
   it('главный экран: заголовки разделов и полоса пациента', () => {
     const { tree } = render(ButtonApp, theme);
     const headers = tree.root

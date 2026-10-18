@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 // Масштабирование шрифтов задаётся в components/AppText.js: экраны импортируют
 // Text и TextInput оттуда (Text.defaultProps в React 19 не работает).
 import { ThemeProvider, useTheme, makeNavigationTheme } from './theme/index';
+import ThemeToggle from './components/ui/ThemeToggle';
 import { PatientProvider } from './patient/PatientContext';
 import ButtonApp from './main_screen/button_app';
 import WelcomeScreen from './js_button_preparation/calculate_button';
@@ -93,6 +94,8 @@ function AppNavigator() {
       headerTitleStyle: { color: colors.text },
       headerBackButtonDisplayMode: 'minimal',
       contentStyle: { backgroundColor: colors.bg },
+      // Кнопка темы (луна / солнце) — в правом верхнем углу каждого экрана
+      headerRight: () => <ThemeToggle />,
     }),
     [colors],
   );
