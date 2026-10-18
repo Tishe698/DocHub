@@ -4,13 +4,11 @@ import {
   MENU_SECTIONS,
   TUBE_MENU,
   OXYGEN_MENU,
-  THEME_MODE_OPTIONS,
   allMainCards,
   cardA11yLabel,
   gridColumns,
 } from '../menuConfig';
 import palette from '../../theme/palette';
-import { THEME_MODES } from '../../theme/ThemeProvider';
 import { stripEmoji } from '../../components/a11y';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -89,11 +87,6 @@ describe('menuConfig', () => {
       expect(card.title.length).toBeGreaterThan(0);
       expect(card.description.length).toBeGreaterThan(0);
     }
-  });
-
-  it('режимы темы совпадают с THEME_MODES', () => {
-    expect(THEME_MODE_OPTIONS.map((o) => o.value)).toEqual(THEME_MODES);
-    expect(THEME_MODE_OPTIONS.map((o) => o.label)).toEqual(['Авто', 'Светлая', 'Тёмная']);
   });
 
   it('cardA11yLabel склеивает название и пояснение', () => {

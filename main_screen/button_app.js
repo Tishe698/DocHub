@@ -1,19 +1,18 @@
 // button_app.js — главный экран DocHub (маршрут Home, без шапки навигатора).
-// Пациент (PatientBar), разделы с карточками (данные — menuConfig.js), выбор темы.
+// Пациент (PatientBar), разделы с карточками (данные — menuConfig.js), кнопка темы рядом с названием.
 // Системный StatusBar рисует только App.js.
 import React, { useCallback } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { hideFromA11y } from '../components/a11y';
-import { ChoiceChips, Note, Section, ThemeToggle } from '../components/ui';
+import { Note, Section, ThemeToggle } from '../components/ui';
 import PatientBar from '../patient/PatientBar';
-import { useTheme, useThemedStyles } from '../theme/index';
+import { useThemedStyles } from '../theme/index';
 import MenuCard from './MenuCard';
-import { MENU_SECTIONS, THEME_MODE_OPTIONS, gridColumns } from './menuConfig';
+import { MENU_SECTIONS, gridColumns } from './menuConfig';
 
 export default function ButtonApp({ navigation }) {
-  const { mode, setMode } = useTheme();
   const styles = useThemedStyles(makeStyles);
   const { width, fontScale } = useWindowDimensions();
   const columns = gridColumns(width, fontScale);
@@ -30,7 +29,7 @@ export default function ButtonApp({ navigation }) {
           <Text variant="title" accessibilityRole="header" style={styles.brandTitle}>
             DocHub
           </Text>
-          {/* Быстрое переключение светлой и тёмной темы; «Авто» — в разделе «Оформление» внизу */}
+          {/* Тема: нажатие — светлая / тёмная, долгое нажатие — как в телефоне */}
           <ThemeToggle style={styles.themeToggle} testID="home-theme-toggle" />
         </View>
         <Text variant="body" color="textSecondary">
@@ -56,21 +55,6 @@ export default function ButtonApp({ navigation }) {
           </View>
         </Section>
       ))}
-
-      <Section title="Оформление">
-        <ChoiceChips
-          label="Тема"
-          options={THEME_MODE_OPTIONS}
-          value={mode}
-          onChange={setMode}
-          hint="Переключает светлую и тёмную тему приложения"
-          testID="home-theme-mode"
-        />
-        <Text variant="caption" color="textSecondary">
-          Быстро переключить светлую и тёмную тему — переключатель «Тёмная тема» (луна или солнце) в
-          правом верхнем углу любого экрана. «Авто» — как в настройках телефона.
-        </Text>
-      </Section>
 
       <Note level="info">
         Расчёты справочные: сверяйте результат с состоянием пациента, клиническими рекомендациями и
