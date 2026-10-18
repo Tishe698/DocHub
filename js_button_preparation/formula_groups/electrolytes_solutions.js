@@ -32,6 +32,7 @@
 //    и «калия и магния аспарагинат»; калия хлорида, кальция хлорида и Рингер-лактата в укладках нет.
 
 import { choiceInput, ROUTES } from '../routes';
+import { shockVolumeNotes } from '../shockFluids';
 
 // Число для текста примечания: запятая, без «хвоста» плавающей точки
 const num = (x, digits = 1) => String(Number(x.toFixed(digits))).replace('.', ',');
@@ -60,7 +61,7 @@ const AGE_YEARS = 'Возраст (лет)';
 // NICE CG174 (2013, ред. 2017), разд. 1.3. То же правило, что у NaCl 0,9% и раствора Рингера (infusion.js).
 const BOLUS_ML_PER_KG = 10;
 const BOLUS_MAX_ML = 500;
-const bolus = (w, route) => {
+const bolus = (w, route, ageYears) => {
   const raw = w * BOLUS_ML_PER_KG;
   const ml = Math.min(raw, BOLUS_MAX_ML);
   const notes = [];
@@ -74,13 +75,8 @@ const bolus = (w, route) => {
   notes.push(
     'Затем переоценка (ЧСС, АД, СНК, хрипы, печень); повтор по 10 мл/кг (взрослым по 500 мл).',
   );
-  // Surviving Sepsis Campaign 2020 (дети): 10–20 мл/кг на болюс, до 40–60 мл/кг за 1-й час при
-  // доступности ОРИТ; без ОРИТ и без гипотензии — без болюсов
-  if (w <= 50) {
-    notes.push(
-      `Септический шок у детей (SSC 2020): 10–20 мл/кг на болюс (${num(w * 10)}–${num(w * 20)} мл), до 40–60 мл/кг за 1-й час при доступности ОРИТ.`,
-    );
-  }
+  // Суммарный объём при шоке — общий текст (ERC 2025 дети; КР «Сепсис у взрослых» 2024), по возрасту
+  notes.push(...shockVolumeNotes(w, ageYears));
   return { ml, note: notes.join(' ') };
 };
 
@@ -374,7 +370,7 @@ const ringerLactate = {
       };
     }
     const route = ind === 'shock-io' ? 'io' : 'iv';
-    const { ml, note } = bolus(w, route);
+    const { ml, note } = bolus(w, route, ageYears);
     return { result1: ml, result6: note };
   },
   units: { result1: 'мл', result2: 'мл', result3: 'мл', result4: 'мл', result5: 'мл' },
@@ -462,7 +458,7 @@ const sterofundin = {
       };
     }
     const route = ind === 'shock-io' ? 'io' : 'iv';
-    const { ml, note } = bolus(w, route);
+    const { ml, note } = bolus(w, route, ageYears);
     return { result1: ml, result6: note };
   },
   units: { result1: 'мл', result2: 'мл', result3: 'мл', result4: 'мл/ч', result5: 'мл/ч' },
