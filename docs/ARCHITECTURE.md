@@ -116,7 +116,7 @@ iOS — `padding`, смещение считается по фактическо
 | `Badge` | `level ('success'|'warning'|'danger'|'info'|'neutral'), label | children, icon, accessibilityLabel, style` |
 | `Note` | `level ('info'|'warning'|'danger'|'success'), title, children, icon, style, testID` |
 | `HelpButton` | `title, accessibilityLabel, children, style, testID` — кнопка «?» со справкой в модальном окне |
-| `ThemeToggle` | `style, testID` — переключатель «Тёмная тема» (луна / солнце), role `switch` + `aria-checked` |
+| `ThemeToggle` | `style, testID` — переключатель «Тёмная тема» (луна / солнце), role `switch` + `aria-checked`; долгое нажатие и действие диктора `followSystem` — режим `system` |
 
 Роли и состояния: `Button` — `button` + `disabled` (+ `selected`, если передан); `ChoiceChips` —
 `radiogroup` с подписью и `radio` с `selected/checked`, выбранный вариант отмечен галочкой;

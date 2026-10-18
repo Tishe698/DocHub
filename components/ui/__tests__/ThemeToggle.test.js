@@ -74,6 +74,23 @@ describe('ThemeToggle', () => {
     spy.mockRestore();
   });
 
+  test('долгое нажатие и действие диктора «Как в телефоне» — снова «Авто»', async () => {
+    const tree = render('dark');
+    expect(theme.mode).toBe('dark');
+    await act(async () => toggle(tree).props.onLongPress());
+    expect(theme.mode).toBe('system');
+    await act(async () => toggle(tree).props.onPress());
+    expect(theme.mode).toBe('dark');
+    expect(toggle(tree).props.accessibilityActions).toEqual([
+      { name: 'followSystem', label: 'Как в телефоне' },
+    ]);
+    await act(async () =>
+      toggle(tree).props.onAccessibilityAction({ nativeEvent: { actionName: 'followSystem' } }),
+    );
+    expect(theme.mode).toBe('system');
+    expect(await AsyncStorage.getItem(THEME_MODE_KEY)).toBe('system');
+  });
+
   test('значок: луна в светлой теме, солнце в тёмной', async () => {
     const tree = render('light');
     expect(tree.root.findByType('Ionicons').props.name).toBe('moon-outline');

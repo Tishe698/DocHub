@@ -59,18 +59,6 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
     expect(navigation.navigate).toHaveBeenCalledTimes(allMainCards().length);
   });
 
-  it('главный экран: переключатель темы вызывает setMode', () => {
-    const { tree } = render(ButtonApp, theme);
-    const radios = tree.root.findAll(
-      (n) => n.props.accessibilityRole === 'radio' && typeof n.props.onPress === 'function',
-    );
-    const labels = radios.map((r) => r.props.accessibilityLabel);
-    expect(labels).toEqual(expect.arrayContaining(['Тёмная тема', 'Светлая тема']));
-    const target = scheme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
-    act(() => radios.find((r) => r.props.accessibilityLabel === target).props.onPress());
-    expect(theme.setMode).toHaveBeenLastCalledWith(scheme === 'dark' ? 'light' : 'dark');
-  });
-
   it('главный экран: быстрый переключатель темы вверху (луна / солнце)', () => {
     const { tree } = render(ButtonApp, theme);
     const sw = tree.root.find(
@@ -83,6 +71,21 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
     expect(sw.props.accessibilityState).toEqual({ checked: scheme === 'dark' });
     act(() => sw.props.onPress());
     expect(theme.setMode).toHaveBeenLastCalledWith(scheme === 'dark' ? 'light' : 'dark');
+    // Долгое нажатие — тема как в телефоне
+    act(() => sw.props.onLongPress());
+    expect(theme.setMode).toHaveBeenLastCalledWith('system');
+  });
+
+  it('главный экран: отдельного раздела «Оформление» нет — тема только кнопкой вверху', () => {
+    const { tree } = render(ButtonApp, theme);
+    const headers = tree.root
+      .findAll((n) => n.props.accessibilityRole === 'header' && typeof n.type === 'string')
+      .map((n) => [].concat(n.props.children).join(''));
+    expect(headers).not.toContain('Оформление');
+    const radios = tree.root.findAll(
+      (n) => n.props.accessibilityRole === 'radio' && n.props.accessibilityLabel === 'Тёмная тема',
+    );
+    expect(radios).toHaveLength(0);
   });
 
   it('главный экран: заголовки разделов и полоса пациента', () => {
