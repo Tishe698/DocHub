@@ -65,7 +65,8 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({ … }
 
 `SafeAreaProvider → ThemeProvider → PatientProvider → NavigationContainer (theme) → native-stack`.
 Шапка: фон `surface`, кнопки `primary`, заголовок `text`, фон экранов `bg`, подпись «Назад»
-скрыта (`headerBackButtonDisplayMode: 'minimal'`). Имена маршрутов не меняются; новые:
+скрыта (`headerBackButtonDisplayMode: 'minimal'`); справа в шапке каждого экрана — `ThemeToggle`
+(`headerRight`, переключатель светлой и тёмной темы). Имена маршрутов не меняются; новые:
 `NewsScreen` («NEWS2»), `ApgarScreen` («Шкала Апгар»), `DefibrillatorScreen` («Дефибриллятор»). Заголовки короткие, без эмодзи.
 `StatusBar` (expo-status-bar) один, в корне; экраны свой не рисуют и не прячут.
 
@@ -114,6 +115,8 @@ iOS — `padding`, смещение считается по фактическо
 | `ResultCard` | `title, value, unit, level, levelLabel, children, announceText, announceEnabled, style, testID` |
 | `Badge` | `level ('success'|'warning'|'danger'|'info'|'neutral'), label | children, icon, accessibilityLabel, style` |
 | `Note` | `level ('info'|'warning'|'danger'|'success'), title, children, icon, style, testID` |
+| `HelpButton` | `title, accessibilityLabel, children, style, testID` — кнопка «?» со справкой в модальном окне |
+| `ThemeToggle` | `style, testID` — переключатель «Тёмная тема» (луна / солнце), role `switch` + `aria-checked` |
 
 Роли и состояния: `Button` — `button` + `disabled` (+ `selected`, если передан); `ChoiceChips` —
 `radiogroup` с подписью и `radio` с `selected/checked`, выбранный вариант отмечен галочкой;
