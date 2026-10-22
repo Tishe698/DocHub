@@ -129,6 +129,21 @@ describe('DefibrillatorScreen', () => {
     expect(result(tree.root).props.value).toBe('50');
   });
 
+  // Ревью fix/audit-leftovers: опечатка в массе не должна переключать ребёнка на взрослую энергию
+  test.each([
+    ['введена', { weightKg: 12, weightSource: 'entered' }],
+    ['по ленте Broselow', { weightKg: 12, weightSource: 'broselow', broselowZone: 'red' }],
+  ])('масса %s, опечатка «12,5.» — остаётся «Ребёнок», ошибка под полем', (_, patient) => {
+    const tree = render(patient);
+    act(() => weightField(tree.root).props.onChangeText('12,5.'));
+    expect(checked(tree.root, 'Ребёнок')).toBe(true);
+    expect(weightField(tree.root)).toBeDefined();
+    expect(texts(tree.root)).toMatch(/Масса: от 0,3 до 150 кг/);
+    // энергии нет: ни по старым 12 кг, ни взрослой
+    const card = result(tree.root);
+    expect(card ? card.props.value : undefined).toBeUndefined();
+  });
+
   test('возраст важнее массы; ручная смена группы', () => {
     const tree = render({ weightKg: 30, ageMonths: 30 * 12 });
     expect(checked(tree.root, 'Взрослый')).toBe(true);

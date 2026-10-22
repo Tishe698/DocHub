@@ -1,5 +1,6 @@
-// Поля пациента: неверно набранное число не оставляет в расчёте прежнее значение (аудит DocHub M1-20),
-// поле получает текст ошибки; набор «5,» ошибкой не считается.
+// Поля пациента: неверно набранное число получает текст ошибки под полем (аудит DocHub M1-20), а в
+// пациенте остаётся прежнее значение — опечатка не переключает группу на других экранах;
+// экран сам не берёт такое значение в расчёт. Набор «5,» ошибкой не считается.
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import {
@@ -45,13 +46,21 @@ describe('usePatientNumber', () => {
     expect(hooks.weight.error).toBeNull();
   });
 
-  test('«3.2.5» — ошибка, прежнее 3,2 в расчёт не идёт, строка в поле остаётся', () => {
+  test('«3.2.5» — ошибка, строка в поле остаётся, в пациенте прежние 3,2', () => {
     mount();
     act(() => hooks.weight.onChangeText('3.2'));
     act(() => hooks.weight.onChangeText('3.2.5'));
-    expect(hooks.ctx.patient.weightKg).toBeNull();
+    expect(hooks.ctx.patient.weightKg).toBe(3.2);
     expect(hooks.weight.text).toBe('3.2.5');
     expect(hooks.weight.error).toBe(INVALID_NUMBER);
+  });
+
+  test('опечатка не сбрасывает источник массы (лента Broselow)', () => {
+    mount({ weightKg: 12, weightSource: 'broselow', broselowZone: 'red' });
+    act(() => hooks.weight.onChangeText('12,5.'));
+    expect(hooks.weight.error).toBe(INVALID_NUMBER);
+    expect(hooks.ctx.patient.weightSource).toBe('broselow');
+    expect(hooks.ctx.patient.weightKg).toBe(12);
   });
 
   test('отрицательное число — ошибка', () => {
