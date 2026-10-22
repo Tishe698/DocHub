@@ -226,6 +226,22 @@ describe('вес ↔ возраст', () => {
     expect(ageWeightWarning({ weight: 5 }, map, 60)).toMatch(/необычен/);
     // до 1 года нижний порог не применяется (недоношенные)
     expect(ageWeightWarning({ weight: 2 }, map, 3)).toBeNull();
+    expect(ageWeightWarning({ weight: 40 }, map, 24)).toMatch(/возраста 2 года/);
+    expect(ageWeightWarning({ weight: 40 }, map, 12)).toMatch(/возраста 1 год/);
+  });
+
+  it('с 13 лет — только явная ошибка в разряде (меньше 25 кг)', () => {
+    const map = { weight: 'Вес (кг)', ageYears: 'Возраст (лет)' };
+    // аудит D5-17: 5 кг при 41 годе проходил без предупреждения
+    expect(ageWeightWarning({ weight: 5 }, map, 41 * 12 + 8)).toMatch(
+      /Вес 5 кг необычен для возраста 41 год/,
+    );
+    expect(ageWeightWarning({ weight: 24 }, map, 13 * 12)).toMatch(/необычен/);
+    expect(ageWeightWarning({ weight: 25 }, map, 13 * 12)).toBeNull();
+    expect(ageWeightWarning({ weight: 45 }, map, 70 * 12)).toBeNull();
+    expect(ageWeightWarning({ weight: 150 }, map, 30 * 12)).toBeNull();
+    // 12 лет — ещё по формуле APLS
+    expect(ageWeightWarning({ weight: 20 }, map, 12 * 12)).toBeNull();
   });
 });
 

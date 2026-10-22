@@ -15,8 +15,7 @@ UI-компоненты, общий пациент, пути введения в
 | `ThemeProvider.js` | провайдер темы и режима `system / light / dark` |
 | `index.js` | публичный API |
 
-**Импорт.** Пока в корне лежит старый `theme.js`, путь `'../theme'` разрешается в него
-(файл важнее каталога). Новый код импортирует явно: `import { useTheme } from '../theme/index'`.
+**Импорт.** Тема импортируется явно: `import { useTheme } from '../theme/index'`.
 
 ### API
 
@@ -56,7 +55,7 @@ const makeStyles = ({ colors, spacing, radius, typography, isDark }) => ({ … }
 
 ### Токены (`theme/tokens.js`)
 
-- `spacing`: `xs 4, sm 8, md 12, lg 16, xl 24, xxl 32` (внимание: в старом `theme.js` `md` = 16);
+- `spacing`: `xs 4, sm 8, md 12, lg 16, xl 24, xxl 32`;
 - `radius`: `sm 6, md 10, lg 14, pill 999`;
 - `typography`: `title`, `heading`, `body`, `bodyStrong`, `caption`, `number` (tabular-nums);
 - `fontScaling`: `{ enabled: true, maxScale: 1.5, minScale: 0.8 }`; `MIN_TOUCH = 48`.

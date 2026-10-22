@@ -106,7 +106,9 @@ export const validateTubeInput = (category, weight, height) => {
     if (height < 3) {
       return `Похоже, рост введён в метрах. Введите в сантиметрах (например, ${Math.round(height * 100)})`;
     }
-    if (height < L.heightMin || height > L.heightMax) {
+    // Нижняя граница — только когда рост нужен для расчёта: у недоношенного ребёнка (размер по массе)
+    // рост меньше 40 см возможен и не должен блокировать расчёт
+    if ((heightNeeded && height < L.heightMin) || height > L.heightMax) {
       return `Рост вне допустимого диапазона ${L.heightMin}–${L.heightMax} см. Проверьте ввод`;
     }
   }

@@ -70,7 +70,18 @@ const IntubationTubeCalculation = () => {
   }, [greyPicked, local.greySubzone]);
   const greySubzone = greyPicked ? opts.greySubzone : null;
 
-  const { mode, result, error, needsGreySubzone } = computeIntubation(patient, {
+  // Неверное число в полях возраста — возраст в расчёт не берём (в пациенте остаётся прежний),
+  // вместе с массой, оценённой по этому возрасту (аудит DocHub M1-20). Ошибка видна под полем.
+  const ageInvalid = !!(age.years.error || age.months.error);
+  const calcPatient = ageInvalid
+    ? {
+        ...patient,
+        ageMonths: null,
+        ...(patient.weightSource === 'age' ? { weightKg: null, weightSource: null } : {}),
+      }
+    : patient;
+
+  const { mode, result, error, needsGreySubzone } = computeIntubation(calcPatient, {
     cuffed: opts.cuffed,
     route: opts.route,
     greySubzone: greySubzone || undefined,
@@ -94,6 +105,8 @@ const IntubationTubeCalculation = () => {
           unit="см"
           value={height.text}
           onChangeText={height.onChangeText}
+          error={height.error}
+          testID="ett-height"
           placeholder="например, 92"
           hint="Приоритетно для детей: лента Broselow 46,8–143,3 см"
         />
@@ -103,6 +116,8 @@ const IntubationTubeCalculation = () => {
             unit="лет"
             value={age.years.text}
             onChangeText={age.years.onChangeText}
+            error={age.years.error}
+            testID="ett-age-years"
             placeholder="0"
             style={styles.ageField}
           />
@@ -111,6 +126,8 @@ const IntubationTubeCalculation = () => {
             unit="мес"
             value={age.months.text}
             onChangeText={age.months.onChangeText}
+            error={age.months.error}
+            testID="ett-age-months"
             placeholder="0"
             style={styles.ageField}
           />
@@ -129,6 +146,8 @@ const IntubationTubeCalculation = () => {
           unit="кг"
           value={weight.text}
           onChangeText={weight.onChangeText}
+          error={weight.error}
+          testID="ett-weight"
           placeholder="например, 3,2"
           badge={derived.weightIsEstimate ? 'оценка' : null}
           badgeLevel="warning"

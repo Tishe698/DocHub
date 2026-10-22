@@ -81,6 +81,7 @@ const LaryngealTubeCalculation = () => {
             unit="кг"
             value={weight.text}
             onChangeText={weight.onChangeText}
+            error={weight.error}
             placeholder="например, 18"
             badge={derived.weightIsEstimate ? 'оценка' : null}
             badgeLevel="warning"
@@ -93,6 +94,7 @@ const LaryngealTubeCalculation = () => {
             unit="см"
             value={height.text}
             onChangeText={height.onChangeText}
+            error={height.error}
             placeholder="например, 165"
             hint={
               category === 'child' && !heightNeeded
