@@ -53,6 +53,34 @@ describe('IntubationTubeCalculation', () => {
     expect(t).toMatch(/по длине тела/);
   });
 
+  // Аудит M1-20: неверно набранное число подсвечивается, расчёт по прежнему значению не идёт.
+  const type = (tree, testID, text) => {
+    const node = tree.root.find(
+      (n) => n.props.testID === testID && typeof n.props.onChangeText === 'function',
+    );
+    act(() => node.props.onChangeText(text));
+  };
+
+  test('рост «9.0.0» — ошибка под полем, по прежним 90 см не считает', () => {
+    const tree = renderWith({ heightCm: 90 });
+    expect(textOf(tree)).toMatch(/по длине тела/);
+    type(tree, 'ett-height', '9.0.0');
+    const t = textOf(tree);
+    expect(t).toMatch(/Неверное число — проверьте ввод/);
+    expect(t).not.toMatch(/по длине тела/);
+    expect(t).toMatch(/Нет данных для расчёта/);
+  });
+
+  test('возраст «5..» — ошибка под полем, по прежним 5 годам не считает', () => {
+    const tree = renderWith({ ageMonths: 60 });
+    const before = textOf(tree);
+    expect(before).not.toMatch(/Нет данных для расчёта/);
+    type(tree, 'ett-age-years', '5..');
+    const t = textOf(tree);
+    expect(t).toMatch(/Неверное число — проверьте ввод/);
+    expect(t).toMatch(/Нет данных для расчёта/);
+  });
+
   test('серая зона по ленте — просьба выбрать подзону', () => {
     const t = textOf(renderWith({ broselowZone: 'grey', weightKg: 4, weightSource: 'broselow' }));
     expect(t).toMatch(/Выберите подзону серой зоны/);

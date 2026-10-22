@@ -51,8 +51,11 @@ const LaryngealTubeCalculation = () => {
   const ageCategory = categoryFromAge(patient.ageMonths);
   const category = manualCategory || ageCategory;
 
-  const heightNeeded = category ? isHeightRequired(category, weight.value ?? undefined) : false;
-  const { prompt, result } = category ? computeLaryngeal(category, weight.value, height.value) : {};
+  // Неверное число в поле — в расчёт не берём (в пациенте остаётся прежнее; аудит DocHub M1-20)
+  const weightKg = weight.error ? null : weight.value;
+  const heightCm = height.error ? null : height.value;
+  const heightNeeded = category ? isHeightRequired(category, weightKg ?? undefined) : false;
+  const { prompt, result } = category ? computeLaryngeal(category, weightKg, heightCm) : {};
   const hasSize = !!(result && result.tubeSize);
 
   return (
@@ -81,6 +84,7 @@ const LaryngealTubeCalculation = () => {
             unit="кг"
             value={weight.text}
             onChangeText={weight.onChangeText}
+            error={weight.error}
             placeholder="например, 18"
             badge={derived.weightIsEstimate ? 'оценка' : null}
             badgeLevel="warning"
@@ -93,6 +97,7 @@ const LaryngealTubeCalculation = () => {
             unit="см"
             value={height.text}
             onChangeText={height.onChangeText}
+            error={height.error}
             placeholder="например, 165"
             hint={
               category === 'child' && !heightNeeded

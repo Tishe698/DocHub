@@ -135,11 +135,25 @@ function useSyncedText(value, format) {
   return [text, setText, lastWritten];
 }
 
+// Ошибка поля для неверно набранного числа («3.2.5», «abc», «-5»); пустое поле ошибкой не считается.
+export const INVALID_NUMBER = 'Неверное число — проверьте ввод';
+const fieldError = (t) => {
+  const s = String(t ?? '').trim();
+  if (!s) return null;
+  const n = parseNum(s);
+  return n === undefined || n < 0 ? INVALID_NUMBER : null;
+};
+
 // Поле ввода, связанное с числовым полем пациента: 'weightKg' | 'heightCm' | 'ageMonths'.
-// Возвращает { text, onChangeText, value }:
+// Возвращает { text, onChangeText, value, error }:
 //  - text — строка для TextInput (набор «5,» не стирается);
-//  - валидное число пишется в контекст, пустая строка — null, мусор — контекст не меняется;
-//  - value — текущее число из контекста (или null).
+//  - валидное число пишется в контекст, пустая строка — null; неверное число контекст не меняет:
+//    от массы и возраста зависят группа «ребёнок / взрослый» и оценки на других экранах
+//    (дефибриллятор, ИВЛ) — опечатка не должна их переключать;
+//  - value — текущее число из контекста (или null);
+//  - error — текст ошибки для NumberField, пока в поле неверное число (иначе null). Экран, который
+//    считает по value, при error значение в расчёт не берёт (аудит DocHub M1-20).
+// Возраст (usePatientAge) устроен так же — см. комментарий в write().
 export function usePatientNumber(key) {
   if (!NUMBER_KEYS.includes(key)) {
     throw new Error(
@@ -168,7 +182,7 @@ export function usePatientNumber(key) {
     [key, setPatient, setText, lastWritten],
   );
 
-  return { text, onChangeText, value };
+  return { text, onChangeText, value, error: fieldError(text) };
 }
 
 // Возраст «лет + мес» двумя полями, связанными с patient.ageMonths.
@@ -199,7 +213,10 @@ export function usePatientAge() {
       const mEmpty = !String(nextTexts.months).trim();
       const y = yEmpty ? null : parseNum(nextTexts.years);
       const m = mEmpty ? null : parseNum(nextTexts.months);
-      if (y === undefined || m === undefined) return; // набор не закончен или ошибка
+      // Набор не закончен или ошибка: возраст в пациенте не меняется (от него зависит группа
+      // «ребёнок / взрослый» на экранах — поле не должно пропадать посреди набора). Экран видит
+      // ошибку в years.error / months.error и сам не берёт возраст в расчёт.
+      if (y === undefined || m === undefined) return;
       const total = composeAgeMonths(y, m);
       lastWritten.current = total;
       setPatient({ ageMonths: total });
@@ -213,8 +230,18 @@ export function usePatientAge() {
 
   const parts = splitAgeMonths(ageMonths);
   return {
-    years: { text: texts.years, onChangeText: onYears, value: parts ? parts.years : null },
-    months: { text: texts.months, onChangeText: onMonths, value: parts ? parts.months : null },
+    years: {
+      text: texts.years,
+      onChangeText: onYears,
+      value: parts ? parts.years : null,
+      error: fieldError(texts.years),
+    },
+    months: {
+      text: texts.months,
+      onChangeText: onMonths,
+      value: parts ? parts.months : null,
+      error: fieldError(texts.months),
+    },
     ageMonths,
     setNeonate,
   };

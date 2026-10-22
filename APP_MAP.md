@@ -296,11 +296,9 @@ pregnancy/pregnancy.js + pregnancyCalc.js
 ```
 theme/        palette.js (светлая и тёмная палитры), tokens.js, broselow.js, ThemeProvider.js, index.js
 components/   Screen.js, AppText.js, a11y.js, ui/ (Button, ChoiceChips, NumberField, SwitchRow, Card,
-              Section, ResultCard, Badge, Note)
+              Section, ResultCard, Badge, Note, HelpButton, ThemeToggle)
 utils/        parseNum.js — разбор числа (запятая или точка; некорректный ввод → undefined)
 ```
-
-Старые `theme.js`, `components/FontScaling.js` и папка `css/` экранами не используются.
 
 ## Состояние и хранение
 

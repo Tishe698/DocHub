@@ -70,7 +70,19 @@ const IntubationTubeCalculation = () => {
   }, [greyPicked, local.greySubzone]);
   const greySubzone = greyPicked ? opts.greySubzone : null;
 
-  const { mode, result, error, needsGreySubzone } = computeIntubation(patient, {
+  // Неверное число в поле — это значение в расчёт не берём (в пациенте остаётся прежнее, чтобы
+  // опечатка не переключала другие экраны), а с ошибкой возраста — и массу, оценённую по нему
+  // (аудит DocHub M1-20). Ошибка видна под полем.
+  const ageInvalid = !!(age.years.error || age.months.error);
+  const calcPatient = { ...patient };
+  if (height.error) calcPatient.heightCm = null;
+  if (weight.error) calcPatient.weightKg = null;
+  if (ageInvalid) {
+    calcPatient.ageMonths = null;
+    if (patient.weightSource === 'age') calcPatient.weightKg = null;
+  }
+
+  const { mode, result, error, needsGreySubzone } = computeIntubation(calcPatient, {
     cuffed: opts.cuffed,
     route: opts.route,
     greySubzone: greySubzone || undefined,
@@ -78,7 +90,7 @@ const IntubationTubeCalculation = () => {
 
   const pickedZone =
     patient.weightSource === 'broselow' ? patientZoneByKey(patient.broselowZone) : null;
-  const isNeonate = patient.ageMonths === 0;
+  const isNeonate = calcPatient.ageMonths === 0;
   const depths = depthRows(result, opts.route);
 
   return (
@@ -94,6 +106,8 @@ const IntubationTubeCalculation = () => {
           unit="см"
           value={height.text}
           onChangeText={height.onChangeText}
+          error={height.error}
+          testID="ett-height"
           placeholder="например, 92"
           hint="Приоритетно для детей: лента Broselow 46,8–143,3 см"
         />
@@ -103,6 +117,8 @@ const IntubationTubeCalculation = () => {
             unit="лет"
             value={age.years.text}
             onChangeText={age.years.onChangeText}
+            error={age.years.error}
+            testID="ett-age-years"
             placeholder="0"
             style={styles.ageField}
           />
@@ -111,6 +127,8 @@ const IntubationTubeCalculation = () => {
             unit="мес"
             value={age.months.text}
             onChangeText={age.months.onChangeText}
+            error={age.months.error}
+            testID="ett-age-months"
             placeholder="0"
             style={styles.ageField}
           />
@@ -129,6 +147,8 @@ const IntubationTubeCalculation = () => {
           unit="кг"
           value={weight.text}
           onChangeText={weight.onChangeText}
+          error={weight.error}
+          testID="ett-weight"
           placeholder="например, 3,2"
           badge={derived.weightIsEstimate ? 'оценка' : null}
           badgeLevel="warning"
