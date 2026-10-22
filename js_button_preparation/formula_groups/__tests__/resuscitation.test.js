@@ -449,6 +449,10 @@ describe('Инфузии насосом', () => {
     expect(at(1)).toMatch(/ошибки в 10 раз/);
     expect(at(0.6)).toMatch(/выше обычного/);
     expect(at(0.5)).not.toMatch(/проверьте ввод/);
+    // ребёнку 20 кг 0,6 — в обычном диапазоне PALS
+    expect(norepi.formula({ weight: 20, rate: 0.6, drugMg: 4, volume: 50 }).result4).not.toMatch(
+      /проверьте ввод/,
+    );
   });
 
   test('добутамин: 70 кг, 5 мкг/кг/мин, 250 мг в 50 мл', () => {

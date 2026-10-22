@@ -70,16 +70,17 @@ const IntubationTubeCalculation = () => {
   }, [greyPicked, local.greySubzone]);
   const greySubzone = greyPicked ? opts.greySubzone : null;
 
-  // Неверное число в полях возраста — возраст в расчёт не берём (в пациенте остаётся прежний),
-  // вместе с массой, оценённой по этому возрасту (аудит DocHub M1-20). Ошибка видна под полем.
+  // Неверное число в поле — это значение в расчёт не берём (в пациенте остаётся прежнее, чтобы
+  // опечатка не переключала другие экраны), а с ошибкой возраста — и массу, оценённую по нему
+  // (аудит DocHub M1-20). Ошибка видна под полем.
   const ageInvalid = !!(age.years.error || age.months.error);
-  const calcPatient = ageInvalid
-    ? {
-        ...patient,
-        ageMonths: null,
-        ...(patient.weightSource === 'age' ? { weightKg: null, weightSource: null } : {}),
-      }
-    : patient;
+  const calcPatient = { ...patient };
+  if (height.error) calcPatient.heightCm = null;
+  if (weight.error) calcPatient.weightKg = null;
+  if (ageInvalid) {
+    calcPatient.ageMonths = null;
+    if (patient.weightSource === 'age') calcPatient.weightKg = null;
+  }
 
   const { mode, result, error, needsGreySubzone } = computeIntubation(calcPatient, {
     cuffed: opts.cuffed,
@@ -89,7 +90,7 @@ const IntubationTubeCalculation = () => {
 
   const pickedZone =
     patient.weightSource === 'broselow' ? patientZoneByKey(patient.broselowZone) : null;
-  const isNeonate = patient.ageMonths === 0;
+  const isNeonate = calcPatient.ageMonths === 0;
   const depths = depthRows(result, opts.route);
 
   return (

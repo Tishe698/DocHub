@@ -147,11 +147,13 @@ const fieldError = (t) => {
 // Поле ввода, связанное с числовым полем пациента: 'weightKg' | 'heightCm' | 'ageMonths'.
 // Возвращает { text, onChangeText, value, error }:
 //  - text — строка для TextInput (набор «5,» не стирается);
-//  - валидное число пишется в контекст, пустая строка — null; неверное число — тоже null, чтобы
-//    ни один экран не считал по прежнему значению (аудит DocHub M1-20), строка в поле остаётся;
+//  - валидное число пишется в контекст, пустая строка — null; неверное число контекст не меняет:
+//    от массы и возраста зависят группа «ребёнок / взрослый» и оценки на других экранах
+//    (дефибриллятор, ИВЛ) — опечатка не должна их переключать;
 //  - value — текущее число из контекста (или null);
-//  - error — текст ошибки для NumberField, пока в поле неверное число (иначе null).
-// Возраст (usePatientAge) при неверном числе в контексте не меняется — см. комментарий в write().
+//  - error — текст ошибки для NumberField, пока в поле неверное число (иначе null). Экран, который
+//    считает по value, при error значение в расчёт не берёт (аудит DocHub M1-20).
+// Возраст (usePatientAge) устроен так же — см. комментарий в write().
 export function usePatientNumber(key) {
   if (!NUMBER_KEYS.includes(key)) {
     throw new Error(
@@ -172,11 +174,7 @@ export function usePatientNumber(key) {
         return;
       }
       const n = parseNum(s);
-      if (n === undefined || n < 0) {
-        lastWritten.current = null;
-        setPatient({ [key]: null });
-        return;
-      }
+      if (n === undefined || n < 0) return;
       const v = key === 'ageMonths' ? Math.floor(n) : n;
       lastWritten.current = v;
       setPatient({ [key]: v });
