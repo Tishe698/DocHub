@@ -442,10 +442,13 @@ describe('Инфузии насосом', () => {
     expect(r.result4).toMatch(/выше максимума/);
   });
 
-  test('норэпинефрин: 1,5 мкг/кг/мин — проверка ввода', () => {
-    expect(norepi.formula({ weight: 70, rate: 1.5, drugMg: 4, volume: 50 }).result4).toMatch(
-      /выше 1 мкг/,
-    );
+  test('норэпинефрин: от 1 мкг/кг/мин включительно — проверка ввода, 0,5–1 — выше обычного', () => {
+    const at = (rate) => norepi.formula({ weight: 70, rate, drugMg: 4, volume: 50 }).result4;
+    expect(at(1.5)).toMatch(/1 мкг\/кг\/мин основания и выше/);
+    // десятикратная опечатка 0,1 → 1 (аудит M15-3)
+    expect(at(1)).toMatch(/ошибки в 10 раз/);
+    expect(at(0.6)).toMatch(/выше обычного/);
+    expect(at(0.5)).not.toMatch(/проверьте ввод/);
   });
 
   test('добутамин: 70 кг, 5 мкг/кг/мин, 250 мг в 50 мл', () => {

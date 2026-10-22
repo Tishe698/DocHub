@@ -139,6 +139,13 @@ describe('VBM: проверка ввода', () => {
     expect(validateTubeInput('child', 10, undefined)).toBeNull();
     expect(validateTubeInput('adult', undefined, 170)).toBeNull();
   });
+
+  test('недоношенный: рост < 40 см не блокирует расчёт по массе, а при массе > 25 кг — блокирует', () => {
+    expect(validateTubeInput('child', 1.5, 35)).toBeNull();
+    expect(computeLaryngeal('child', 1.5, 35).result.tubeSize).toBe('0');
+    expect(validateTubeInput('child', 30, 35)).toMatch(/Рост вне допустимого диапазона/);
+    expect(validateTubeInput('child', 10, 300)).toMatch(/Рост вне допустимого диапазона/);
+  });
 });
 
 describe('laryngealFromPatient', () => {

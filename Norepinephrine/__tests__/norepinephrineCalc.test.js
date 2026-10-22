@@ -30,6 +30,7 @@ describe('константы препарата', () => {
       weightMaxKg: 250,
       doseLowWarn: 0.01,
       doseSoftWarn: 1,
+      doseUsualAdult: 0.5,
       doseMaxAdult: 2.5,
       doseMaxChild: 2,
       childWeightKg: 40,
@@ -81,9 +82,15 @@ describe('доза', () => {
     expect(calc({ weight: '70', dose: '2.2', ageMonths: null }).dose.isChild).toBe(false);
   });
 
-  it('мягкие предупреждения: > 1 и < 0,01', () => {
+  it('мягкие предупреждения: от 1 включительно, взрослым выше 0,5, ниже 0,01', () => {
     expect(levels(calc({ dose: '1.5' }).dose.warnings)).toEqual(['warn']);
-    expect(levels(calc({ dose: '1' }).dose.warnings)).toEqual([]);
+    // десятикратная опечатка 0,1 → 1 (аудит M6-8)
+    expect(levels(calc({ dose: '1' }).dose.warnings)).toEqual(['warn']);
+    expect(texts(calc({ dose: '1' }).dose.warnings)).toMatch('ошибки в 10 раз');
+    expect(texts(calc({ dose: '0.6' }).dose.warnings)).toMatch('выше обычного диапазона взрослых');
+    expect(calc({ dose: '0.5' }).dose.warnings).toEqual([]);
+    // ребёнку 0,6 — в обычном диапазоне PALS (до 2)
+    expect(calc({ weight: '20', dose: '0.6' }).dose.warnings).toEqual([]);
     expect(texts(calc({ dose: '0.005' }).dose.warnings)).toMatch('Очень малая доза');
     expect(calc({ dose: '0.01' }).dose.warnings).toEqual([]);
   });

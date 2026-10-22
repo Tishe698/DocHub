@@ -77,6 +77,7 @@ function EditorBody({ onClose }) {
           unit="кг"
           value={weight.text}
           onChangeText={weight.onChangeText}
+          error={weight.error}
           badge={weightBadge}
           badgeLevel="warning"
         />
@@ -96,6 +97,7 @@ function EditorBody({ onClose }) {
             unit="лет"
             value={age.years.text}
             onChangeText={age.years.onChangeText}
+            error={age.years.error}
             style={styles.ageField}
           />
           <NumberField
@@ -103,6 +105,7 @@ function EditorBody({ onClose }) {
             unit="мес"
             value={age.months.text}
             onChangeText={age.months.onChangeText}
+            error={age.months.error}
             style={styles.ageField}
           />
         </View>
@@ -140,6 +143,7 @@ function EditorBody({ onClose }) {
           unit="см"
           value={height.text}
           onChangeText={height.onChangeText}
+          error={height.error}
         />
       </Section>
 

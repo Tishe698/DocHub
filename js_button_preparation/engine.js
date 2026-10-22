@@ -230,15 +230,30 @@ export const ageMonthsFromClean = (clean, inputsMap) => {
 // Мягкая проверка «вес ↔ возраст»: ловит ошибку в разряде (7 → 70 кг), которую диапазон 0,3–250 кг не видит.
 // Порог ×2 / ×0,4 от массы по APLS — только предупреждение, расчёт не блокируется.
 // Нижний порог — с 1 года: у недоношенных младенцев масса законно бывает вдвое ниже формулы.
+// Старше 12 лет формулы нет: ловим только явную ошибку в разряде (5 вместо 50 кг). Порог 25 кг с 13 лет
+// ниже 3-го перцентиля массы в 13 лет (CDC 2000: ≈30 кг) — у реального подростка почти не сработает.
+const TEEN_MIN_WEIGHT_KG = 25;
+const TEEN_FROM_MONTHS = 13 * 12;
+const yearsText = (n) => {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return `${n} год`;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return `${n} года`;
+  return `${n} лет`;
+};
+
 export const ageWeightWarning = (clean, inputsMap, ageMonths) => {
   if (!('weight' in inputsMap) || !Number.isFinite(clean.weight)) return null;
   const months = Number.isFinite(ageMonths) ? ageMonths : ageMonthsFromClean(clean, inputsMap);
   const exp = expectedWeightApls(months);
-  if (!exp) return null;
+  if (!exp) {
+    if (!(months >= TEEN_FROM_MONTHS) || clean.weight >= TEEN_MIN_WEIGHT_KG) return null;
+    return `Вес ${ru(clean.weight)} кг необычен для возраста ${yearsText(Math.floor(months / 12))} (с 13 лет масса обычно больше ${TEEN_MIN_WEIGHT_KG} кг). Проверьте ввод — нет ли ошибки в разряде.`;
+  }
   const ratio = clean.weight / exp;
   if (ratio <= 2 && (months < 12 || ratio >= 0.4)) return null;
   const ageText =
-    months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : `${Math.floor(months / 12)} лет`;
+    months < 12 ? `${ru(Math.round(months * 10) / 10)} мес` : yearsText(Math.floor(months / 12));
   return `Вес ${ru(clean.weight)} кг необычен для возраста ${ageText} (ожидаемо около ${ru(Math.round(exp))} кг по возрастной формуле). Проверьте ввод — нет ли ошибки в разряде.`;
 };
 
