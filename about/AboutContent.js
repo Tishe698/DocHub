@@ -4,10 +4,7 @@ import React from 'react';
 import { View } from 'react-native';
 import { Text } from '../components/AppText';
 import { useThemedStyles } from '../theme/index';
-import appConfig from '../app.json';
 import { NOTICE_POINTS, PRIVACY_SECTIONS, PRIVACY_TITLE, PRIVACY_URL } from './aboutText';
-
-export const APP_VERSION = appConfig.expo.version;
 
 export function NoticePoints() {
   const styles = useThemedStyles(makeStyles);

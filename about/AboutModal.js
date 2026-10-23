@@ -6,7 +6,8 @@ import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { Text } from '../components/AppText';
 import { Button } from '../components/ui';
 import { useThemedStyles } from '../theme/index';
-import { APP_VERSION, NoticePoints, PrivacyText } from './AboutContent';
+import { NoticePoints, PrivacyText } from './AboutContent';
+import { APP_NAME, APP_VERSION } from './aboutText';
 
 export default function AboutModal({ visible, onClose, privacyOnly = false, testID }) {
   const styles = useThemedStyles(makeStyles);
@@ -33,7 +34,7 @@ export default function AboutModal({ visible, onClose, privacyOnly = false, test
                   О приложении
                 </Text>
                 <Text variant="caption" color="textSecondary">
-                  {`DocHub, версия ${APP_VERSION}`}
+                  {`${APP_NAME}, версия ${APP_VERSION}`}
                 </Text>
                 <NoticePoints />
               </>

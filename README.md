@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/icon.png" width="96" alt="Иконка DocHub">
+<img src="assets/icon.png" width="96" alt="Иконка MedRush">
 
-# DocHub
+# MedRush
 
 **Справочник и калькуляторы для бригад скорой помощи и педиатров.**<br>
 Дозы препаратов, дефибрилляция, трубки, кислород и ИВЛ, клинические шкалы и МКБ-10 — без интернета.
@@ -12,6 +12,8 @@
 ![Expo SDK 54](https://img.shields.io/badge/Expo%20SDK-54-000020)
 ![React Native 0.81](https://img.shields.io/badge/React%20Native-0.81-61dafb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+<sub>До версии 1.0 приложение называлось DocHub — отсюда имя репозитория.</sub>
 
 </div>
 
@@ -123,7 +125,7 @@ npm run web    # веб-версия в браузере
 
 ### Сборка
 
-Пакет приложения — `com.pulsetech7812.dochub`.
+Пакет приложения — `com.pulsetech7812.medrush`, версия — `1.0.0`.
 
 ```bash
 npx eas build --platform android --profile preview      # APK для установки
@@ -215,8 +217,9 @@ DocHub/
 ## История версий
 
 <details>
-<summary><b>v2.0.0 — текущая</b></summary>
+<summary><b>MedRush 1.0.0 — текущая, первая версия для RuStore</b></summary>
 
+- Новое название MedRush и пакет `com.pulsetech7812.medrush`; нумерация версий начата заново.
 - Главный экран из шести разделов и общий пациент для всех калькуляторов.
 - Калькулятор препаратов: 128 записей, пути введения и показания, пределы доз, расшифровка
   сокращений, поиск по привычным названиям.
@@ -229,11 +232,11 @@ DocHub/
 </details>
 
 <details>
-<summary><b>v1.0.0</b></summary>
+<summary><b>DocHub 1.0–2.0 — до переименования</b></summary>
 
-- Первый релиз: базовые расчёты, МКБ-10, педиатрические нормы.
-- [APK на Expo](https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk) — ранее опубликованная
-  сборка, без изменений v2.0.0. Актуальную версию соберите из исходников.
+- Первый релиз DocHub: базовые расчёты, МКБ-10, педиатрические нормы.
+- [APK DocHub на Expo](https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk) — старая сборка
+  без изменений MedRush 1.0.0. Актуальную версию соберите из исходников.
 
 </details>
 

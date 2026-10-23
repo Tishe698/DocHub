@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "DocHub",
+    "name": "MedRush",
     "slug": "DocHub",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "android": {
-      "versionCode": 5,
-      "package": "com.pulsetech7812.dochub",
+      "versionCode": 1,
+      "package": "com.pulsetech7812.medrush",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a1b39"
@@ -24,7 +24,7 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.pulsetech7812.dochub",
+      "bundleIdentifier": "com.pulsetech7812.medrush",
       "config": {
         "usesNonExemptEncryption": false
       }

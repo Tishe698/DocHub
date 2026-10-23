@@ -106,7 +106,7 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
       .findAll((n) => n.props.accessibilityRole === 'header' && typeof n.type === 'string')
       .map((n) => [].concat(n.props.children).join(''));
     expect(headers).toEqual(
-      expect.arrayContaining(['DocHub', 'Препараты', 'Шкалы и индексы', 'Справочники']),
+      expect.arrayContaining(['MedRush', 'Препараты', 'Шкалы и индексы', 'Справочники']),
     );
     const texts = tree.root.findAll(
       (n) => typeof n.type === 'string' && n.props.children === 'Пациент не указан',
