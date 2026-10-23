@@ -38,7 +38,13 @@
 | Политика конфиденциальности | https://github.com/Tishe698/DocHub/blob/main/PRIVACY.md |
 | Почта для связи | govard6981@outlook.com |
 | Иконка | `icon-512.png` — 512×512, PNG без прозрачности |
-| Скриншоты | `screenshots/01…06` — 1080×1920 (9:16), портрет, реальный интерфейс |
+| Скриншоты | `previews/01…06` — 1080×1920 (9:16): заголовок и настоящий экран в рамке телефона. Без подписей — `screenshots/01…06` |
+
+Превью собираются из `preview-src/template.html` (заголовки — там же) и снимков `screenshots/`:
+
+```bash
+node store/rustore/preview-src/render.mjs
+```
 
 ### Полное описание (до 4000)
 

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>MedRush — превью для RuStore</title>
+    <!-- Превью карточки RuStore 1080×1920: заголовок + настоящий экран приложения в рамке телефона.
+         Слайд выбирается параметром ?i=1…6; снимок — ../screenshots/0N-*.png. Рендер — render.mjs. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Unbounded:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Фон — тёмно-синий из иконки и заставки, свечение — как у неонового креста иконки */
+      :root {
+        --night: #0a1b39;
+        --deep: #102a5c;
+        --ink: #ffffff;
+        --muted: #c3cfea;
+        --accent: #8fb3ff;
+        --glow: rgba(233, 205, 255, 0.28);
+        --frame: #050c1c;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--night);
+      }
+      .slide {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background:
+          radial-gradient(900px 700px at 85% -5%, rgba(143, 179, 255, 0.28), transparent 70%),
+          radial-gradient(1100px 900px at 0% 105%, var(--glow), transparent 65%),
+          linear-gradient(180deg, var(--deep) 0%, var(--night) 55%);
+        font-family: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
+        color: var(--ink);
+      }
+      .head {
+        position: absolute;
+        top: 104px;
+        left: 92px;
+        right: 92px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font:
+          700 34px/1 'Manrope',
+          sans-serif;
+        letter-spacing: 0.02em;
+        color: var(--muted);
+      }
+      .brand img {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+      }
+      h1 {
+        margin: 0;
+        font:
+          700 74px/1.1 'Unbounded',
+          'Manrope',
+          sans-serif;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      p {
+        margin: 0;
+        font:
+          500 38px/1.35 'Manrope',
+          sans-serif;
+        color: var(--muted);
+        max-width: 860px;
+      }
+      .phone {
+        position: absolute;
+        left: 50%;
+        top: 640px;
+        width: 760px;
+        transform: translateX(-50%);
+        border: 14px solid var(--frame);
+        border-radius: 72px;
+        overflow: hidden;
+        background: var(--frame);
+        box-shadow:
+          0 0 0 2px rgba(195, 207, 234, 0.18),
+          0 40px 120px rgba(0, 0, 0, 0.55),
+          0 0 160px rgba(233, 205, 255, 0.18);
+      }
+      .phone img {
+        display: block;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide">
+      <div class="head">
+        <div class="brand"><img src="../icon-512.png" alt="" />MedRush</div>
+        <h1 id="title"></h1>
+        <p id="sub"></p>
+      </div>
+      <div class="phone"><img id="shot" alt="" /></div>
+    </div>
+    <script>
+      // Заголовки описывают то, что видно на снимке; без обещаний диагноза и лечения
+      const SLIDES = {
+        1: {
+          shot: '01-home.png',
+          title: 'Пациент вводится <em>один раз</em>',
+          sub: 'Масса, возраст и рост сами подставляются во все расчёты',
+        },
+        2: {
+          shot: '02-drugs.png',
+          title: '<em>128 препаратов</em> с дозой по массе',
+          sub: 'Путь введения, предел дозы и разведение — по инструкции',
+        },
+        3: {
+          shot: '03-defibrillator.png',
+          title: 'Энергия разряда <em>на вашем аппарате</em>',
+          sub: 'LIFEPAK, ZOLL, Аксион, Philips, Mindray и другие',
+        },
+        4: {
+          shot: '04-intubation.png',
+          title: 'Трубка по ленте <em>Broselow</em>',
+          sub: 'Размер и глубина через рот и нос, с альтернативами',
+        },
+        5: {
+          shot: '05-blood-group.png',
+          title: 'Группа крови <em>по цоликлонам</em>',
+          sub: 'Выберите строку, похожую на планшет, — группа и резус готовы',
+        },
+        6: {
+          shot: '06-icd10.png',
+          title: 'МКБ-10 <em>без интернета</em>',
+          sub: 'Поиск по коду и названию — больше 11 700 кодов',
+        },
+      };
+      const i = new URLSearchParams(location.search).get('i') || '1';
+      const s = SLIDES[i];
+      document.getElementById('title').innerHTML = s.title;
+      document.getElementById('sub').textContent = s.sub;
+      document.getElementById('shot').src = '../screenshots/' + s.shot;
+    </script>
+  </body>
+</html>
