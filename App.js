@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme, makeNavigationTheme } from './theme/index';
 import ThemeToggle from './components/ui/ThemeToggle';
 import { PatientProvider } from './patient/PatientContext';
+import NoticeGate from './about/NoticeGate';
 import ButtonApp from './main_screen/button_app';
 import WelcomeScreen from './js_button_preparation/calculate_button';
 import Tabnav from './button_two/navigate_button/TabnavTube';
@@ -131,7 +132,10 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <PatientProvider>
-          <AppNavigator />
+          {/* «Перед началом работы» при первом запуске: назначение, ответственность, данные */}
+          <NoticeGate>
+            <AppNavigator />
+          </NoticeGate>
         </PatientProvider>
       </ThemeProvider>
     </SafeAreaProvider>

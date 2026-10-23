@@ -1,15 +1,15 @@
-// pregnancy.js — срок беременности и ПДР по ДПМ + информационное видео (expo-video).
+// pregnancy.js — срок беременности и ПДР по ДПМ.
+// Информационное видео (g.mp4, водяной знак стороннего автора) убрано из приложения перед публикацией
+// в RuStore: прав на него нет (соглашение разработчика RuStore, п. 7.4, 9.2). Файл остаётся в репозитории;
+// вернуть экран можно из истории git, когда будет разрешение правообладателя или видео со свободной лицензией.
 // Расчёты — pregnancy/pregnancyCalc.js (чистые функции с тестами).
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppState, Keyboard, Platform, View } from 'react-native';
-import { useEvent } from 'expo';
-import { VideoView, useVideoPlayer } from 'expo-video';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons } from '@expo/vector-icons';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
-import { announce, hideFromA11y } from '../components/a11y';
-import { Badge, Button, Card, Note, NumberField, ResultCard, Section } from '../components/ui';
+import { announce } from '../components/a11y';
+import { Badge, Button, Note, NumberField, ResultCard, Section } from '../components/ui';
 import { useTheme, useThemedStyles } from '../theme/index';
 import {
   CATEGORIES,
@@ -29,9 +29,6 @@ import {
   spokenSummary,
   startOfDay,
 } from './pregnancyCalc';
-
-const VIDEO_SOURCE = require('../g.mp4');
-const VIDEO_TITLE = 'Информационное видео о поэтапном развитии ребёнка в утробе матери';
 
 // «Сегодня» как состояние: срок пересчитывается после полуночи и при возврате в приложение.
 function useToday() {
@@ -62,120 +59,6 @@ function useToday() {
     };
   }, []);
   return today;
-}
-
-function VideoCard() {
-  const { colors } = useTheme();
-  const styles = useThemedStyles(makeStyles);
-  const videoRef = useRef(null);
-
-  // Плеер без автозапуска: пользователь запускает сам. Хуки — безусловно (правила хуков React).
-  const player = useVideoPlayer(VIDEO_SOURCE, (p) => {
-    p.loop = true;
-    p.muted = false;
-    p.volume = 1.0;
-  });
-
-  // Третий аргумент useEvent — начальное значение.
-  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
-  const { muted } = useEvent(player, 'mutedChange', { muted: player.muted });
-  const { status } = useEvent(player, 'statusChange', { status: player.status });
-  const failed = status === 'error';
-
-  const togglePlay = () => {
-    if (player.playing) {
-      player.pause();
-      announce('Видео на паузе');
-    } else {
-      player.play();
-      announce('Видео воспроизводится');
-    }
-  };
-
-  const toggleMute = () => {
-    player.muted = !player.muted;
-    announce(player.muted ? 'Звук выключен' : 'Звук включён');
-  };
-
-  const enterFullscreen = async () => {
-    try {
-      await videoRef.current?.enterFullscreen();
-    } catch {
-      announce('Полноэкранный режим недоступен');
-    }
-  };
-
-  return (
-    <Card>
-      <View style={styles.cardHeader}>
-        <View {...hideFromA11y} style={styles.headerIcon}>
-          <Ionicons name="videocam-outline" size={22} color={colors.section.pregnancy} />
-        </View>
-        <Text variant="bodyStrong" accessibilityRole="header" style={styles.flexText}>
-          {VIDEO_TITLE}
-        </Text>
-      </View>
-
-      <View style={styles.videoWrap}>
-        {failed ? (
-          <View
-            style={styles.videoFallback}
-            accessible
-            accessibilityLabel="Видео не удалось загрузить"
-          >
-            <View {...hideFromA11y}>
-              <Ionicons name="videocam-off-outline" size={40} color={colors.textMuted} />
-            </View>
-            <Text variant="body" color="textSecondary" style={styles.fallbackText}>
-              Видео не удалось загрузить. Перезапустите приложение.
-            </Text>
-          </View>
-        ) : (
-          <VideoView
-            ref={videoRef}
-            style={styles.video}
-            player={player}
-            nativeControls
-            fullscreenOptions={{ enable: true }}
-            allowsPictureInPicture
-            contentFit="contain"
-            collapsable={false} // важно для касаний на Android
-          />
-        )}
-      </View>
-
-      {/* Свои кнопки дублируют нативные элементы управления: крупнее и с подписями для диктора */}
-      <View style={styles.controls}>
-        <Button
-          title={isPlaying ? 'Пауза' : 'Пуск'}
-          icon={isPlaying ? 'pause' : 'play'}
-          variant="secondary"
-          onPress={togglePlay}
-          disabled={failed}
-          accessibilityLabel={isPlaying ? 'Поставить видео на паузу' : 'Воспроизвести видео'}
-          style={styles.controlBtn}
-        />
-        <Button
-          title={muted ? 'Звук выкл.' : 'Звук вкл.'}
-          icon={muted ? 'volume-mute' : 'volume-high'}
-          variant="secondary"
-          onPress={toggleMute}
-          disabled={failed}
-          accessibilityLabel={muted ? 'Включить звук видео' : 'Выключить звук видео'}
-          style={styles.controlBtn}
-        />
-        <Button
-          title="На весь экран"
-          icon="expand"
-          variant="secondary"
-          onPress={enterFullscreen}
-          disabled={failed}
-          accessibilityLabel="Открыть видео на весь экран"
-          style={styles.controlBtn}
-        />
-      </View>
-    </Card>
-  );
 }
 
 const Date_pregnancy = () => {
@@ -385,42 +268,12 @@ const Date_pregnancy = () => {
           />
         </Section>
       )}
-
-      <VideoCard />
     </Screen>
   );
 };
 
-const makeStyles = ({ colors, spacing, radius }) => ({
+const makeStyles = ({ spacing }) => ({
   today: { marginBottom: spacing.md },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.sm },
-  headerIcon: { marginRight: spacing.sm, marginTop: 1 },
-  flexText: { flex: 1 },
-  videoWrap: {
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  // Размер видео задан пропорцией, а не высотой — к тексту не относится
-  video: { width: '100%', aspectRatio: 16 / 9 },
-  videoFallback: {
-    width: '100%',
-    minHeight: 160,
-    padding: spacing.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fallbackText: { textAlign: 'center', marginTop: spacing.sm },
-  controls: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    marginTop: spacing.md,
-    marginHorizontal: -spacing.xs,
-  },
-  controlBtn: { margin: spacing.xs, flexGrow: 1 },
   picker: { marginTop: spacing.md },
   pickerActions: {
     flexDirection: 'row',
