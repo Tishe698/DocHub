@@ -1,7 +1,7 @@
 // NoticeGate — экран «Перед началом работы» при первом запуске: назначение приложения,
 // ответственность медицинского работника, данные пациента и ссылка на политику конфиденциальности.
 // Принятие сохраняется (AsyncStorage) с номером версии текста: при новой версии экран покажется снова.
-// Хранилище недоступно — экран показывается, а принятие действует до перезапуска.
+// Хранилище недоступно или не ответило за 2 с — экран показывается, а принятие действует до перезапуска.
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,6 +12,9 @@ import { useTheme, useThemedStyles } from '../theme/index';
 import AboutModal from './AboutModal';
 import { NoticePoints } from './AboutContent';
 import { NOTICE_ACCEPT, NOTICE_KEY, NOTICE_TITLE, NOTICE_VERSION } from './aboutText';
+
+// Сколько ждать хранилище: дольше — показываем уведомление, чтобы запуск не зависал на пустом экране
+export const STORAGE_TIMEOUT_MS = 2000;
 
 export function NoticeScreen({ onAccept }) {
   const styles = useThemedStyles(makeStyles);
@@ -48,16 +51,20 @@ export default function NoticeGate({ children }) {
   const [state, setState] = useState('loading');
 
   useEffect(() => {
-    let cancelled = false;
+    let done = false;
+    const finish = (next) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      setState(next);
+    };
+    const timer = setTimeout(() => finish('needed'), STORAGE_TIMEOUT_MS);
     AsyncStorage.getItem(NOTICE_KEY)
-      .then((v) => {
-        if (!cancelled) setState(v === String(NOTICE_VERSION) ? 'accepted' : 'needed');
-      })
-      .catch(() => {
-        if (!cancelled) setState('needed');
-      });
+      .then((v) => finish(v === String(NOTICE_VERSION) ? 'accepted' : 'needed'))
+      .catch(() => finish('needed'));
     return () => {
-      cancelled = true;
+      done = true;
+      clearTimeout(timer);
     };
   }, []);
 

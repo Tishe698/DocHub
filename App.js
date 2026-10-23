@@ -86,7 +86,7 @@ const webBackButton = (navigation) =>
 
 function AppNavigator() {
   const theme = useTheme();
-  const { colors, isDark } = theme;
+  const { colors } = theme;
   const navigationTheme = useMemo(() => makeNavigationTheme(theme), [theme]);
   const baseOptions = useMemo(
     () => ({
@@ -110,8 +110,6 @@ function AppNavigator() {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {/* Единственный StatusBar приложения: экраны свой не рисуют */}
-      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack.Navigator initialRouteName="Home" screenOptions={screenOptions}>
         {/* Заголовок «Главная» не виден (шапки нет), но им подписывается кнопка «назад» на следующих экранах */}
         <Stack.Screen
@@ -127,10 +125,17 @@ function AppNavigator() {
   );
 }
 
+// Единственный StatusBar приложения (и для экрана «Перед началом работы»): экраны свой не рисуют
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
+        <ThemedStatusBar />
         <PatientProvider>
           {/* «Перед началом работы» при первом запуске: назначение, ответственность, данные */}
           <NoticeGate>

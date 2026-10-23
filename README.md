@@ -197,7 +197,8 @@ DocHub/
 
 - Expo SDK 54 (`expo ~54.0.37`), React Native 0.81.5, React 19.1, JavaScript;
 - React Navigation 7 (native-stack), react-native-safe-area-context;
-- AsyncStorage — только для выбранной темы; expo-clipboard — копирование результата;
+- AsyncStorage — выбранная тема и отметка о прочтении экрана «Перед началом работы»;
+  expo-clipboard — копирование результата;
 - expo-system-ui — фон системы под тему; datetimepicker — выбор даты;
 - Jest 29 + jest-expo, ESLint 9, Prettier 3.
 

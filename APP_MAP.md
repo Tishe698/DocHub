@@ -11,10 +11,10 @@
 ```
 SafeAreaProvider
 └── ThemeProvider                тема «Авто / Светлая / Тёмная», режим хранится в AsyncStorage
+    ├── StatusBar                один на приложение (и для экрана уведомления); экраны свой не рисуют
     └── PatientProvider          общий пациент, только в памяти
         └── NoticeGate           «Перед началом работы» при первом запуске (about/NoticeGate.js)
             └── NavigationContainer  тема навигации из makeNavigationTheme(theme)
-                ├── StatusBar        один на приложение; экраны свой не рисуют и не прячут
                 └── native-stack     Home без шапки + маршруты из массива ROUTES
 ```
 

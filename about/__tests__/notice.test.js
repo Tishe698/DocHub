@@ -6,7 +6,7 @@ import React from 'react';
 import { Text as RNText } from 'react-native';
 import renderer, { act } from 'react-test-renderer';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NoticeGate from '../NoticeGate';
+import NoticeGate, { STORAGE_TIMEOUT_MS } from '../NoticeGate';
 import {
   CONTACT_EMAIL,
   NOTICE_KEY,
@@ -79,6 +79,16 @@ describe('NoticeGate', () => {
     expect(hasApp(tree)).toBe(false);
     await act(async () => byTestId(tree, 'notice-accept').props.onPress());
     expect(hasApp(tree)).toBe(true);
+  });
+
+  test('хранилище не ответило за 2 с — экран показывается, пустого экрана навсегда нет', async () => {
+    jest.useFakeTimers();
+    jest.spyOn(AsyncStorage, 'getItem').mockReturnValueOnce(new Promise(() => {}));
+    const tree = await render();
+    expect(tree.root.findAll((n) => n.props.testID === 'notice-accept')).toHaveLength(0);
+    await act(async () => jest.advanceTimersByTime(STORAGE_TIMEOUT_MS));
+    expect(byTestId(tree, 'notice-accept')).toBeDefined();
+    jest.useRealTimers();
   });
 
   test('кнопка «Политика конфиденциальности» открывает её текст', async () => {
