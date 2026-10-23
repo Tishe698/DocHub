@@ -1,4 +1,4 @@
-// Экран срока беременности: ввод даты, ошибки, результат, видео и доступность кнопок.
+// Экран срока беременности: ввод даты, ошибки, результат и доступность кнопок; видео нет.
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,22 +13,6 @@ jest.mock('@react-native-community/datetimepicker', () => {
   return MockDateTimePicker;
 });
 
-// Плеер expo-video: состояние в объекте, события через useEvent
-const mockPlayer = { playing: false, muted: false, status: 'readyToPlay', loop: false, volume: 1 };
-mockPlayer.play = jest.fn(() => (mockPlayer.playing = true));
-mockPlayer.pause = jest.fn(() => (mockPlayer.playing = false));
-jest.mock('expo-video', () => {
-  const { View } = require('react-native');
-  return {
-    useVideoPlayer: (source, setup) => {
-      mockPlayer.source = source;
-      if (setup) setup(mockPlayer);
-      return mockPlayer;
-    },
-    VideoView: () => <View testID="video" />,
-  };
-});
-jest.mock('expo', () => ({ useEvent: (_p, _name, initial) => initial }));
 jest.mock('../../components/a11y', () => ({
   ...jest.requireActual('../../components/a11y'),
   announce: jest.fn(),
@@ -71,8 +55,6 @@ beforeEach(() => {
   jest.useFakeTimers();
   jest.setSystemTime(new Date(2026, 9, 17, 10, 0));
   announce.mockClear();
-  mockPlayer.playing = false;
-  mockPlayer.muted = false;
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -137,20 +119,11 @@ test('календарь: открыть и выбрать дату (Android —
   expect(texts(tree)).toMatch(/40 нед 0 дн/);
 });
 
-test('видео: g.mp4 через expo-video, кнопки управления с ролью, подписью и состоянием', () => {
+test('видео стороннего автора в приложение не входит; кнопки с ролью, подписью и состоянием', () => {
   const tree = mount();
-  expect(mockPlayer.source).toBeTruthy();
-  expect(mockPlayer.loop).toBe(true);
-  expect(
-    tree.root.findAll((n) => n.props.testID === 'video' && typeof n.type === 'string'),
-  ).toHaveLength(1);
-  pressByLabel(tree, /Воспроизвести видео/);
-  expect(mockPlayer.play).toHaveBeenCalled();
-  pressByLabel(tree, /Выключить звук видео/);
-  expect(mockPlayer.muted).toBe(true);
-
+  expect(texts(tree)).not.toMatch(/видео/i);
   const pressables = tree.root.findAll(isPressable);
-  expect(pressables.length).toBeGreaterThanOrEqual(4);
+  expect(pressables.length).toBeGreaterThanOrEqual(1);
   pressables.forEach((p) => {
     expect(p.props.accessibilityRole).toBe('button');
     expect(p.props.accessibilityLabel).toBeTruthy();

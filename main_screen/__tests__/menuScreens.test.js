@@ -88,13 +88,25 @@ describe.each(['light', 'dark'])('экраны меню, тема %s', (scheme) 
     expect(radios).toHaveLength(0);
   });
 
+  it('главный экран: «О приложении и конфиденциальность» открывает окно с политикой', () => {
+    const { tree } = render(ButtonApp, theme);
+    const btn = tree.root.findAll(
+      (n) => n.props.testID === 'home-about' && typeof n.props.onPress === 'function',
+    )[0];
+    act(() => btn.props.onPress());
+    const shown = tree.root
+      .findAll((n) => n.props.accessibilityRole === 'header' && typeof n.type === 'string')
+      .map((n) => [].concat(n.props.children).join(''));
+    expect(shown).toEqual(expect.arrayContaining(['О приложении', 'Политика конфиденциальности']));
+  });
+
   it('главный экран: заголовки разделов и полоса пациента', () => {
     const { tree } = render(ButtonApp, theme);
     const headers = tree.root
       .findAll((n) => n.props.accessibilityRole === 'header' && typeof n.type === 'string')
       .map((n) => [].concat(n.props.children).join(''));
     expect(headers).toEqual(
-      expect.arrayContaining(['DocHub', 'Препараты', 'Шкалы и индексы', 'Справочники']),
+      expect.arrayContaining(['MedRush', 'Препараты', 'Шкалы и индексы', 'Справочники']),
     );
     const texts = tree.root.findAll(
       (n) => typeof n.type === 'string' && n.props.children === 'Пациент не указан',

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/icon.png" width="96" alt="Иконка DocHub">
+<img src="assets/icon.png" width="96" alt="Иконка MedRush">
 
-# DocHub
+# MedRush
 
 **Справочник и калькуляторы для бригад скорой помощи и педиатров.**<br>
 Дозы препаратов, дефибрилляция, трубки, кислород и ИВЛ, клинические шкалы и МКБ-10 — без интернета.
@@ -12,6 +12,8 @@
 ![Expo SDK 54](https://img.shields.io/badge/Expo%20SDK-54-000020)
 ![React Native 0.81](https://img.shields.io/badge/React%20Native-0.81-61dafb)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+<sub>До версии 1.0 приложение называлось DocHub — отсюда имя репозитория.</sub>
 
 </div>
 
@@ -53,7 +55,10 @@
 - **Доступность.** Подписи для TalkBack и VoiceOver на русском, результат озвучивается,
   крупный системный шрифт до 150 %.
 - **Без учётных записей.** Данные пациента хранятся только в памяти и стираются при закрытии;
-  истории расчётов и передачи данных нет.
+  истории расчётов и передачи данных нет — см. [политику конфиденциальности](PRIVACY.md).
+- **Перед началом работы.** При первом запуске приложение показывает, для чего оно и кто принимает
+  решение; этот текст и политика всегда доступны с главного экрана: «О приложении и
+  конфиденциальность».
 
 Подробная инструкция по каждому экрану и полный список препаратов — в
 [USER_GUIDE.md](USER_GUIDE.md).
@@ -118,19 +123,18 @@ npm run ios
 npm run web    # веб-версия в браузере
 ```
 
-В Expo Go видео на экране «Срок беременности» может не воспроизводиться, в собранном приложении
-оно работает.
-
 ### Сборка
+
+Пакет приложения — `com.pulsetech7812.medrush`, версия — `1.0.0`.
 
 ```bash
 npx eas build --platform android --profile preview      # APK для установки
-npx eas build --platform android --profile production   # сейчас тоже APK (см. eas.json)
+npx eas build --platform android --profile production   # AAB для магазинов
 npx eas build --platform ios --profile production
 ```
 
-Для Google Play нужен AAB: в профиле `production` файла `eas.json` замените
-`"buildType": "apk"` на `"buildType": "app-bundle"`.
+Публикация в RuStore — подпись своим ключом, тексты карточки, скриншоты и порядок загрузки —
+в [store/rustore/README.md](store/rustore/README.md).
 
 ## Разработка
 
@@ -195,8 +199,9 @@ DocHub/
 
 - Expo SDK 54 (`expo ~54.0.37`), React Native 0.81.5, React 19.1, JavaScript;
 - React Navigation 7 (native-stack), react-native-safe-area-context;
-- AsyncStorage — только для выбранной темы; expo-clipboard — копирование результата;
-- expo-video — видео на экране «Срок беременности»; datetimepicker — выбор даты;
+- AsyncStorage — выбранная тема и отметка о прочтении экрана «Перед началом работы»;
+  expo-clipboard — копирование результата;
+- expo-system-ui — фон системы под тему; datetimepicker — выбор даты;
 - Jest 29 + jest-expo, ESLint 9, Prettier 3.
 
 </details>
@@ -212,24 +217,26 @@ DocHub/
 ## История версий
 
 <details>
-<summary><b>v2.0.0 — текущая</b></summary>
+<summary><b>MedRush 1.0.0 — текущая, первая версия для RuStore</b></summary>
 
+- Новое название MedRush и пакет `com.pulsetech7812.medrush`; нумерация версий начата заново.
 - Главный экран из шести разделов и общий пациент для всех калькуляторов.
 - Калькулятор препаратов: 128 записей, пути введения и показания, пределы доз, расшифровка
   сокращений, поиск по привычным названиям.
 - Новые экраны: Дефибриллятор, NEWS2, шкала Апгар; группа крови по таблице цоликлонов.
 - Светлая и тёмная тема со значком в шапке, доступность для TalkBack и VoiceOver.
 - Аудит всех расчётов и исправления по клиническим рекомендациям; автотесты, ESLint, Prettier, CI.
-- Видео на экране беременности сжато с 34,7 до 11,3 МБ.
+- Экран «Перед началом работы» и политика конфиденциальности; видео стороннего автора убрано
+  с экрана беременности (прав на него нет).
 
 </details>
 
 <details>
-<summary><b>v1.0.0</b></summary>
+<summary><b>DocHub 1.0–2.0 — до переименования</b></summary>
 
-- Первый релиз: базовые расчёты, МКБ-10, педиатрические нормы.
-- [APK на Expo](https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk) — ранее опубликованная
-  сборка, без изменений v2.0.0. Актуальную версию соберите из исходников.
+- Первый релиз DocHub: базовые расчёты, МКБ-10, педиатрические нормы.
+- [APK DocHub на Expo](https://expo.dev/artifacts/eas/9MKdaFnSxotn5m1b2zsj3C.apk) — старая сборка
+  без изменений MedRush 1.0.0. Актуальную версию соберите из исходников.
 
 </details>
 

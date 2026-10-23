@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>MedRush — обложка Google Play</title>
+    <!-- Обложка (feature graphic) Google Play: 1024×500, без прозрачности, фон не белый и не чёрный.
+         В RuStore отдельной обложки нет. Рендер — render.mjs. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&family=Unbounded:wght@800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --night: #081631;
+        --deep: #0f2a5e;
+        --accent: #9ec0ff;
+        --neon: #f0d2ff;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+        background: var(--night);
+      }
+      .banner {
+        position: relative;
+        width: 1024px;
+        height: 500px;
+        overflow: hidden;
+        color: #fff;
+        font-family: 'Manrope', Arial, sans-serif;
+        background:
+          radial-gradient(520px 360px at 92% 10%, rgba(158, 192, 255, 0.3), transparent 70%),
+          radial-gradient(480px 380px at 5% 110%, rgba(240, 210, 255, 0.22), transparent 70%),
+          linear-gradient(120deg, var(--deep), var(--night));
+      }
+      svg.ecg {
+        position: absolute;
+        inset: 0;
+      }
+      .text {
+        position: absolute;
+        left: 56px;
+        top: 70px;
+        width: 520px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font:
+          800 30px/1 'Manrope',
+          sans-serif;
+      }
+      .brand img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+      }
+      h1 {
+        margin: 0;
+        font:
+          800 50px/1.08 'Unbounded',
+          sans-serif;
+        letter-spacing: -0.02em;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      p {
+        margin: 0;
+        font:
+          600 22px/1.35 'Manrope',
+          sans-serif;
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .shot {
+        position: absolute;
+        width: 210px;
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.16),
+          0 24px 60px rgba(0, 0, 0, 0.55);
+      }
+      .shot img {
+        display: block;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <svg class="ecg" width="1024" height="500" viewBox="0 0 1024 500">
+        <defs>
+          <filter id="neon" x="-5%" y="-50%" width="110%" height="200%">
+            <feGaussianBlur stdDeviation="5" />
+          </filter>
+        </defs>
+        <path
+          id="ecg"
+          d="M0 466 L380 466 L400 456 L415 466 L440 466 L450 480 L466 398 L482 492 L494 466 L530 466 L552 450 L574 466 L1024 466"
+          fill="none"
+          stroke="#f0d2ff"
+          stroke-width="9"
+          stroke-opacity=".35"
+          filter="url(#neon)"
+        />
+        <path
+          d="M0 466 L380 466 L400 456 L415 466 L440 466 L450 480 L466 398 L482 492 L494 466 L530 466 L552 450 L574 466 L1024 466"
+          fill="none"
+          stroke="#f0d2ff"
+          stroke-width="3"
+          stroke-opacity=".9"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <div class="text">
+        <div class="brand"><img src="../icon-512.png" alt="" />MedRush</div>
+        <h1>Расчёты для скорой <em>без интернета</em></h1>
+        <p>Дозы препаратов, дефибрилляция, интубация, шкалы и МКБ-10</p>
+      </div>
+      <div class="shot" style="left: 590px; top: 60px; transform: rotate(-6deg)">
+        <img src="shots/v-adr.png" alt="" />
+      </div>
+      <div class="shot" style="left: 790px; top: 30px; transform: rotate(5deg)">
+        <img src="shots/v-defib.png" alt="" />
+      </div>
+    </div>
+  </body>
+</html>

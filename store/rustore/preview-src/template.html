@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>MedRush — превью для магазинов</title>
+    <!-- Превью 1080×1920 (9:16) для RuStore и Google Play. Слайд — параметр ?i=1…8.
+         Приёмы — по разбору топовых приложений: на первых слайдах суть, заголовок 3–5 слов про выгоду,
+         экран без рамки телефона (Google Play запрещает рамки), увеличенная выноска результата,
+         сквозной фон на весь набор (линия ЭКГ соединяет соседние слайды), тёмный слайд, финальный слайд
+         о доверии. Без «№1», рейтингов и наград. Снимки — shots/*.png, рендер — render.mjs. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Unbounded:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Палитра — из иконки: ночной синий и неоновое розово-сиреневое свечение креста */
+      :root {
+        --night: #081631;
+        --deep: #0f2a5e;
+        --ink: #ffffff;
+        --soft: rgba(255, 255, 255, 0.78);
+        --accent: #9ec0ff;
+        --neon: #f0d2ff;
+        --pill: rgba(158, 192, 255, 0.14);
+        --W: 1080px;
+        --H: 1920px;
+      }
+      html,
+      body {
+        margin: 0;
+        width: var(--W);
+        height: var(--H);
+        overflow: hidden;
+        background: var(--night);
+      }
+      .slide {
+        position: relative;
+        width: var(--W);
+        height: var(--H);
+        overflow: hidden;
+        font-family: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(180deg, var(--deep) 0%, var(--night) 62%);
+      }
+      /* Панорама на весь набор: 8 слайдов × 1080 px, каждый слайд показывает свой кусок */
+      .pano {
+        position: absolute;
+        top: 0;
+        height: var(--H);
+        width: calc(var(--W) * 8);
+      }
+      .pano svg {
+        position: absolute;
+        inset: 0;
+      }
+      .head {
+        position: absolute;
+        top: 112px;
+        left: 84px;
+        right: 84px;
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+        z-index: 3;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font:
+          800 36px/1 'Manrope',
+          sans-serif;
+        letter-spacing: 0.01em;
+      }
+      .brand img {
+        width: 68px;
+        height: 68px;
+        border-radius: 18px;
+      }
+      h1 {
+        margin: 0;
+        font:
+          800 92px/1.06 'Unbounded',
+          'Manrope',
+          sans-serif;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      .sub {
+        margin: 0;
+        font:
+          600 40px/1.32 'Manrope',
+          sans-serif;
+        color: var(--soft);
+        max-width: 900px;
+        text-wrap: pretty;
+      }
+      /* Экран приложения без рамки устройства: скруглён, с тонкой кромкой и свечением */
+      .screen {
+        position: absolute;
+        left: 130px;
+        width: 820px;
+        border-radius: 58px;
+        overflow: hidden;
+        z-index: 2;
+        box-shadow:
+          0 0 0 2px rgba(255, 255, 255, 0.14),
+          0 50px 120px rgba(0, 0, 0, 0.55),
+          0 0 140px rgba(240, 210, 255, 0.16);
+      }
+      .screen img {
+        display: block;
+        width: 100%;
+      }
+      /* Выноска: увеличенный фрагмент того же снимка поверх экрана */
+      .callout {
+        position: absolute;
+        left: 70px;
+        width: 940px;
+        border-radius: 34px;
+        z-index: 4;
+        background-repeat: no-repeat;
+        box-shadow:
+          0 0 0 4px var(--accent),
+          0 36px 90px rgba(0, 0, 0, 0.6);
+      }
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 28px;
+        border-radius: 999px;
+        background: var(--pill);
+        box-shadow: inset 0 0 0 2px rgba(158, 192, 255, 0.35);
+        font:
+          700 36px/1 'Manrope',
+          sans-serif;
+      }
+      .pill svg {
+        width: 38px;
+        height: 38px;
+        flex: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide" id="slide">
+      <div class="pano" id="pano"></div>
+      <div class="head" id="head"></div>
+    </div>
+    <script>
+      const W = 1080;
+      const SCREEN = { left: 130, width: 820, top: 640 };
+      const K = SCREEN.width / W; // масштаб снимка на слайде
+
+      // Заголовки — выгода в 3–5 словах; подпись — чем это сделано. Только то, что видно на снимке.
+      const SLIDES = {
+        1: {
+          brand: true,
+          title: 'Доза и объём <em>сразу в&nbsp;мл</em>',
+          sub: '128 препаратов: доза по массе, путь введения и предел из инструкции',
+          shot: 'v-adr.png',
+          crop: { x: 83, y: 978, w: 915, h: 635 },
+        },
+        2: {
+          title: 'Пациент — <em>один раз</em> на все расчёты',
+          sub: 'Масса, возраст и рост сами подставляются в каждый калькулятор',
+          shot: 'v-home.png',
+          crop: { x: 40, y: 350, w: 1000, h: 330 },
+        },
+        3: {
+          title: 'Энергия разряда <em>под ваш аппарат</em>',
+          sub: 'LIFEPAK, ZOLL, Аксион, Philips, Mindray — ступени конкретной модели',
+          shot: 'v-defib.png',
+          crop: { x: 40, y: 663, w: 1000, h: 290 },
+        },
+        4: {
+          title: 'Вес ребёнка <em>по ленте Broselow</em>',
+          sub: 'Укажите рост или цвет зоны — масса подставится сама',
+          shot: 'v-broselow.png',
+        },
+        5: {
+          title: 'Трубка: <em>размер и глубина</em>',
+          sub: 'По росту, зоне Broselow, возрасту или массе — с альтернативами',
+          shot: 'v-ett.png',
+          crop: { x: 40, y: 700, w: 1000, h: 470 },
+        },
+        6: {
+          title: 'Шкалы <em>считают баллы</em> за вас',
+          sub: 'NEWS2, Глазго, шоковый индекс, ТЭЛА, ШОКС',
+          shot: 'v-news.png',
+          crop: { x: 40, y: 508, w: 1000, h: 288 },
+        },
+        7: {
+          title: 'Группа крови <em>по картинке</em>',
+          sub: 'Выберите строку как на планшете — группа и резус готовы',
+          shot: 'v-blood.png',
+          crop: { x: 63, y: 430, w: 955, h: 160 },
+        },
+        8: {
+          brand: true,
+          title: 'Работает <em>без интернета</em>',
+          sub: 'Препараты, шкалы и МКБ-10 всегда под рукой',
+          shot: 'v-icd.png',
+          screenTop: 900,
+          pills: ['noads', 'noreg', 'local'],
+        },
+      };
+
+      const ICONS = {
+        local:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#9ec0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="11" width="6" height="5" rx="1" stroke="#f0d2ff"/><path d="M10 11V9.5a2 2 0 0 1 4 0V11" stroke="#f0d2ff"/></svg>',
+        offline:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#9ec0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16a6 6 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1"/><path d="M3 3l18 18" stroke="#f0d2ff"/></svg>',
+        noads:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#9ec0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 15l2-6 2 6M8.7 13h2.6M15 9v6h1a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z"/><path d="M3 3l18 18" stroke="#f0d2ff"/></svg>',
+        noreg:
+          '<svg viewBox="0 0 24 24" fill="none" stroke="#9ec0ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+      };
+      const PILL_TEXT = {
+        noads: 'Без рекламы',
+        noreg: 'Без регистрации',
+        local: 'Данные не покидают телефон',
+      };
+
+      // Линия ЭКГ на всю панораму: комплексы QRS на стыках слайдов, видны по краям экрана
+      function ecgPath() {
+        const base = 1180;
+        let d = `M 0 ${base}`;
+        for (let k = 0; k <= 8; k += 1) {
+          const c = k * W; // стык слайдов
+          const pts = [
+            [c - 150, base],
+            [c - 120, base - 22],
+            [c - 95, base],
+            [c - 55, base],
+            [c - 38, base + 34],
+            [c - 10, base - 230],
+            [c + 18, base + 70],
+            [c + 40, base],
+            [c + 95, base],
+            [c + 135, base - 40],
+            [c + 175, base],
+          ];
+          pts.forEach(([x, y]) => {
+            if (x >= 0 && x <= 8 * W) d += ` L ${x} ${y}`;
+          });
+        }
+        return d + ` L ${8 * W} ${base}`;
+      }
+      // Мягкие пятна света на стыках — связывают соседние слайды
+      function glows() {
+        let g = '';
+        for (let k = 0; k <= 8; k += 1) {
+          const cx = k * W;
+          const cy = k % 2 ? 380 : 1650;
+          g += `<circle cx="${cx}" cy="${cy}" r="560" fill="url(#glow${k % 2})"/>`;
+        }
+        return g;
+      }
+
+      const i = Number(new URLSearchParams(location.search).get('i') || 1);
+      const s = SLIDES[i];
+      const pano = document.getElementById('pano');
+      pano.style.left = `${-(i - 1) * W}px`;
+      pano.innerHTML = `<svg width="${8 * W}" height="1920" viewBox="0 0 ${8 * W} 1920">
+        <defs>
+          <radialGradient id="glow0"><stop offset="0" stop-color="#9ec0ff" stop-opacity=".22"/><stop offset="1" stop-color="#9ec0ff" stop-opacity="0"/></radialGradient>
+          <radialGradient id="glow1"><stop offset="0" stop-color="#f0d2ff" stop-opacity=".2"/><stop offset="1" stop-color="#f0d2ff" stop-opacity="0"/></radialGradient>
+          <filter id="neon" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+        </defs>
+        ${glows()}
+        <path d="${ecgPath()}" fill="none" stroke="#f0d2ff" stroke-width="16" stroke-opacity=".35" filter="url(#neon)" stroke-linejoin="round"/>
+        <path d="${ecgPath()}" fill="none" stroke="#f0d2ff" stroke-width="5" stroke-opacity=".9" stroke-linejoin="round" stroke-linecap="round"/>
+      </svg>`;
+
+      const head = document.getElementById('head');
+      head.innerHTML =
+        (s.brand ? '<div class="brand"><img src="../icon-512.png" alt="" />MedRush</div>' : '') +
+        `<h1>${s.title}</h1><p class="sub">${s.sub}</p>` +
+        (s.pills
+          ? `<div class="pills">${s.pills.map((p) => `<span class="pill">${ICONS[p]}${PILL_TEXT[p]}</span>`).join('')}</div>`
+          : '');
+
+      const slide = document.getElementById('slide');
+      const shotTop = s.screenTop || SCREEN.top;
+      const screen = document.createElement('div');
+      screen.className = 'screen';
+      screen.style.top = `${shotTop}px`;
+      screen.innerHTML = `<img src="shots/${s.shot}" alt="" />`;
+      slide.appendChild(screen);
+
+      if (s.crop) {
+        const c = s.crop;
+        const cw = 940;
+        const z = cw / c.w; // увеличение фрагмента
+        const ch = c.h * z;
+        const centre = shotTop + (c.y + c.h / 2) * K;
+        const cTop = Math.min(centre - ch / 2, 1920 - ch - 70);
+        const el = document.createElement('div');
+        el.className = 'callout';
+        el.style.top = `${cTop}px`;
+        el.style.height = `${ch}px`;
+        el.style.backgroundImage = `url(shots/${s.shot})`;
+        el.style.backgroundSize = `${W * z}px auto`;
+        el.style.backgroundPosition = `${-c.x * z}px ${-c.y * z}px`;
+        slide.appendChild(el);
+      }
+    </script>
+  </body>
+</html>

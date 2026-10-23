@@ -1,13 +1,16 @@
-// button_app.js — главный экран DocHub (маршрут Home, без шапки навигатора).
+// button_app.js — главный экран MedRush (маршрут Home, без шапки навигатора).
 // Пациент (PatientBar), разделы с карточками (данные — menuConfig.js), кнопка темы рядом с названием.
+// Внизу — кнопка «О приложении»: назначение и политика конфиденциальности (требование RuStore).
 // Системный StatusBar рисует только App.js.
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, useWindowDimensions } from 'react-native';
 import Screen from '../components/Screen';
 import { Text } from '../components/AppText';
 import { hideFromA11y } from '../components/a11y';
-import { Note, Section, ThemeToggle } from '../components/ui';
+import { Button, Note, Section, ThemeToggle } from '../components/ui';
 import PatientBar from '../patient/PatientBar';
+import AboutModal from '../about/AboutModal';
+import { APP_NAME } from '../about/aboutText';
 import { useThemedStyles } from '../theme/index';
 import MenuCard from './MenuCard';
 import { MENU_SECTIONS, gridColumns } from './menuConfig';
@@ -18,6 +21,7 @@ export default function ButtonApp({ navigation }) {
   const columns = gridColumns(width, fontScale);
 
   const open = useCallback((route) => navigation.navigate(route), [navigation]);
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <Screen noHeader scroll keyboardAvoiding={false} testID="home-screen">
@@ -27,7 +31,7 @@ export default function ButtonApp({ navigation }) {
             <Text style={styles.brandMarkText}>✚</Text>
           </View>
           <Text variant="title" accessibilityRole="header" style={styles.brandTitle}>
-            DocHub
+            {APP_NAME}
           </Text>
           {/* Тема: нажатие — светлая / тёмная, долгое нажатие — как в телефоне */}
           <ThemeToggle style={styles.themeToggle} testID="home-theme-toggle" />
@@ -60,6 +64,19 @@ export default function ButtonApp({ navigation }) {
         Расчёты справочные: сверяйте результат с состоянием пациента, клиническими рекомендациями и
         инструкцией к препарату или аппарату.
       </Note>
+      <Button
+        title="О приложении и конфиденциальность"
+        icon="information-circle-outline"
+        variant="ghost"
+        onPress={() => setAboutOpen(true)}
+        accessibilityHint="Назначение приложения и политика конфиденциальности"
+        testID="home-about"
+      />
+      <AboutModal
+        visible={aboutOpen}
+        onClose={() => setAboutOpen(false)}
+        testID="home-about-modal"
+      />
     </Screen>
   );
 }
